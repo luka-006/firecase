@@ -1,0 +1,68 @@
+# Firecase
+
+Webshop za futrole za upaljače. Next.js 16 + Postgres (Neon) + Stripe + Vercel.
+
+- Hrvatski na `/`, engleski na `/en`
+- Admin panel na `/admin` (proizvodi, narudžbe, računi, postavke)
+- Plaćanje: kartice, Apple Pay, Google Pay, PayPal (Stripe Checkout)
+- Računi u PDF-u s fiskalizacijom (CIS Porezne uprave), storno računi kod povrata
+- Korisnički računi (favoriti, povijest narudžbi, spremljena adresa)
+- Pravne stranice: uvjeti poslovanja, privatnost, kolačići, dostava, povrat, obrazac za raskid
+
+## Postavljanje na Vercel
+
+1. **Import** – Vercel → Add New → Project → odaberi GitHub repo `firecase` → Deploy.
+2. **Baza** – projekt → Storage → Create → **Neon (Postgres)**, regija **Frankfurt (eu-central-1)** → Connect. `DATABASE_URL` se postavi sam. Tablice se kreiraju automatski pri svakom deployu.
+3. **Slike** – Storage → Create → **Blob** → Connect. `BLOB_READ_WRITE_TOKEN` se postavi sam.
+4. **Analytics** – projekt → Analytics → Enable.
+5. **Environment Variables** (Settings → Environment Variables), popis je u `.env.example`:
+   - `AUTH_SECRET` – nasumičan niz, npr. `openssl rand -base64 32`
+   - `ADMIN_PASSWORD` – lozinka za `/admin`
+   - `CRON_SECRET` – nasumičan niz
+   - `NEXT_PUBLIC_SITE_URL` – npr. `https://firecase.hr` (nakon spajanja domene)
+   - `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `ORDER_NOTIFY_EMAIL` – Gmail: Google račun → Sigurnost → uključi 2FA → *App passwords* → generiraj lozinku i stavi je u `SMTP_PASS`
+   - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` – vidi dolje
+6. **Redeploy** (Deployments → ⋯ → Redeploy) nakon dodavanja varijabli.
+
+## Stripe
+
+1. Otvori račun na stripe.com kao obrt i završi aktivaciju.
+2. Settings → Payment methods: uključi **Cards, Apple Pay, Google Pay, PayPal**.
+3. Developers → API keys → `Secret key` → `STRIPE_SECRET_KEY`.
+4. Developers → Webhooks → Add endpoint: `https://TVOJA-DOMENA/api/stripe/webhook`, događaji
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` → `Signing secret` → `STRIPE_WEBHOOK_SECRET`.
+5. Za testiranje koristi test ključeve (`sk_test_...`) i karticu `4242 4242 4242 4242`.
+
+## Fiskalizacija
+
+1. Nabavi FINA aplikacijski certifikat za fiskalizaciju (`.p12`).
+2. `base64 -w0 certifikat.p12` → vrijednost u `FISCAL_CERT_BASE64`, lozinka u `FISCAL_CERT_PASSWORD` → Redeploy.
+3. `/admin/settings` → **Provjeri certifikat**.
+4. Upiši oznaku poslovnog prostora i naplatnog uređaja (kako je određeno internim aktom), okruženje **TEST**, uključi fiskalizaciju.
+5. Napravi testnu narudžbu i provjeri da račun ima JIR (`/admin/invoices`).
+6. Prebaci okruženje na **PRODUKCIJA**.
+
+Računi koji se ne uspiju fiskalizirati (npr. CIS nedostupan) dobivaju ZKI i automatski se šalju ponovno (Vercel Cron jednom dnevno) ili ručno gumbom *Ponovi fiskalizaciju*.
+
+## Domena
+
+Vercel → Settings → Domains → dodaj domenu i postavi DNS zapise kako Vercel pokaže. Zatim promijeni `NEXT_PUBLIC_SITE_URL` i webhook URL u Stripeu.
+
+## Prije puštanja u rad
+
+- [ ] Djelatnost trgovine na malo putem interneta upisana u obrt
+- [ ] MBO upisan u `lib/config.ts` (`registryNumber`)
+- [ ] Obrisani primjeri proizvoda, dodani pravi proizvodi, fotografije i GPSR podaci (proizvođač / odgovorna osoba u EU)
+- [ ] Rok dostave u `/admin/settings` prema stvarnom dobavljaču
+- [ ] Fiskalizacija u PRODUKCIJI i testirana
+- [ ] Stripe live ključevi, testna narudžba i povrat novca
+- [ ] Pravne tekstove pregledao pravnik/knjigovođa
+
+## Lokalni razvoj
+
+```bash
+cp .env.example .env.local   # upiši DATABASE_URL itd.
+npm install
+npm run migrate
+npm run dev
+```
