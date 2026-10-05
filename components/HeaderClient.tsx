@@ -14,7 +14,7 @@ export function CartButton({ locale }: { locale: Locale }) {
     <button onClick={() => setOpen(true)} className="relative p-2 text-bone/80 transition hover:text-bone" aria-label={t(locale).cart}>
       <BagIcon />
       {count > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 grid min-w-[18px] place-items-center rounded-full bg-flame px-1 text-[10px] font-semibold leading-[18px] text-ink">{count}</span>
+        <span className="absolute -right-1 -top-0.5 grid min-w-[17px] place-items-center bg-flame px-1 font-mono text-[10px] font-medium leading-[17px] text-ink">{count}</span>
       )}
     </button>
   )

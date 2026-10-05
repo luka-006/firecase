@@ -11,20 +11,22 @@ import type { Variant } from '@/lib/types'
 
 export function Gallery({ images, alt }: { images: string[]; alt: string }) {
   const [i, setI] = useState(0)
-  if (!images.length) return <div className="aspect-square rounded-sm border border-line bg-ink-2" />
+  if (!images.length) return <div className="frame aspect-square"><div className="frame-in" /></div>
   return (
     <div className="space-y-3">
-      <div className="relative aspect-square overflow-hidden rounded-sm border border-line bg-ink-2">
-        {images.map((src, idx) => (
-          <Image key={src} src={src} alt={idx === 0 ? alt : ''} fill priority={idx === 0} sizes="(min-width:1024px) 50vw, 100vw"
-            className={`object-cover transition-opacity duration-500 ${idx === i ? 'opacity-100' : 'opacity-0'}`} />
-        ))}
+      <div className="frame aspect-square">
+        <div className="frame-in">
+          {images.map((src, idx) => (
+            <Image key={src} src={src} alt={idx === 0 ? alt : ''} fill priority={idx === 0} sizes="(min-width:1024px) 50vw, 100vw"
+              className={`object-cover transition-opacity duration-500 ${idx === i ? 'opacity-100' : 'opacity-0'}`} />
+          ))}
+        </div>
       </div>
       {images.length > 1 && (
         <div className="flex gap-3 overflow-x-auto pb-1">
           {images.map((src, idx) => (
             <button key={src} onClick={() => setI(idx)} aria-label={`${idx + 1}`}
-              className={`relative size-20 shrink-0 overflow-hidden rounded-sm border transition ${idx === i ? 'border-flame' : 'border-line opacity-60 hover:opacity-100'}`}>
+              className={`relative size-20 shrink-0 overflow-hidden border transition ${idx === i ? 'border-flame' : 'border-line opacity-60 hover:opacity-100'}`}>
               <Image src={src} alt="" fill sizes="80px" className="object-cover" />
             </button>
           ))}
@@ -59,7 +61,7 @@ export function BuyBox({ locale, product }: BuyProps) {
           <div className="flex flex-wrap gap-2">
             {product.variants.map((v, idx) => (
               <button key={idx} onClick={() => setVi(idx)}
-                className={`rounded-none border px-4 py-2 text-sm transition ${idx === vi ? 'border-bone bg-bone text-ink' : 'border-line text-bone/80 hover:border-bone/50'}`}>
+                className={`border px-4 py-3 font-mono text-xs uppercase tracking-[0.1em] transition ${idx === vi ? 'border-flame bg-flame text-ink' : 'border-line text-bone/80 hover:border-bone/50'}`}>
                 {locale === 'en' && v.en ? v.en : v.hr}
               </button>
             ))}

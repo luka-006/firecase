@@ -9,13 +9,12 @@ export function Header({ locale, announcement }: { locale: Locale; announcement:
   const d = t(locale)
   const links = [
     { href: href(locale, 'shop'), label: d.allCases },
-    { href: href(locale, 'home') + '#prica', label: d.story },
     { href: href(locale, 'contact'), label: d.contact },
   ]
   return (
     <>
       {announcement && (
-        <div className="border-b border-line bg-ink px-4 py-2.5 text-center text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.28em] text-bone/55">{announcement}</div>
+        <div className="bg-flame px-4 py-2 text-center font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ink sm:tracking-[0.2em]">{announcement}</div>
       )}
       <HeaderShell>
         <div className="container-x flex h-16 items-center justify-between gap-4">
@@ -27,7 +26,7 @@ export function Header({ locale, announcement }: { locale: Locale; announcement:
             </Link>
             <nav className="hidden items-center gap-7 md:flex">
               {links.map((l) => (
-                <Link key={l.href} href={l.href} className="text-[11px] uppercase tracking-[0.22em] text-bone/65 transition hover:text-bone">{l.label}</Link>
+                <Link key={l.href} href={l.href} className="font-mono text-[11px] uppercase tracking-[0.16em] text-bone/65 transition hover:text-bone">{l.label}</Link>
               ))}
             </nav>
           </div>

@@ -74,7 +74,7 @@ export default async function ProductPage({ params }: Props) {
   }]
   const Row = ({ title, children, open }: { title: string; children: React.ReactNode; open?: boolean }) => (
     <details className="group border-b border-line py-5" open={open}>
-      <summary className="flex items-center justify-between text-sm font-medium">{title}<ChevronIcon className="size-4 text-mute transition duration-300 group-open:rotate-180" /></summary>
+      <summary className="flex items-center justify-between font-mono text-xs font-medium uppercase tracking-[0.16em]">{title}<ChevronIcon className="size-4 text-mute transition duration-300 group-open:rotate-180" /></summary>
       <div className="mt-3 whitespace-pre-line text-sm leading-relaxed text-mute">{children}</div>
     </details>
   )
@@ -87,9 +87,9 @@ export default async function ProductPage({ params }: Props) {
         <Gallery images={p.images} alt={name} />
         <div className="lg:sticky lg:top-24 lg:self-start">
           <p className="eyebrow">Firecase</p>
-          <h1 className="h-display mt-4 text-4xl leading-tight sm:text-5xl">{name}</h1>
+          <h1 className="h-display mt-4 text-3xl leading-[1.02] sm:text-5xl">{name}</h1>
           <div className="mt-5 flex items-baseline gap-3">
-            <span className={`text-2xl tabular-nums ${p.compareCents ? 'text-flame-2' : ''}`}>{money(p.priceCents, locale)}</span>
+            <span className={`font-mono text-2xl tabular-nums ${p.compareCents ? 'text-flame-2' : ''}`}>{money(p.priceCents, locale)}</span>
             {p.compareCents && <span className="text-mute line-through tabular-nums">{money(p.compareCents, locale)}</span>}
           </div>
           {p.compareCents && <p className="mt-1 text-xs text-mute">{d.lowest30}: {money(lowest, locale)}</p>}

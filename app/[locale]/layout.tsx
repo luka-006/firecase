@@ -47,7 +47,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       <head>
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
         <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
-        <link rel="preload" href="/fonts/bodoni-moda-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
+        <link rel="preload" href="/fonts/archivo-latin-expanded.woff2" as="font" type="font/woff2" crossOrigin="" />
       </head>
       <body className="min-h-svh">
         <CartProvider shipping={{ shippingCents: s.shippingCents, freeThresholdCents: s.freeThresholdCents }}>

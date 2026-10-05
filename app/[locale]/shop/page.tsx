@@ -29,9 +29,9 @@ export default async function Shop({ params, searchParams }: Props) {
   return (
     <div className="container-x pt-14">
       <p className="eyebrow">{d.allCases}</p>
-      <h1 className="h-display mt-4 text-5xl sm:text-6xl">{locale === 'en' ? 'Lighter cases' : 'Futrole za upaljače'}</h1>
-      <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-bone/55">{d.shopIntro}</p>
-      <div className="mt-10 flex items-center justify-between gap-4 border-b border-line pb-5 text-[11px] uppercase tracking-[0.2em]">
+      <h1 className="h-display mt-4 text-4xl leading-[1] sm:text-6xl">{locale === 'en' ? 'Lighter cases' : 'Futrole za upaljače'}</h1>
+      <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-bone/60">{d.shopIntro}</p>
+      <div className="mt-10 flex items-center justify-between gap-4 border-b border-line pb-5 font-mono text-[11px] uppercase tracking-[0.18em]">
         <span className="text-mute">{list.length} {locale === 'en' ? 'products' : 'proizvoda'}</span>
         <div className="flex gap-4">
           {[['', d.sortFeatured], ['asc', d.sortPriceAsc], ['desc', d.sortPriceDesc]].map(([k, label]) => (
