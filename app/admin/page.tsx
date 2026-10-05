@@ -30,7 +30,7 @@ export default async function Dashboard() {
     !process.env.STRIPE_SECRET_KEY && 'STRIPE_SECRET_KEY nije postavljen – plaćanje ne radi.',
     !process.env.STRIPE_WEBHOOK_SECRET && 'STRIPE_WEBHOOK_SECRET nije postavljen – narudžbe se potvrđuju samo preko stranice zahvale.',
     !process.env.SMTP_PASS && 'SMTP_PASS nije postavljen – e-mailovi se ne šalju.',
-    !process.env.BLOB_READ_WRITE_TOKEN && 'Vercel Blob nije spojen – upload slika ne radi.',
+    !process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID && 'Vercel Blob nije spojen – upload slika ne radi.',
     !s.fiscalEnabled && 'Fiskalizacija je isključena. Kartična plaćanja moraju se fiskalizirati prije puštanja trgovine u rad.',
     s.fiscalEnabled && s.fiscalEnv === 'test' && 'Fiskalizacija radi u TEST okruženju – JIR-ovi nisu pravno valjani.',
     stats.fiscalPending > 0 && `${stats.fiscalPending} račun(a) čeka fiskalizaciju – provjeri Računi.`,

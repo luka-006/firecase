@@ -41,7 +41,7 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 
 1. **Import** – Vercel → Add New → Project → odaberi GitHub repo `firecase` → Deploy.
 2. **Baza** – projekt → Storage → Create → **Neon (Postgres)**, regija **Frankfurt (eu-central-1)** → Connect. `DATABASE_URL` se postavi sam. Tablice se kreiraju automatski pri svakom deployu. Neon doda petnaestak varijabli (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `POSTGRES_URL`, `PGHOST`...); kod koristi samo `DATABASE_URL` (rezervno `POSTGRES_URL`), ostale ne diraj i ne briši.
-3. **Slike** – Storage → Create → **Blob** → Connect. `BLOB_READ_WRITE_TOKEN` se postavi sam.
+3. **Slike** – Storage → Create → **Blob** (pristup **Public**) → Connect. Vercel postavi `BLOB_READ_WRITE_TOKEN` ili `BLOB_STORE_ID`; kod radi s oba.
 4. **Analytics** – projekt → Analytics → Enable.
 5. **Environment Variables** (Settings → Environment Variables), popis je u `.env.example`:
    - `AUTH_SECRET` – nasumičan niz, npr. `openssl rand -base64 32`

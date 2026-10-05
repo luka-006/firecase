@@ -1,9 +1,26 @@
 'use client'
 import Image from 'next/image'
 import { useActionState, useState } from 'react'
-import { upload } from '@vercel/blob/client'
 import { saveProduct } from '@/app/admin/actions'
 import type { Product } from '@/lib/types'
+
+// Smanji fotografiju u pregledniku (najviše 2000 px) da upload ostane ispod Vercelovog limita
+async function shrink(file: File): Promise<File> {
+  try {
+    const bmp = await createImageBitmap(file)
+    const scale = Math.min(1, 2000 / Math.max(bmp.width, bmp.height))
+    const c = document.createElement('canvas')
+    c.width = Math.round(bmp.width * scale)
+    c.height = Math.round(bmp.height * scale)
+    c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height)
+    const type = file.type === 'image/png' ? 'image/webp' : 'image/jpeg'
+    const out = await new Promise<Blob | null>((r) => c.toBlob(r, type, 0.88))
+    if (!out || out.type !== type || (out.size >= file.size && scale === 1)) return file
+    return new File([out], file.name.replace(/\.[^.]+$/, type === 'image/webp' ? '.webp' : '.jpg'), { type })
+  } catch {
+    return file
+  }
+}
 
 const eur = (c?: number | null) => (c ? (c / 100).toFixed(2).replace('.', ',') : '')
 
@@ -38,8 +55,12 @@ export function ProductForm({ p }: { p: Product | null }) {
     setUpErr('')
     try {
       for (const file of Array.from(files)) {
-        const blob = await upload(`products/${file.name}`, file, { access: 'public', handleUploadUrl: '/api/admin/upload' })
-        setImages((prev) => [...prev, blob.url])
+        const fd = new FormData()
+        fd.append('file', await shrink(file))
+        const res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
+        const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string }
+        if (!res.ok || !data.url) throw new Error(data.error || `Upload nije uspio (${res.status})`)
+        setImages((prev) => [...prev, data.url!])
       }
     } catch (e) {
       setUpErr((e as Error).message)
