@@ -1,6 +1,7 @@
 import type { Locale } from './routes'
 
-export type Variant = { hr: string; en: string }
+// sup = opcija koju treba odabrati kod dobavljača (npr. boja/veličina na AliExpressu)
+export type Variant = { hr: string; en: string; sup?: string }
 
 export type Product = {
   id: number
@@ -27,6 +28,8 @@ export type Product = {
   euResponsible: string
   safetyHr: string
   safetyEn: string
+  supplierUrl: string
+  costCents: number | null
   lowest30?: number | null
 }
 
@@ -45,6 +48,9 @@ export type OrderItem = {
   qty: number
   unitCents: number
   image?: string
+  supplierUrl?: string
+  supplierOption?: string
+  costCents?: number | null
 }
 
 export type Order = {
@@ -69,6 +75,7 @@ export type Order = {
   stripePaymentIntent: string | null
   paymentMethod: string | null
   tracking: string
+  supplierOrder: string
   paidAt: Date | null
   shippedAt: Date | null
   createdAt: Date

@@ -62,6 +62,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       name: locale === 'en' && p.nameEn ? p.nameEn : p.nameHr,
       variant: v ? (locale === 'en' && v.en ? v.en : v.hr) : '',
       qty: line.qty, unitCents: p.priceCents, image: p.images[0],
+      supplierUrl: p.supplierUrl || '', supplierOption: v?.sup ?? '', costCents: p.costCents ?? null,
     })
   }
   const subtotal = items.reduce((a, i) => a + i.unitCents * i.qty, 0)

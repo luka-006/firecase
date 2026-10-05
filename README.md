@@ -36,8 +36,18 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 **Moguće nadogradnje (nije napravljeno)**
 - Kodovi za popust, newsletter, recenzije proizvoda
 - Odabir BOX NOW paketomata u blagajni
-- Automatsko slanje narudžbe dobavljaču
+- Automatsko slanje narudžbe na AliExpress (AliExpress DS API; zasad pomoćnik za ručno naručivanje)
 - Izvoz računa za knjigovođu (CSV), dvostupanjska prijava za admin
+
+## Kako obraditi narudžbu (AliExpress)
+
+1. Stigne e-mail „Nova narudžba“. U `/admin` je vidiš pod **Za naručiti**.
+2. Otvori narudžbu → **Otvori na AliExpressu** (link spremljen uz proizvod) → odaberi opciju koja piše uz stavku i količinu.
+3. Na AliExpressu kao adresu dostave upiši kupčevu: klik na polje u adminu ga kopira (ime, mobitel, ulica, poštanski broj, grad, županija, država). Kopiraj i napomenu prodavaču.
+4. Plati na AliExpressu i broj AliExpress narudžbe upiši u admin → narudžba prelazi u **Čeka slanje**.
+5. Kad prodavač pošalje, broj za praćenje upiši u admin → **Označi kao poslano** (kupac dobije e-mail).
+
+Uz svaki proizvod u adminu upiši **link na AliExpressu** i **nabavnu cijenu** (za izračun zarade), a uz veličine opciju koju treba odabrati na AliExpressu (`HR naziv | EN naziv | AliExpress opcija`).
 
 ## Postavljanje na Vercel
 

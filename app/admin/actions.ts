@@ -85,7 +85,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   let images: string[] = []
   try { images = JSON.parse(str(f, 'images') || '[]') } catch {}
   const variants: Variant[] = str(f, 'variants').split('\n').map((l) => l.trim()).filter(Boolean)
-    .map((l) => { const [hr, en] = l.split('|').map((x) => x.trim()); return { hr, en: en || hr } })
+    .map((l) => { const [hr, en, sup] = l.split('|').map((x) => x.trim()); return sup ? { hr, en: en || hr, sup } : { hr, en: en || hr } })
   const stockRaw = str(f, 'stock')
   const data = {
     slug: slugify(str(f, 'slug') || nameHr),
@@ -98,6 +98,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
     active: f.get('active') === 'on', featured: f.get('featured') === 'on', sort: parseInt(str(f, 'sort'), 10) || 0,
     sku: str(f, 'sku'), materialHr: str(f, 'materialHr'), materialEn: str(f, 'materialEn'),
     manufacturer: str(f, 'manufacturer'), euResponsible: str(f, 'euResponsible'),
+    supplierUrl: str(f, 'supplierUrl'), costCents: str(f, 'cost') ? cents(str(f, 'cost')) : null,
     safetyHr: str(f, 'safetyHr'), safetyEn: str(f, 'safetyEn'),
   }
   if (!data.slug) return { error: 'Neispravan URL (slug).' }
@@ -149,6 +150,13 @@ export async function markShipped(f: FormData) {
     where id = ${o.id} and status in ('paid', 'shipped') returning *`
   if (u) await sendShipped(u)
   revalidatePath(`/admin/orders/${o.id}`)
+}
+
+export async function setSupplierOrder(f: FormData) {
+  const o = await orderOf(f)
+  await sql`update orders set supplier_order = ${str(f, 'supplierOrder').slice(0, 80)} where id = ${o.id}`
+  revalidatePath(`/admin/orders/${o.id}`)
+  revalidatePath('/admin/orders')
 }
 
 export async function markDelivered(f: FormData) {
