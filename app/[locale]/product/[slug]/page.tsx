@@ -24,10 +24,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!p) return {}
   const l = locale as Locale
   return {
-    title: loc(p, 'name', l),
-    description: loc(p, 'short', l) || undefined,
+    title: `${loc(p, 'name', l)} – ${l === 'en' ? 'lighter case' : 'futrola za upaljač'}`,
+    description: loc(p, 'short', l) || t(l).shopIntro,
     openGraph: { images: p.images[0] ? [{ url: p.images[0] }] : undefined },
-    alternates: { canonical: href(l, 'product', slug), languages: { hr: href('hr', 'product', slug), en: href('en', 'product', slug) } },
+    alternates: { canonical: href(l, 'product', slug), languages: { hr: href('hr', 'product', slug), en: href('en', 'product', slug), 'x-default': href('hr', 'product', slug) } },
   }
 }
 
@@ -45,12 +45,33 @@ export default async function ProductPage({ params }: Props) {
   const delivery = locale === 'en' ? s.deliveryEn : s.deliveryHr
   const lowest = p.lowest30 ?? p.priceCents
   const img = (u: string) => (u.startsWith('http') ? u : SITE_URL + u)
-  const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Product', name, image: p.images.map(img), description: loc(p, 'short', locale),
-    sku: p.sku || undefined, brand: { '@type': 'Brand', name: 'Firecase' },
-    offers: { '@type': 'Offer', priceCurrency: 'EUR', price: (p.priceCents / 100).toFixed(2), url: SITE_URL + href(locale, 'product', p.slug),
-      availability: soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock' },
-  }
+  const days = (s.deliveryHr.match(/\d+/g) ?? ['3', '7']).map(Number)
+  const jsonLd = [{
+    '@context': 'https://schema.org', '@type': 'Product', name, image: p.images.map(img), description: loc(p, 'short', locale) || desc.slice(0, 300),
+    sku: p.sku || String(p.id), brand: { '@type': 'Brand', name: 'Firecase' }, category: locale === 'en' ? 'Lighter cases' : 'Futrole za upaljače',
+    offers: {
+      '@type': 'Offer', priceCurrency: 'EUR', price: (p.priceCents / 100).toFixed(2), url: SITE_URL + href(locale, 'product', p.slug),
+      availability: soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock', itemCondition: 'https://schema.org/NewCondition',
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: (p.priceCents >= s.freeThresholdCents ? 0 : s.shippingCents / 100).toFixed(2), currency: 'EUR' },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'HR' },
+        deliveryTime: { '@type': 'ShippingDeliveryTime', handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 2, unitCode: 'DAY' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: days[0], maxValue: days[1] ?? days[0], unitCode: 'DAY' } },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy', applicableCountry: 'HR', returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 14, returnMethod: 'https://schema.org/ReturnByMail', returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+      },
+    },
+  }, {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Firecase', item: SITE_URL + href(locale, 'home') },
+      { '@type': 'ListItem', position: 2, name: d.allCases, item: SITE_URL + href(locale, 'shop') },
+      { '@type': 'ListItem', position: 3, name, item: SITE_URL + href(locale, 'product', p.slug) },
+    ],
+  }]
   const Row = ({ title, children, open }: { title: string; children: React.ReactNode; open?: boolean }) => (
     <details className="group border-b border-line py-5" open={open}>
       <summary className="flex items-center justify-between text-sm font-medium">{title}<ChevronIcon className="size-4 text-mute transition duration-300 group-open:rotate-180" /></summary>
@@ -61,12 +82,12 @@ export default async function ProductPage({ params }: Props) {
   return (
     <div className="container-x pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <nav className="mb-8 text-xs text-mute"><Link href={href(locale, 'shop')} className="hover:text-bone">{d.shop}</Link> <span className="mx-1.5">/</span> {name}</nav>
+      <nav className="mb-8 text-xs text-mute"><Link href={href(locale, 'shop')} className="hover:text-bone">{d.allCases}</Link> <span className="mx-1.5">/</span> {name}</nav>
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
         <Gallery images={p.images} alt={name} />
         <div className="lg:sticky lg:top-24 lg:self-start">
-          {p.fits && <p className="eyebrow">{d.fits}: {p.fits}</p>}
-          <h1 className="h-display mt-4 text-3xl leading-tight sm:text-4xl">{name}</h1>
+          <p className="eyebrow">Firecase</p>
+          <h1 className="h-display mt-4 text-4xl leading-tight sm:text-5xl">{name}</h1>
           <div className="mt-5 flex items-baseline gap-3">
             <span className={`text-2xl tabular-nums ${p.compareCents ? 'text-flame-2' : ''}`}>{money(p.priceCents, locale)}</span>
             {p.compareCents && <span className="text-mute line-through tabular-nums">{money(p.compareCents, locale)}</span>}
@@ -78,13 +99,12 @@ export default async function ProductPage({ params }: Props) {
           </div>
           <div className="mt-8 grid gap-3 text-sm text-bone/75">
             <p className="flex items-center gap-3"><TruckIcon className="size-5 text-flame" />{d.deliveryTime}: {delivery} · {d.freeOver(money(s.freeThresholdCents, locale))}</p>
-            <p className="flex items-center gap-3"><ReturnIcon className="size-5 text-flame" />{d.valueRetT}</p>
+            <p className="flex items-center gap-3"><ReturnIcon className="size-5 text-flame" />{d.ret14}</p>
           </div>
           <div className="mt-8 border-t border-line">
             {desc && <Row title={d.description} open>{desc}</Row>}
-            {(material || p.sku || p.fits) && (
+            {(material || p.sku) && (
               <Row title={d.details}>
-                {p.fits && <>{d.fits}: {p.fits}{'\n'}</>}
                 {material && <>{d.material}: {material}{'\n'}</>}
                 {p.sku && <>{d.sku}: {p.sku}</>}
               </Row>

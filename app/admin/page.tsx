@@ -41,7 +41,7 @@ export default async function Dashboard() {
       <h1 className="h-display text-2xl">Pregled</h1>
       {warnings.length > 0 && (
         <ul className="space-y-2">
-          {warnings.map((w) => <li key={w} className="rounded-xl border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">{w}</li>)}
+          {warnings.map((w) => <li key={w} className="rounded-sm border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">{w}</li>)}
         </ul>
       )}
       <div className="grid gap-4 sm:grid-cols-3">

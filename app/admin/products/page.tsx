@@ -17,7 +17,7 @@ export default async function Products() {
         <h1 className="h-display text-2xl">Proizvodi</h1>
         <Link href="/admin/products/new" className="btn btn-sm">+ Novi proizvod</Link>
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-line">
+      <div className="overflow-x-auto rounded-sm border border-line">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-ink-2 text-left text-xs uppercase tracking-wider text-mute">
             <tr><th className="p-3">Proizvod</th><th className="p-3">Model</th><th className="p-3">Cijena</th><th className="p-3">Zaliha</th><th className="p-3">Vidljiv</th></tr>

@@ -24,11 +24,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const en = locale === 'en'
   return {
     metadataBase: new URL(SITE_URL),
-    title: { default: en ? 'Firecase – Lighter cases' : 'Firecase – Futrole za upaljače', template: '%s | Firecase' },
+    title: { default: en ? 'Firecase – Premium lighter cases' : 'Firecase – Premium futrole za upaljače', template: '%s | Firecase' },
     description: en
-      ? 'Precision-made cases for BIC J6 and J3 lighters. Free shipping in Croatia over €30.'
-      : 'Precizno izrađene futrole za BIC J6 i J3 upaljače. Besplatna dostava u Hrvatskoj iznad 30 €.',
-    openGraph: { type: 'website', siteName: 'Firecase', locale: en ? 'en_US' : 'hr_HR', images: [{ url: '/og.jpg', width: 1200, height: 630 }] },
+      ? 'Premium lighter cases from Firecase. Protection and style for your lighter, delivered across Croatia. Free shipping over €30.'
+      : 'Premium futrole za upaljače Firecase. Zaštita i stil za vaš upaljač uz dostavu diljem Hrvatske. Besplatna dostava iznad 30 €.',
+    keywords: en ? ['lighter case', 'lighter cover', 'BIC lighter case', 'Firecase'] : ['futrola za upaljač', 'futrole za upaljače', 'navlaka za upaljač', 'futrola za BIC upaljač', 'Firecase'],
+    openGraph: { type: 'website', siteName: 'Firecase', locale: en ? 'en_US' : 'hr_HR', alternateLocale: en ? 'hr_HR' : 'en_US', images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Firecase' }] },
+    verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } : undefined,
     twitter: { card: 'summary_large_image' },
     manifest: '/site.webmanifest',
   }
@@ -45,7 +47,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
       <head>
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
         <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
-        <link rel="preload" href="/fonts/unbounded-latin-500-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
+        <link rel="preload" href="/fonts/bodoni-moda-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
       </head>
       <body className="min-h-svh">
         <CartProvider shipping={{ shippingCents: s.shippingCents, freeThresholdCents: s.freeThresholdCents }}>

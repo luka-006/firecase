@@ -22,7 +22,13 @@ Webshop za futrole za upaljače. Next.js 16 + Postgres (Neon) + Stripe + Vercel.
    - `NEXT_PUBLIC_SITE_URL` – npr. `https://firecase.hr` (nakon spajanja domene)
    - `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `ORDER_NOTIFY_EMAIL` – Gmail: Google račun → Sigurnost → uključi 2FA → *App passwords* → generiraj lozinku i stavi je u `SMTP_PASS`
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` – vidi dolje
+   - `NEXT_PUBLIC_GA_ID` – Google Analytics 4 Measurement ID (`G-...`); učitava se tek kad posjetitelj prihvati kolačiće
+   - `NEXT_PUBLIC_GSC_VERIFICATION` – Google Search Console → HTML tag → vrijednost `content`
 6. **Redeploy** (Deployments → ⋯ → Redeploy) nakon dodavanja varijabli.
+
+## SEO
+
+Nakon spajanja domene: Google Search Console → dodaj domenu → pošalji `https://TVOJA-DOMENA/sitemap.xml`.
 
 ## Stripe
 

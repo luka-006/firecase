@@ -100,7 +100,7 @@ const hr: Record<LegalDoc, Doc> = {
           <li><b>Narudžba:</b> ime i prezime, e-mail, broj mobitela, adresa dostave, naručeni proizvodi, iznos, način plaćanja (bez podataka o kartici).</li>
           <li><b>Korisnički račun (neobavezno):</b> e-mail, lozinka (pohranjena isključivo kao kriptografski sažetak), spremljeni podaci za dostavu, favoriti.</li>
           <li><b>Komunikacija:</b> sadržaj e-mailova koje nam pošaljete (npr. prigovori, povrati).</li>
-          <li><b>Tehnički podaci:</b> anonimizirani statistički podaci o posjetima (Vercel Web Analytics, bez kolačića) i sigurnosni zapisi poslužitelja.</li>
+          <li><b>Tehnički podaci:</b> anonimizirani statistički podaci o posjetima (Vercel Web Analytics, bez kolačića), sigurnosni zapisi poslužitelja te, samo uz vašu privolu, podaci o korištenju stranice putem Google Analyticsa (pseudonimizirani identifikator, stranice, uređaj, približna lokacija).</li>
         </ul>
         <h2>3. Svrhe i pravne osnove</h2>
         <ul>
@@ -108,14 +108,15 @@ const hr: Record<LegalDoc, Doc> = {
           <li>Ispunjenje zakonskih obveza – izdavanje i čuvanje računa, fiskalizacija, računovodstvo (čl. 6. st. 1. t. c).</li>
           <li>Legitimni interes – sigurnost stranice, sprječavanje prijevara, anonimna statistika posjeta (čl. 6. st. 1. t. f).</li>
           <li>Korisnički račun – na vaš zahtjev, radi pružanja usluge računa (čl. 6. st. 1. t. b).</li>
+          <li>Analitika putem Google Analyticsa – na temelju vaše privole (čl. 6. st. 1. t. a), koju možete povući u svakom trenutku.</li>
         </ul>
-        <p>Ne šaljemo promotivne poruke i ne koristimo podatke za profiliranje ni automatizirano donošenje odluka.</p>
+        <p>Ne šaljemo promotivne poruke i ne koristimo podatke za automatizirano donošenje odluka.</p>
         <h2>4. Primatelji podataka</h2>
         <ul>
           <li>Vercel Inc., SAD – hosting stranice i anonimna statistika posjeta.</li>
           <li>Neon Inc. – baza podataka (podaci pohranjeni u EU).</li>
           <li>Stripe Payments Europe Ltd., Irska – obrada plaćanja; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luksemburg – ako plaćate PayPalom.</li>
-          <li>Google Ireland Ltd. – slanje e-mailova (potvrde narudžbi, računi).</li>
+          <li>Google Ireland Ltd. – slanje e-mailova (potvrde narudžbi, računi) i, uz privolu, Google Analytics.</li>
           <li>Dobavljači i dostavne službe – ime, adresa i broj mobitela, isključivo radi dostave.</li>
           <li>Porezna uprava – podaci o računu radi fiskalizacije; knjigovodstveni servis – računi, ako ga koristimo.</li>
         </ul>
@@ -124,6 +125,7 @@ const hr: Record<LegalDoc, Doc> = {
         <ul>
           <li>Računi i podaci o narudžbama – najmanje 11 godina, sukladno računovodstvenim i poreznim propisima.</li>
           <li>Korisnički račun – dok ga ne obrišete (brisanje je moguće u svakom trenutku u postavkama računa).</li>
+          <li>Google Analytics – 14 mjeseci.</li>
           <li>Prepiska o prigovorima i povratima – do isteka zastarnih rokova.</li>
         </ul>
         <h2>6. Vaša prava</h2>
@@ -141,17 +143,26 @@ const hr: Record<LegalDoc, Doc> = {
     title: 'Kolačići',
     body: () => (
       <>
-        <p>Kolačići su male datoteke koje stranica sprema u vaš preglednik. Koristimo isključivo nužne kolačiće i lokalnu pohranu bez kojih stranica ne može ispravno raditi. Za njih, sukladno Zakonu o elektroničkim komunikacijama, nije potrebna privola. Ne koristimo kolačiće za praćenje ni oglašavanje.</p>
+        <p>Kolačići su male datoteke koje stranica sprema u vaš preglednik. Nužni kolačići i lokalna pohrana potrebni su za rad stranice i za njih, sukladno Zakonu o elektroničkim komunikacijama, nije potrebna privola. Analitičke kolačiće (Google Analytics) postavljamo samo ako ih prihvatite u obavijesti o kolačićima. Ne koristimo kolačiće za oglašavanje.</p>
+        <h2>Nužni</h2>
         <table>
           <thead><tr><th>Naziv</th><th>Svrha</th><th>Trajanje</th></tr></thead>
           <tbody>
             <tr><td>fc_session</td><td>Prijava u korisnički račun</td><td>30 dana</td></tr>
             <tr><td>fc_admin</td><td>Prijava administratora</td><td>12 sati</td></tr>
             <tr><td>fc_cart (lokalna pohrana)</td><td>Sadržaj košarice</td><td>Do brisanja</td></tr>
-            <tr><td>fc_cookie_ok (lokalna pohrana)</td><td>Pamti da ste zatvorili obavijest o kolačićima</td><td>Do brisanja</td></tr>
+            <tr><td>fc_consent (lokalna pohrana)</td><td>Pamti vaš izbor u obavijesti o kolačićima</td><td>Do brisanja</td></tr>
           </tbody>
         </table>
-        <p>Statistiku posjeta pratimo pomoću alata Vercel Web Analytics, koji ne koristi kolačiće i ne identificira pojedine posjetitelje. Prilikom plaćanja preusmjeravamo vas na Stripe, koji koristi vlastite kolačiće prema svojoj politici privatnosti.</p>
+        <h2>Analitički (samo uz privolu)</h2>
+        <table>
+          <thead><tr><th>Naziv</th><th>Svrha</th><th>Trajanje</th></tr></thead>
+          <tbody>
+            <tr><td>_ga</td><td>Google Analytics – razlikovanje posjetitelja</td><td>2 godine</td></tr>
+            <tr><td>_ga_*</td><td>Google Analytics – stanje sesije</td><td>2 godine</td></tr>
+          </tbody>
+        </table>
+        <p>Google Analytics pruža Google Ireland Ltd., Irska. Privolu možete u svakom trenutku povući putem poveznice „Postavke kolačića” u podnožju stranice. Uz to, osnovnu statistiku posjeta pratimo alatom Vercel Web Analytics, koji ne koristi kolačiće i ne identificira pojedine posjetitelje. Prilikom plaćanja preusmjeravamo vas na Stripe, koji koristi vlastite kolačiće prema svojoj politici privatnosti.</p>
         <p>Kolačiće možete obrisati ili blokirati u postavkama preglednika; u tom slučaju prijava i košarica možda neće raditi.</p>
       </>
     ),
@@ -302,7 +313,7 @@ const en: Record<LegalDoc, Doc> = {
           <li><b>Orders:</b> name, email, mobile number, delivery address, products ordered, amount, payment method (no card data).</li>
           <li><b>Account (optional):</b> email, password (stored only as a cryptographic hash), saved delivery details, favorites.</li>
           <li><b>Communication:</b> content of emails you send us (e.g. complaints, returns).</li>
-          <li><b>Technical data:</b> anonymised visit statistics (Vercel Web Analytics, cookieless) and server security logs.</li>
+          <li><b>Technical data:</b> anonymised visit statistics (Vercel Web Analytics, cookieless), server security logs and, only with your consent, usage data via Google Analytics (pseudonymous identifier, pages, device, approximate location).</li>
         </ul>
         <h2>3. Purposes and legal bases</h2>
         <ul>
@@ -310,14 +321,15 @@ const en: Record<LegalDoc, Doc> = {
           <li>Legal obligations – issuing and keeping invoices, fiscalisation, accounting (Art. 6(1)(c)).</li>
           <li>Legitimate interest – site security, fraud prevention, anonymous visit statistics (Art. 6(1)(f)).</li>
           <li>User account – at your request, to provide the account service (Art. 6(1)(b)).</li>
+          <li>Analytics via Google Analytics – based on your consent (Art. 6(1)(a)), which you may withdraw at any time.</li>
         </ul>
-        <p>We do not send marketing messages and do not use your data for profiling or automated decision-making.</p>
+        <p>We do not send marketing messages and do not use your data for automated decision-making.</p>
         <h2>4. Recipients</h2>
         <ul>
           <li>Vercel Inc., USA – website hosting and anonymous statistics.</li>
           <li>Neon Inc. – database (data stored in the EU).</li>
           <li>Stripe Payments Europe Ltd., Ireland – payment processing; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luxembourg – if you pay with PayPal.</li>
-          <li>Google Ireland Ltd. – sending emails (order confirmations, invoices).</li>
+          <li>Google Ireland Ltd. – sending emails (order confirmations, invoices) and, with consent, Google Analytics.</li>
           <li>Suppliers and couriers – name, address and mobile number, for delivery only.</li>
           <li>Croatian Tax Administration – invoice data for fiscalisation; our accountant – invoices, if used.</li>
         </ul>
@@ -326,6 +338,7 @@ const en: Record<LegalDoc, Doc> = {
         <ul>
           <li>Invoices and order data – at least 11 years, as required by accounting and tax law.</li>
           <li>User account – until you delete it (possible at any time in your account settings).</li>
+          <li>Google Analytics – 14 months.</li>
           <li>Complaint and return correspondence – until limitation periods expire.</li>
         </ul>
         <h2>6. Your rights</h2>
@@ -343,17 +356,26 @@ const en: Record<LegalDoc, Doc> = {
     title: 'Cookies',
     body: () => (
       <>
-        <p>Cookies are small files a website stores in your browser. We only use strictly necessary cookies and local storage without which the site cannot work properly. Under Croatian law, these do not require consent. We do not use tracking or advertising cookies.</p>
+        <p>Cookies are small files a website stores in your browser. Necessary cookies and local storage are required for the site to work and, under Croatian law, do not require consent. Analytics cookies (Google Analytics) are only set if you accept them in the cookie notice. We do not use advertising cookies.</p>
+        <h2>Necessary</h2>
         <table>
           <thead><tr><th>Name</th><th>Purpose</th><th>Duration</th></tr></thead>
           <tbody>
             <tr><td>fc_session</td><td>Customer login</td><td>30 days</td></tr>
             <tr><td>fc_admin</td><td>Administrator login</td><td>12 hours</td></tr>
             <tr><td>fc_cart (local storage)</td><td>Cart contents</td><td>Until deleted</td></tr>
-            <tr><td>fc_cookie_ok (local storage)</td><td>Remembers that you closed the cookie notice</td><td>Until deleted</td></tr>
+            <tr><td>fc_consent (local storage)</td><td>Remembers your cookie choice</td><td>Until deleted</td></tr>
           </tbody>
         </table>
-        <p>Visit statistics are measured with Vercel Web Analytics, which uses no cookies and does not identify individual visitors. At payment you are redirected to Stripe, which uses its own cookies under its privacy policy.</p>
+        <h2>Analytics (only with consent)</h2>
+        <table>
+          <thead><tr><th>Name</th><th>Purpose</th><th>Duration</th></tr></thead>
+          <tbody>
+            <tr><td>_ga</td><td>Google Analytics – distinguishes visitors</td><td>2 years</td></tr>
+            <tr><td>_ga_*</td><td>Google Analytics – session state</td><td>2 years</td></tr>
+          </tbody>
+        </table>
+        <p>Google Analytics is provided by Google Ireland Ltd., Ireland. You can withdraw consent at any time via the “Cookie settings” link in the footer. We also measure basic visit statistics with Vercel Web Analytics, which uses no cookies and does not identify individual visitors. At payment you are redirected to Stripe, which uses its own cookies under its privacy policy.</p>
         <p>You can delete or block cookies in your browser settings; login and cart may then not work.</p>
       </>
     ),

@@ -124,30 +124,31 @@ create table if not exists invoices (
 create index if not exists invoices_order on invoices(order_id);
 `
 
+const sizes = [{ hr: 'BIC J6 (standardni)', en: 'BIC J6 (regular)' }, { hr: 'BIC J3 (mini)', en: 'BIC J3 (mini)' }]
 const samples = [
   {
-    slug: 'firecase-classic-bic-j6',
-    name_hr: 'Firecase Classic – BIC J6',
-    name_en: 'Firecase Classic – BIC J6',
-    short_hr: 'Metalna futrola za BIC J6 upaljač.',
-    short_en: 'Metal case for the BIC J6 lighter.',
-    desc_hr: 'PRIMJER PROIZVODA – zamijeni ili obriši u admin panelu.\n\nPrecizno izrađena futrola koja štiti upaljač i daje mu karakter.',
-    desc_en: 'SAMPLE PRODUCT – replace or delete in the admin panel.\n\nPrecisely made case that protects your lighter and gives it character.',
-    price_cents: 1499, fits: 'BIC J6', featured: true, sort: 1,
+    slug: 'firecase-classic',
+    name_hr: 'Firecase Classic',
+    name_en: 'Firecase Classic',
+    short_hr: 'Futrola za upaljač čistih linija.',
+    short_en: 'A lighter case with clean lines.',
+    desc_hr: 'PRIMJER PROIZVODA – zamijeni ili obriši u admin panelu.',
+    desc_en: 'SAMPLE PRODUCT – replace or delete in the admin panel.',
+    price_cents: 1499, featured: true, sort: 1,
     images: ['/products/sample-j6.svg'],
-    variants: [{ hr: 'Crna', en: 'Black' }, { hr: 'Srebrna', en: 'Silver' }],
+    variants: sizes,
   },
   {
-    slug: 'firecase-classic-bic-j3',
-    name_hr: 'Firecase Classic – BIC J3',
-    name_en: 'Firecase Classic – BIC J3',
-    short_hr: 'Metalna futrola za BIC J3 mini upaljač.',
-    short_en: 'Metal case for the BIC J3 mini lighter.',
-    desc_hr: 'PRIMJER PROIZVODA – zamijeni ili obriši u admin panelu.\n\nKompaktna futrola za mini upaljač.',
-    desc_en: 'SAMPLE PRODUCT – replace or delete in the admin panel.\n\nCompact case for the mini lighter.',
-    price_cents: 1299, fits: 'BIC J3', featured: true, sort: 2,
+    slug: 'firecase-noir',
+    name_hr: 'Firecase Noir',
+    name_en: 'Firecase Noir',
+    short_hr: 'Futrola za upaljač u tamnoj izvedbi.',
+    short_en: 'A lighter case in a dark finish.',
+    desc_hr: 'PRIMJER PROIZVODA – zamijeni ili obriši u admin panelu.',
+    desc_en: 'SAMPLE PRODUCT – replace or delete in the admin panel.',
+    price_cents: 1699, featured: true, sort: 2,
     images: ['/products/sample-j3.svg'],
-    variants: [],
+    variants: sizes,
   },
 ]
 

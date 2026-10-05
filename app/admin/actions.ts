@@ -65,7 +65,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
     descHr: str(f, 'descHr'), descEn: str(f, 'descEn'),
     priceCents: price, compareCents: compare,
     images: sql.json(images), variants: sql.json(variants as never),
-    fits: str(f, 'fits'), stock: stockRaw === '' ? null : Math.max(0, parseInt(stockRaw, 10) || 0),
+    stock: stockRaw === '' ? null : Math.max(0, parseInt(stockRaw, 10) || 0),
     active: f.get('active') === 'on', featured: f.get('featured') === 'on', sort: parseInt(str(f, 'sort'), 10) || 0,
     sku: str(f, 'sku'), materialHr: str(f, 'materialHr'), materialEn: str(f, 'materialEn'),
     manufacturer: str(f, 'manufacturer'), euResponsible: str(f, 'euResponsible'),

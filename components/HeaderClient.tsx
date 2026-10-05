@@ -57,7 +57,7 @@ export function MobileMenu({ locale, links }: { locale: Locale; links: { href: s
         <nav className={`drawer absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col gap-1 border-r border-line bg-ink p-6 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
           <button onClick={() => setOpen(false)} className="mb-6 self-end text-mute" aria-label={d.close}><XIcon /></button>
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="h-display rounded-xl px-3 py-3 text-lg transition hover:bg-ink-3">{l.label}</Link>
+            <Link key={l.href} href={l.href} className="h-display rounded-sm px-3 py-3 text-lg transition hover:bg-ink-3">{l.label}</Link>
           ))}
           <div className="mt-auto flex items-center gap-3 border-t border-line pt-4">
             <LangSwitch locale={locale} />

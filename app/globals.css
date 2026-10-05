@@ -6,10 +6,12 @@
 @font-face { font-family: Inter; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/inter-latin-ext-500-normal.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 @font-face { font-family: Inter; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/inter-latin-600-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: Inter; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/inter-latin-ext-600-normal.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: Unbounded; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/unbounded-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: Unbounded; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/unbounded-latin-ext-400-normal.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: Unbounded; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/unbounded-latin-500-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-@font-face { font-family: Unbounded; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/unbounded-latin-ext-500-normal.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Bodoni Moda'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/bodoni-moda-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Bodoni Moda'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/bodoni-moda-latin-ext-400-normal.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Bodoni Moda'; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/bodoni-moda-latin-500-normal.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Bodoni Moda'; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/bodoni-moda-latin-ext-500-normal.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Bodoni Moda'; font-style: italic; font-weight: 400; font-display: swap; src: url(/fonts/bodoni-moda-latin-400-italic.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Bodoni Moda'; font-style: italic; font-weight: 400; font-display: swap; src: url(/fonts/bodoni-moda-latin-ext-400-italic.woff2) format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 
 @theme {
   --color-ink: #0a0a0a;
@@ -21,7 +23,7 @@
   --color-flame: #d08a2e;
   --color-flame-2: #f0b65c;
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: Unbounded, Inter, ui-sans-serif, sans-serif;
+  --font-display: 'Bodoni Moda', 'Times New Roman', serif;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -36,18 +38,18 @@
 
 @layer components {
   .container-x { @apply mx-auto w-full max-w-6xl px-4 sm:px-6; }
-  .h-display { font-family: var(--font-display); @apply font-medium tracking-tight; }
-  .eyebrow { @apply text-[11px] font-medium uppercase tracking-[0.28em] text-flame; }
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full bg-bone px-6 py-3 text-sm font-medium text-ink transition duration-300 ease-out hover:bg-flame-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50; }
-  .btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-full border border-line px-6 py-3 text-sm font-medium text-bone transition duration-300 hover:border-bone/50 active:scale-[0.98]; }
-  .btn-sm { @apply px-4 py-2 text-xs; }
-  .input { @apply w-full rounded-xl border border-line bg-ink-2 px-4 py-3 text-sm text-bone outline-none transition placeholder:text-mute/60 focus:border-flame/70; }
+  .h-display { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.01em; }
+  .eyebrow { @apply text-[11px] font-medium uppercase tracking-[0.32em] text-flame; }
+  .btn { @apply inline-flex items-center justify-center gap-3 bg-bone px-8 py-4 text-[11px] font-medium uppercase tracking-[0.22em] text-ink transition duration-500 ease-out hover:bg-flame-2 disabled:pointer-events-none disabled:opacity-50; }
+  .btn-ghost { @apply inline-flex items-center justify-center gap-3 border border-bone/25 px-8 py-4 text-[11px] font-medium uppercase tracking-[0.22em] text-bone transition duration-500 hover:border-bone hover:bg-bone hover:text-ink; }
+  .btn-sm { @apply px-5 py-2.5 text-[10px]; }
+  .input { @apply w-full rounded-none border border-line bg-ink-2 px-4 py-3 text-sm text-bone outline-none transition placeholder:text-mute/60 focus:border-flame/70; }
   .label { @apply mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute; }
-  .card { @apply rounded-2xl border border-line bg-ink-2; }
+  .card { @apply border border-line bg-ink-2; }
   .link { @apply underline decoration-line underline-offset-4 transition hover:decoration-flame; }
 
   .prose-legal { @apply max-w-3xl text-[15px] leading-relaxed text-bone/85; }
-  .prose-legal h2 { font-family: var(--font-display); @apply mt-10 mb-3 text-lg font-medium text-bone; }
+  .prose-legal h2 { font-family: var(--font-display); @apply mt-12 mb-3 text-2xl text-bone; }
   .prose-legal h3 { @apply mt-6 mb-2 font-semibold text-bone; }
   .prose-legal p { @apply my-3; }
   .prose-legal ul, .prose-legal ol { @apply my-3 space-y-1.5 pl-5; }
@@ -76,3 +78,5 @@
   .flicker, .float, .page-in { animation: none; }
   html { scroll-behavior: auto; }
 }
+
+.rule { background: linear-gradient(90deg, transparent, var(--color-line) 15%, var(--color-line) 85%, transparent); height: 1px; }

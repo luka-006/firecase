@@ -15,8 +15,8 @@ export function FreeShippingBar({ locale }: { locale: Locale }) {
   return (
     <div>
       <p className="mb-2 text-xs text-mute">{left > 0 ? d.freeLeft(money(left, locale)) : d.freeReached}</p>
-      <div className="h-1 overflow-hidden rounded-full bg-line">
-        <div className="h-full rounded-full bg-gradient-to-r from-flame to-flame-2 transition-[width] duration-700 ease-out" style={{ width: `${pct}%` }} />
+      <div className="h-1 overflow-hidden rounded-none bg-line">
+        <div className="h-full rounded-none bg-gradient-to-r from-flame to-flame-2 transition-[width] duration-700 ease-out" style={{ width: `${pct}%` }} />
       </div>
     </div>
   )
@@ -29,7 +29,7 @@ export function CartLines({ locale, compact }: { locale: Locale; compact?: boole
     <ul className="divide-y divide-line">
       {items.map((i) => (
         <li key={i.key} className="flex gap-4 py-4">
-          <Link href={href(locale, 'product', i.slug)} onClick={() => setOpen(false)} className={`relative shrink-0 overflow-hidden rounded-xl bg-ink-3 ${compact ? 'size-20' : 'size-24'}`}>
+          <Link href={href(locale, 'product', i.slug)} onClick={() => setOpen(false)} className={`relative shrink-0 overflow-hidden rounded-sm bg-ink-3 ${compact ? 'size-20' : 'size-24'}`}>
             {i.image && <Image src={i.image} alt="" fill sizes="96px" className="object-cover" />}
           </Link>
           <div className="flex min-w-0 flex-1 flex-col">
@@ -41,7 +41,7 @@ export function CartLines({ locale, compact }: { locale: Locale; compact?: boole
               <button onClick={() => remove(i.key)} aria-label={d.remove} className="text-mute transition hover:text-bone"><XIcon className="size-4" /></button>
             </div>
             <div className="mt-auto flex items-center justify-between pt-2">
-              <div className="flex items-center rounded-full border border-line">
+              <div className="flex items-center rounded-none border border-line">
                 <button onClick={() => setQty(i.key, i.qty - 1)} className="p-2 text-mute hover:text-bone" aria-label="-"><MinusIcon className="size-3.5" /></button>
                 <span className="w-6 text-center text-sm tabular-nums">{i.qty}</span>
                 <button onClick={() => setQty(i.key, i.qty + 1)} className="p-2 text-mute hover:text-bone" aria-label="+"><PlusIcon className="size-3.5" /></button>

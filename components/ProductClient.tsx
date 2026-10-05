@@ -11,10 +11,10 @@ import type { Variant } from '@/lib/types'
 
 export function Gallery({ images, alt }: { images: string[]; alt: string }) {
   const [i, setI] = useState(0)
-  if (!images.length) return <div className="aspect-square rounded-3xl border border-line bg-ink-2" />
+  if (!images.length) return <div className="aspect-square rounded-sm border border-line bg-ink-2" />
   return (
     <div className="space-y-3">
-      <div className="relative aspect-square overflow-hidden rounded-3xl border border-line bg-ink-2">
+      <div className="relative aspect-square overflow-hidden rounded-sm border border-line bg-ink-2">
         {images.map((src, idx) => (
           <Image key={src} src={src} alt={idx === 0 ? alt : ''} fill priority={idx === 0} sizes="(min-width:1024px) 50vw, 100vw"
             className={`object-cover transition-opacity duration-500 ${idx === i ? 'opacity-100' : 'opacity-0'}`} />
@@ -24,7 +24,7 @@ export function Gallery({ images, alt }: { images: string[]; alt: string }) {
         <div className="flex gap-3 overflow-x-auto pb-1">
           {images.map((src, idx) => (
             <button key={src} onClick={() => setI(idx)} aria-label={`${idx + 1}`}
-              className={`relative size-20 shrink-0 overflow-hidden rounded-xl border transition ${idx === i ? 'border-flame' : 'border-line opacity-60 hover:opacity-100'}`}>
+              className={`relative size-20 shrink-0 overflow-hidden rounded-sm border transition ${idx === i ? 'border-flame' : 'border-line opacity-60 hover:opacity-100'}`}>
               <Image src={src} alt="" fill sizes="80px" className="object-cover" />
             </button>
           ))}
@@ -59,7 +59,7 @@ export function BuyBox({ locale, product }: BuyProps) {
           <div className="flex flex-wrap gap-2">
             {product.variants.map((v, idx) => (
               <button key={idx} onClick={() => setVi(idx)}
-                className={`rounded-full border px-4 py-2 text-sm transition ${idx === vi ? 'border-bone bg-bone text-ink' : 'border-line text-bone/80 hover:border-bone/50'}`}>
+                className={`rounded-none border px-4 py-2 text-sm transition ${idx === vi ? 'border-bone bg-bone text-ink' : 'border-line text-bone/80 hover:border-bone/50'}`}>
                 {locale === 'en' && v.en ? v.en : v.hr}
               </button>
             ))}
@@ -67,7 +67,7 @@ export function BuyBox({ locale, product }: BuyProps) {
         </div>
       )}
       <div className="flex gap-3">
-        <div className="flex items-center rounded-full border border-line">
+        <div className="flex items-center rounded-none border border-line">
           <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="p-3.5 text-mute hover:text-bone" aria-label="-"><MinusIcon className="size-4" /></button>
           <span className="w-7 text-center tabular-nums" aria-label={d.qty}>{qty}</span>
           <button onClick={() => setQty((q) => Math.min(99, q + 1))} className="p-3.5 text-mute hover:text-bone" aria-label="+"><PlusIcon className="size-4" /></button>
@@ -90,7 +90,7 @@ export function FavoriteButton({ locale, productId }: { locale: Locale; productI
   }, [productId])
   if (state && !state.loggedIn) {
     return (
-      <Link href={href(locale, 'login')} title={d.loginToFav} aria-label={d.loginToFav} className="grid size-[50px] shrink-0 place-items-center rounded-full border border-line text-bone/70 transition hover:border-bone/50 hover:text-bone">
+      <Link href={href(locale, 'login')} title={d.loginToFav} aria-label={d.loginToFav} className="grid size-[50px] shrink-0 place-items-center rounded-none border border-line text-bone/70 transition hover:border-bone/50 hover:text-bone">
         <HeartIcon />
       </Link>
     )
@@ -101,7 +101,7 @@ export function FavoriteButton({ locale, productId }: { locale: Locale; productI
       onClick={() => start(async () => setState(await toggleFavorite(productId)))}
       aria-label={state?.fav ? d.removeFav : d.addFav}
       aria-pressed={!!state?.fav}
-      className={`grid size-[50px] shrink-0 place-items-center rounded-full border transition ${state?.fav ? 'border-flame text-flame' : 'border-line text-bone/70 hover:border-bone/50 hover:text-bone'}`}>
+      className={`grid size-[50px] shrink-0 place-items-center rounded-none border transition ${state?.fav ? 'border-flame text-flame' : 'border-line text-bone/70 hover:border-bone/50 hover:text-bone'}`}>
       <HeartIcon filled={state?.fav} />
     </button>
   )

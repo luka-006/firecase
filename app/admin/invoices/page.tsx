@@ -24,7 +24,7 @@ export default async function Invoices({ searchParams }: { searchParams: Promise
         </div>
       </div>
       <p className="text-sm text-mute">Ukupno izdano: <span className="text-bone">{money(total)}</span> ({list.length} računa). Za knjigu prometa (KPR) koristi ovaj popis.</p>
-      <div className="overflow-x-auto rounded-2xl border border-line">
+      <div className="overflow-x-auto rounded-sm border border-line">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-ink-2 text-left text-xs uppercase tracking-wider text-mute">
             <tr><th className="p-3">Broj</th><th className="p-3">Datum</th><th className="p-3">Kupac</th><th className="p-3">Plaćanje</th><th className="p-3">Iznos</th><th className="p-3">Fiskalizacija</th></tr>

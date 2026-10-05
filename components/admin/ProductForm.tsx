@@ -62,7 +62,7 @@ export function ProductForm({ p }: { p: Product | null }) {
         <h2 className="font-medium">Slike</h2>
         <div className="flex flex-wrap gap-3">
           {images.map((src, i) => (
-            <div key={src} className="group relative size-28 overflow-hidden rounded-xl border border-line bg-ink-3">
+            <div key={src} className="group relative size-28 overflow-hidden rounded-sm border border-line bg-ink-3">
               <Image src={src} alt="" fill sizes="112px" className="object-cover" />
               {i === 0 && <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 text-[10px]">Glavna</span>}
               <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/70 p-1 text-xs opacity-0 transition group-hover:opacity-100">
@@ -72,7 +72,7 @@ export function ProductForm({ p }: { p: Product | null }) {
               </div>
             </div>
           ))}
-          <label className="grid size-28 cursor-pointer place-items-center rounded-xl border border-dashed border-line text-center text-xs text-mute hover:border-bone/50 hover:text-bone">
+          <label className="grid size-28 cursor-pointer place-items-center rounded-sm border border-dashed border-line text-center text-xs text-mute hover:border-bone/50 hover:text-bone">
             {uploading ? 'Učitavam…' : '+ Dodaj slike'}
             <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple className="hidden" onChange={(e) => onFiles(e.target.files)} disabled={uploading} />
           </label>
@@ -87,7 +87,6 @@ export function ProductForm({ p }: { p: Product | null }) {
         <In label="Naziv (EN)" name="nameEn" defaultValue={p?.nameEn} />
         <In label="Cijena (€) *" name="price" defaultValue={eur(p?.priceCents)} inputMode="decimal" required placeholder="14,99" />
         <In label="Stara cijena (€)" name="compare" defaultValue={eur(p?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
-        <In label="Odgovara modelu" name="fits" defaultValue={p?.fits} placeholder="BIC J6" hint="Koristi se za filtere u trgovini (npr. BIC J6, BIC J3)." />
         <In label="Zaliha" name="stock" defaultValue={p?.stock ?? ''} inputMode="numeric" hint="Prazno = neograničeno (dropshipping)." />
         <In label="URL (slug)" name="slug" defaultValue={p?.slug} hint="Prazno = automatski iz naziva." />
         <In label="Šifra (SKU)" name="sku" defaultValue={p?.sku} />
@@ -97,7 +96,7 @@ export function ProductForm({ p }: { p: Product | null }) {
           <label className="flex items-center gap-3"><input type="checkbox" name="featured" defaultChecked={p?.featured ?? false} className="size-4 accent-[#d08a2e]" /> Istaknut na naslovnici</label>
         </div>
         <div className="md:col-span-2">
-          <Ta label="Varijante (boje / izvedbe)" name="variants" rows={3} defaultValue={(p?.variants ?? []).map((v) => `${v.hr} | ${v.en}`).join('\n')} hint="Jedna po retku, format: Crna | Black. Prazno = bez varijanti." />
+          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(p?.variants ?? []).map((v) => `${v.hr} | ${v.en}`).join('\n')} hint="Jedna po retku, format: HR naziv | EN naziv, npr. BIC J6 (standardni) | BIC J6 (regular). Kupac bira veličinu na stranici proizvoda. Prazno = bez izbora." />
         </div>
       </section>
 
@@ -122,7 +121,7 @@ export function ProductForm({ p }: { p: Product | null }) {
         <Ta label="Upozorenja (EN)" name="safetyEn" rows={3} defaultValue={p?.safetyEn} />
       </section>
 
-      <div className="sticky bottom-4 flex items-center gap-4 rounded-2xl border border-line bg-ink/90 p-4 backdrop-blur">
+      <div className="sticky bottom-4 flex items-center gap-4 rounded-sm border border-line bg-ink/90 p-4 backdrop-blur">
         <button className="btn" disabled={pending || uploading}>{pending ? 'Spremam…' : 'Spremi proizvod'}</button>
         {state?.error && <p className="text-sm text-red-400">{state.error}</p>}
         {state?.ok && <p className="text-sm text-emerald-400">{state.ok}</p>}

@@ -22,21 +22,73 @@ export function Reveal() {
   return null
 }
 
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID
+const CONSENT_KEY = 'fc_consent'
+
+declare global {
+  interface Window { dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void }
+}
+
+function loadGA() {
+  if (!GA_ID || window.gtag) return
+  window.dataLayer = window.dataLayer || []
+  window.gtag = function gtag() { window.dataLayer!.push(arguments) } // eslint-disable-line prefer-rest-params
+  window.gtag('js', new Date())
+  window.gtag('config', GA_ID, { anonymize_ip: true })
+  const s = document.createElement('script')
+  s.async = true
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`
+  document.head.appendChild(s)
+}
+
+function clearGACookies() {
+  const host = location.hostname.replace(/^www\./, '')
+  document.cookie.split(';').map((c) => c.split('=')[0].trim()).filter((n) => n.startsWith('_ga')).forEach((n) => {
+    for (const domain of ['', `; domain=.${host}`]) document.cookie = `${n}=; Max-Age=0; path=/${domain}`
+  })
+}
+
+// Obavijest o kolačićima; Google Analytics se učitava samo uz privolu
 export function CookieNotice({ locale }: { locale: Locale }) {
   const [show, setShow] = useState(false)
   const d = t(locale)
   useEffect(() => {
-    try { setShow(!localStorage.getItem('fc_cookie_ok')) } catch {}
+    let choice: string | null = null
+    try { choice = localStorage.getItem(CONSENT_KEY) } catch {}
+    if (choice === 'all') loadGA()
+    setShow(!choice)
+    const open = () => setShow(true)
+    window.addEventListener('fc:consent', open)
+    return () => window.removeEventListener('fc:consent', open)
   }, [])
+  const choose = (v: 'all' | 'necessary') => {
+    try { localStorage.setItem(CONSENT_KEY, v) } catch {}
+    if (v === 'all') loadGA()
+    else clearGACookies()
+    setShow(false)
+  }
   if (!show) return null
   return (
-    <div className="page-in fixed inset-x-4 bottom-4 z-40 mx-auto max-w-xl rounded-2xl border border-line bg-ink-2/95 p-4 shadow-2xl backdrop-blur sm:flex sm:items-center sm:gap-4">
-      <p className="text-xs leading-relaxed text-bone/75">
-        {d.cookieText} <Link href={href(locale, 'cookies')} className="link">{d.more}</Link>
+    <div role="dialog" aria-label={d.cookieSettings} className="page-in fixed inset-x-4 bottom-4 z-40 mx-auto max-w-2xl border border-line bg-ink/95 p-5 shadow-2xl backdrop-blur sm:flex sm:items-center sm:gap-6">
+      <p className="text-xs leading-relaxed text-bone/70">
+        {GA_ID ? d.cookieText : d.cookieTextBasic} <Link href={href(locale, 'cookies')} className="link">{d.more}</Link>
       </p>
-      <button onClick={() => { try { localStorage.setItem('fc_cookie_ok', '1') } catch {}; setShow(false) }} className="btn btn-sm mt-3 shrink-0 sm:mt-0">{d.ok}</button>
+      <div className="mt-4 flex shrink-0 gap-2 sm:mt-0">
+        {GA_ID ? (
+          <>
+            <button onClick={() => choose('necessary')} className="btn-ghost btn-sm">{d.rejectAll}</button>
+            <button onClick={() => choose('all')} className="btn btn-sm">{d.acceptAll}</button>
+          </>
+        ) : (
+          <button onClick={() => choose('necessary')} className="btn btn-sm">{d.ok}</button>
+        )}
+      </div>
     </div>
   )
+}
+
+export function CookieSettingsButton({ label }: { label: string }) {
+  return <button onClick={() => window.dispatchEvent(new Event('fc:consent'))} className="transition hover:text-bone">{label}</button>
 }
 
 export function ClearCart() {
