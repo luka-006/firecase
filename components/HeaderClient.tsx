@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useCart } from './CartProvider'
 import { BagIcon, MenuIcon, XIcon } from './icons'
@@ -9,12 +9,19 @@ import { href, switchLocale, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 
 export function CartButton({ locale }: { locale: Locale }) {
-  const { count, setOpen } = useCart()
+  const { count, setOpen, ready } = useCart()
+  const prev = useRef<number | null>(null)
+  const [bump, setBump] = useState(0)
+  useEffect(() => {
+    if (!ready) return
+    if (prev.current !== null && count > prev.current) setBump((b) => b + 1)
+    prev.current = count
+  }, [count, ready])
   return (
     <button onClick={() => setOpen(true)} className="relative p-2 text-bone/80 transition hover:text-bone" aria-label={t(locale).cart}>
       <BagIcon />
       {count > 0 && (
-        <span className="absolute -right-1 -top-0.5 grid min-w-[17px] place-items-center bg-flame px-1 font-mono text-[10px] font-medium leading-[17px] text-ink">{count}</span>
+        <span key={bump} className={`absolute -right-1 -top-0.5 grid min-w-[17px] place-items-center bg-flame px-1 font-mono text-[10px] font-medium leading-[17px] text-ink ${bump ? 'bump' : ''}`}>{count}</span>
       )}
     </button>
   )

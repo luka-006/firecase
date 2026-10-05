@@ -1,7 +1,7 @@
 'use client'
 import Image from 'next/image'
-import { useActionState, useState } from 'react'
-import { saveProduct } from '@/app/admin/actions'
+import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
+import { saveProduct, translateToEn } from '@/app/admin/actions'
 import type { Product } from '@/lib/types'
 
 // Smanji fotografiju u pregledniku (najviše 2000 px) da upload ostane ispod Vercelovog limita
@@ -40,6 +40,60 @@ function Ta({ label, name, defaultValue, rows = 4, hint }: { label: string; name
       <textarea name={name} defaultValue={defaultValue ?? ''} rows={rows} className="input" />
       {hint && <span className="mt-1 block text-xs text-mute">{hint}</span>}
     </label>
+  )
+}
+
+// Par polja HR/EN: engleski se prevodi automatski dok pišete hrvatski.
+// Čim engleski uredite ručno, više se ne dira (hrvatski se nikad ne mijenja).
+function Pair({ label, base, hr: hr0, en: en0, rows, required, placeholder }: {
+  label: string; base: string; hr?: string; en?: string; rows?: number; required?: boolean; placeholder?: string
+}) {
+  const [hr, setHr] = useState(hr0 ?? '')
+  const [en, setEn] = useState(en0 ?? '')
+  const [auto, setAuto] = useState(!(en0 ?? '').trim())
+  const [status, setStatus] = useState<'idle' | 'busy' | 'error' | 'off'>('idle')
+  const [err, setErr] = useState('')
+  const req = useRef(0)
+  const translate = useCallback(async (text: string) => {
+    const id = ++req.current
+    if (!text.trim()) { setEn(''); setStatus('idle'); return }
+    setStatus('busy')
+    const r = await translateToEn(text)
+    if (id !== req.current) return
+    if (r.ok) { setEn(r.text); setStatus('idle') }
+    else if (r.disabled) { setAuto(false); setStatus('off') }
+    else { setStatus('error'); setErr(r.error) }
+  }, [])
+  useEffect(() => {
+    if (!auto) return
+    const t = setTimeout(() => translate(hr), 900)
+    return () => clearTimeout(t)
+  }, [hr, auto, translate])
+  const field = (name: string, value: string, onChange: (v: string) => void, req?: boolean, ph?: string) =>
+    rows ? (
+      <textarea name={name} rows={rows} value={value} onChange={(e) => onChange(e.target.value)} required={req} placeholder={ph} className="input" />
+    ) : (
+      <input name={name} value={value} onChange={(e) => onChange(e.target.value)} required={req} placeholder={ph} className="input" />
+    )
+  return (
+    <>
+      <label className="block">
+        <span className="label">{label} (HR){required && ' *'}</span>
+        {field(`${base}Hr`, hr, setHr, required, placeholder)}
+      </label>
+      <label className="block">
+        <span className="label flex items-center justify-between gap-2">
+          <span>{label} (EN)</span>
+          <span className={`normal-case tracking-normal ${status === 'error' ? 'text-red-400' : 'text-mute'}`}>
+            {status === 'busy' ? 'Prevodim…' : status === 'error' ? 'Greška prijevoda' : status === 'off' ? 'Prijevod isključen' : auto ? 'Automatski' : (
+              <button type="button" onClick={() => { setAuto(true); translate(hr) }} className="link">↻ Prevedi s HR</button>
+            )}
+          </span>
+        </span>
+        {field(`${base}En`, en, (v) => { setEn(v); setAuto(false); req.current++ })}
+        {status === 'error' && <span className="mt-1 block text-xs text-red-400">{err}</span>}
+      </label>
+    </>
   )
 }
 
@@ -104,8 +158,7 @@ export function ProductForm({ p }: { p: Product | null }) {
 
       <section className="card grid gap-4 p-5 md:grid-cols-2">
         <h2 className="font-medium md:col-span-2">Osnovno</h2>
-        <In label="Naziv (HR) *" name="nameHr" defaultValue={p?.nameHr} required />
-        <In label="Naziv (EN)" name="nameEn" defaultValue={p?.nameEn} />
+        <Pair label="Naziv" base="name" hr={p?.nameHr} en={p?.nameEn} required />
         <In label="Cijena (€) *" name="price" defaultValue={eur(p?.priceCents)} inputMode="decimal" required placeholder="14,99" />
         <In label="Stara cijena (€)" name="compare" defaultValue={eur(p?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
         <In label="Zaliha" name="stock" defaultValue={p?.stock ?? ''} inputMode="numeric" hint="Prazno = neograničeno (dropshipping)." />
@@ -123,12 +176,10 @@ export function ProductForm({ p }: { p: Product | null }) {
 
       <section className="card grid gap-4 p-5 md:grid-cols-2">
         <h2 className="font-medium md:col-span-2">Opis</h2>
-        <Ta label="Kratki opis (HR)" name="shortHr" rows={2} defaultValue={p?.shortHr} />
-        <Ta label="Kratki opis (EN)" name="shortEn" rows={2} defaultValue={p?.shortEn} />
-        <Ta label="Opis (HR)" name="descHr" rows={6} defaultValue={p?.descHr} />
-        <Ta label="Opis (EN)" name="descEn" rows={6} defaultValue={p?.descEn} />
-        <In label="Materijal (HR)" name="materialHr" defaultValue={p?.materialHr} placeholder="Aluminij" />
-        <In label="Materijal (EN)" name="materialEn" defaultValue={p?.materialEn} placeholder="Aluminium" />
+        <p className="-mt-2 text-xs text-mute md:col-span-2">Engleski se popunjava sam dok pišete hrvatski. Ako engleski uredite ručno, više se ne mijenja (gumb „Prevedi s HR” ga vraća na automatski).</p>
+        <Pair label="Kratki opis" base="short" hr={p?.shortHr} en={p?.shortEn} rows={2} />
+        <Pair label="Opis" base="desc" hr={p?.descHr} en={p?.descEn} rows={6} />
+        <Pair label="Materijal" base="material" hr={p?.materialHr} en={p?.materialEn} placeholder="Aluminij" />
       </section>
 
       <section className="card grid gap-4 p-5 md:grid-cols-2">
@@ -138,8 +189,7 @@ export function ProductForm({ p }: { p: Product | null }) {
         </div>
         <Ta label="Proizvođač (naziv, adresa, e-mail)" name="manufacturer" rows={3} defaultValue={p?.manufacturer} />
         <Ta label="Odgovorna osoba u EU (naziv, adresa, e-mail)" name="euResponsible" rows={3} defaultValue={p?.euResponsible} />
-        <Ta label="Upozorenja (HR)" name="safetyHr" rows={3} defaultValue={p?.safetyHr} />
-        <Ta label="Upozorenja (EN)" name="safetyEn" rows={3} defaultValue={p?.safetyEn} />
+        <Pair label="Upozorenja" base="safety" hr={p?.safetyHr} en={p?.safetyEn} rows={3} />
       </section>
 
       <div className="sticky bottom-4 flex items-center gap-4 rounded-sm border border-line bg-ink/90 p-4 backdrop-blur">

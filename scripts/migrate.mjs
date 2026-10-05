@@ -41,6 +41,9 @@ const samples = [
 
 try {
   await sql.unsafe(schema)
+  // Stari zadani rok dostave (ako nije ručno mijenjan u adminu) -> 4–8 dana
+  await sql`update settings set value = value || '{"deliveryHr":"4–8 dana","deliveryEn":"4–8 days"}'::jsonb
+    where key = 'main' and value->>'deliveryHr' = '3–7 radnih dana'`
   const [{ count }] = await sql`select count(*)::int as count from products`
   if (count === 0) {
     for (const p of samples) {

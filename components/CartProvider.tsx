@@ -26,6 +26,7 @@ type Ctx = {
   remove: (key: string) => void
   clear: () => void
   shipping: { shippingCents: number; freeThresholdCents: number }
+  ready: boolean
 }
 
 const CartCtx = createContext<Ctx | null>(null)
@@ -70,8 +71,8 @@ export function CartProvider({ children, shipping }: { children: React.ReactNode
   const value = useMemo(() => {
     const count = items.reduce((a, i) => a + i.qty, 0)
     const subtotal = items.reduce((a, i) => a + i.qty * i.priceCents, 0)
-    return { items, count, subtotal, open, setOpen, add, setQty, remove, clear, shipping }
-  }, [items, open, add, setQty, remove, clear, shipping])
+    return { items, count, subtotal, open, setOpen, add, setQty, remove, clear, shipping, ready }
+  }, [items, open, add, setQty, remove, clear, shipping, ready])
 
   return <CartCtx.Provider value={value}>{children}</CartCtx.Provider>
 }

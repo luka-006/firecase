@@ -7,6 +7,7 @@ Webshop za futrole za upaljače. Next.js 16 + Postgres (Neon) + Stripe + Vercel.
 - Plaćanje: kartice, Apple Pay, Google Pay, PayPal (Stripe Checkout)
 - Računi u PDF-u s fiskalizacijom (CIS Porezne uprave), storno računi kod povrata
 - Korisnički računi (favoriti, povijest narudžbi, spremljena adresa)
+- Automatski prijevod opisa proizvoda s hrvatskog na engleski u adminu (DeepL)
 - Pravne stranice: uvjeti poslovanja, privatnost, kolačići, dostava, povrat, obrazac za raskid
 
 ## Što još treba napraviti
@@ -30,6 +31,7 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 - [ ] **E-mail na domeni** (npr. `info@firecase.hr`) umjesto Gmaila
 - [ ] **Google:** `NEXT_PUBLIC_GA_ID`, Search Console (`NEXT_PUBLIC_GSC_VERIFICATION`) i slanje `sitemap.xml`
 - [ ] **Stripe live ključevi** umjesto test ključeva
+- [ ] **Automatski prijevod:** račun na deepl.com/pro-api (plan *DeepL API Free*), ključ u `DEEPL_API_KEY`, Redeploy
 
 **Moguće nadogradnje (nije napravljeno)**
 - Kodovi za popust, newsletter, recenzije proizvoda

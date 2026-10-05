@@ -130,3 +130,22 @@
   .js [data-reveal] .wm-rise { transform: none; transition: none; }
   .sw { animation: none; }
 }
+
+/* Male interakcije */
+.heart-pop { animation: heart-pop 0.6s var(--ease-out-expo); }
+@keyframes heart-pop { 0% { transform: scale(1); } 30% { transform: scale(1.35); } 55% { transform: scale(0.9); } 75% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.heart-ring { position: absolute; inset: -1px; border: 1px solid var(--color-flame); pointer-events: none; animation: heart-ring 0.7s var(--ease-out-expo) forwards; }
+@keyframes heart-ring { from { transform: scale(0.7); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+.bump { animation: bump 0.5s var(--ease-out-expo); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.5); } 100% { transform: scale(1); } }
+.tick { display: inline-block; animation: tick 0.35s var(--ease-out-expo); }
+@keyframes tick { from { transform: translateY(60%); opacity: 0; } to { transform: none; opacity: 1; } }
+.pop-in { animation: pop-in 0.45s var(--ease-out-expo); }
+@keyframes pop-in { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+.lb-in { animation: lb-in 0.45s var(--ease-out-expo); }
+@keyframes lb-in { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-pop, .heart-ring, .bump, .tick, .pop-in, .lb-in { animation: none; }
+  .heart-ring { display: none; }
+}

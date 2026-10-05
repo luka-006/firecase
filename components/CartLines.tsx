@@ -43,7 +43,7 @@ export function CartLines({ locale, compact }: { locale: Locale; compact?: boole
             <div className="mt-auto flex items-center justify-between pt-2">
               <div className="flex items-center rounded-none border border-line">
                 <button onClick={() => setQty(i.key, i.qty - 1)} className="p-2 text-mute hover:text-bone" aria-label="-"><MinusIcon className="size-3.5" /></button>
-                <span className="w-6 text-center text-sm tabular-nums">{i.qty}</span>
+                <span className="w-6 overflow-hidden text-center text-sm tabular-nums"><span key={i.qty} className="tick">{i.qty}</span></span>
                 <button onClick={() => setQty(i.key, i.qty + 1)} className="p-2 text-mute hover:text-bone" aria-label="+"><PlusIcon className="size-3.5" /></button>
               </div>
               <p className="text-sm tabular-nums">{money(i.priceCents * i.qty, locale)}</p>

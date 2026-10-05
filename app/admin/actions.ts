@@ -45,6 +45,27 @@ export async function adminLogout() {
   redirect('/admin/login')
 }
 
+// ---------- Automatski prijevod HR -> EN (DeepL) ----------
+export async function translateToEn(text: string): Promise<{ ok: true; text: string } | { ok: false; error: string; disabled?: boolean }> {
+  if (!(await isAdmin())) return { ok: false, error: 'Niste prijavljeni.' }
+  const key = process.env.DEEPL_API_KEY
+  if (!key) return { ok: false, error: 'Automatski prijevod nije uključen (DEEPL_API_KEY).', disabled: true }
+  if (!text.trim()) return { ok: true, text: '' }
+  const url = key.endsWith(':fx') ? 'https://api-free.deepl.com/v2/translate' : 'https://api.deepl.com/v2/translate'
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `DeepL-Auth-Key ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: [text.slice(0, 5000)], source_lang: 'HR', target_lang: 'EN-GB', preserve_formatting: true }),
+    })
+    if (!res.ok) return { ok: false, error: `DeepL ${res.status}: ${(await res.text()).slice(0, 160)}` }
+    const data = (await res.json()) as { translations?: { text: string }[] }
+    return { ok: true, text: data.translations?.[0]?.text ?? '' }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
 // ---------- Baza ----------
 export async function runMigrations() {
   await requireAdmin()
