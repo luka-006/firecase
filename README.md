@@ -9,6 +9,34 @@ Webshop za futrole za upaljače. Next.js 16 + Postgres (Neon) + Stripe + Vercel.
 - Korisnički računi (favoriti, povijest narudžbi, spremljena adresa)
 - Pravne stranice: uvjeti poslovanja, privatnost, kolačići, dostava, povrat, obrazac za raskid
 
+## Što još treba napraviti
+
+Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dokumentu.
+
+**Obavezno prije prve prodaje**
+- [ ] **Obrt:** upisati djelatnost trgovine na malo putem interneta; MBO upisati u `lib/config.ts` (`registryNumber`)
+- [ ] **Vercel:** spojiti Neon (Frankfurt) i Blob, postaviti `AUTH_SECRET`, `ADMIN_PASSWORD`, `CRON_SECRET`, napraviti Redeploy i provjeriti da je zadnji deploy *Ready*
+- [ ] **Baza:** u `/admin` ne smije biti žutog okvira s greškom; ako piše da tablice ne postoje, kliknuti *Kreiraj tablice u bazi*
+- [ ] **Dobavljač:** odabrati (Temu ne dopušta dropshipping), dogovoriti rok dostave i dobiti GPSR podatke (proizvođač, odgovorna osoba u EU)
+- [ ] **Proizvodi:** obrisati primjere, dodati prave fotografije, opise, veličine i cijene; rok dostave u `/admin/settings`
+- [ ] **Stripe:** otvoriti račun kao obrt, uključiti kartice, Apple Pay, Google Pay i PayPal, postaviti `STRIPE_SECRET_KEY` i webhook (`STRIPE_WEBHOOK_SECRET`)
+- [ ] **E-mail:** Gmail app password u `SMTP_PASS` (bez toga kupci ne dobivaju potvrdu narudžbe ni račun)
+- [ ] **Fiskalizacija:** FINA certifikat (`FISCAL_CERT_BASE64`, `FISCAL_CERT_PASSWORD`), interni akt s oznakama poslovnog prostora i naplatnog uređaja, test u TEST okruženju pa prebacivanje na PRODUKCIJU; s knjigovođom potvrditi oznaku plaćanja za PayPal (`O`) i format QR koda
+- [ ] **Pravni tekstovi:** dati na pregled pravniku ili knjigovođi
+- [ ] **Probna kupnja:** Stripe test kartica `4242 4242 4242 4242`, provjeriti e-mail, PDF račun i povrat novca iz admina
+
+**Nakon toga**
+- [ ] **Domena:** registrirati (npr. `firecase.hr`), spojiti u Vercelu, promijeniti `NEXT_PUBLIC_SITE_URL` i URL webhooka u Stripeu
+- [ ] **E-mail na domeni** (npr. `info@firecase.hr`) umjesto Gmaila
+- [ ] **Google:** `NEXT_PUBLIC_GA_ID`, Search Console (`NEXT_PUBLIC_GSC_VERIFICATION`) i slanje `sitemap.xml`
+- [ ] **Stripe live ključevi** umjesto test ključeva
+
+**Moguće nadogradnje (nije napravljeno)**
+- Kodovi za popust, newsletter, recenzije proizvoda
+- Odabir BOX NOW paketomata u blagajni
+- Automatsko slanje narudžbe dobavljaču
+- Izvoz računa za knjigovođu (CSV), dvostupanjska prijava za admin
+
 ## Postavljanje na Vercel
 
 1. **Import** – Vercel → Add New → Project → odaberi GitHub repo `firecase` → Deploy.

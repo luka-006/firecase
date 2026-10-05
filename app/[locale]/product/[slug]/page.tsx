@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BuyBox, Gallery } from '@/components/ProductClient'
 import { ChevronIcon, ReturnIcon, TruckIcon } from '@/components/icons'
-import { getProductBySlug } from '@/lib/products'
+import { getActiveProducts, getProductBySlug } from '@/lib/products'
+import { ProductCard } from '@/components/ProductCard'
 import { getSettings } from '@/lib/settings'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
@@ -34,9 +35,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   const { locale: l, slug } = await params
   const locale = l as Locale
-  const [p, s] = await Promise.all([getProductBySlug(slug), getSettings()])
+  const [p, s, all] = await Promise.all([getProductBySlug(slug), getSettings(), getActiveProducts()])
   if (!p) notFound()
   const d = t(locale)
+  const related = all.filter((x) => x.id !== p.id).slice(0, 3)
   const name = loc(p, 'name', locale)
   const soldOut = p.stock !== null && p.stock <= 0
   const desc = loc(p, 'desc', locale)
@@ -118,6 +120,14 @@ export default async function ProductPage({ params }: Props) {
           </div>
         </div>
       </div>
+      {related.length > 0 && (
+        <section className="pt-28 md:pt-40">
+          <h2 className="h-display mb-10 text-3xl leading-none sm:text-5xl" data-reveal>{d.related}</h2>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-12 md:gap-x-6 lg:grid-cols-3">
+            {related.map((r, i) => <ProductCard key={r.id} p={r} locale={locale} delay={i * 90} />)}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

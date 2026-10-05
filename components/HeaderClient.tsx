@@ -20,6 +20,23 @@ export function CartButton({ locale }: { locale: Locale }) {
   )
 }
 
+export function NavLinks({ links }: { links: { href: string; label: string }[] }) {
+  const pathname = usePathname()
+  return (
+    <nav className="hidden items-center gap-7 md:flex">
+      {links.map((l) => {
+        const active = !l.href.includes('#') && (pathname === l.href || pathname.startsWith(l.href + '/'))
+        return (
+          <Link key={l.href} href={l.href}
+            className={`relative font-mono text-[11px] uppercase tracking-[0.16em] transition after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:bg-flame after:transition-transform after:duration-500 hover:text-bone hover:after:scale-x-100 ${active ? 'text-bone after:scale-x-100' : 'text-bone/65 after:scale-x-0'}`}>
+            {l.label}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
 export function LangSwitch({ locale }: { locale: Locale }) {
   const pathname = usePathname()
   const other: Locale = locale === 'hr' ? 'en' : 'hr'

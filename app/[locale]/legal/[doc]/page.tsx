@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { PrintButton } from '@/components/PrintButton'
+import { PageHead } from '@/components/PageHead'
+import { LegalToc } from '@/components/LegalToc'
+import { t } from '@/lib/dict'
 import { LEGAL, LEGAL_DOCS, type LegalDoc } from '@/lib/legal'
 import { getSettings } from '@/lib/settings'
 import { href, LOCALES, type Locale, type RouteKey } from '@/lib/routes'
@@ -27,10 +30,15 @@ export default async function LegalPage({ params }: Props) {
   if (!d) notFound()
   const s = await getSettings()
   return (
-    <div className="container-x pt-14">
-      <h1 className="h-display text-3xl sm:text-4xl">{d.title}</h1>
-      <div className="prose-legal mt-8">{d.body({ s, locale })}</div>
-      {doc === 'withdrawal' && <PrintButton label={locale === 'en' ? 'Print / save as PDF' : 'Ispiši / spremi kao PDF'} />}
-    </div>
+    <>
+      <PageHead eyebrow={t(locale).footerInfo} title={d.title} />
+      <div className="container-x grid gap-16 pt-12 lg:grid-cols-[1fr_15rem]">
+        <div>
+          <div className="prose-legal">{d.body({ s, locale })}</div>
+          {doc === 'withdrawal' && <PrintButton label={locale === 'en' ? 'Print / save as PDF' : 'Ispiši / spremi kao PDF'} />}
+        </div>
+        <LegalToc label={t(locale).contents} />
+      </div>
+    </>
   )
 }

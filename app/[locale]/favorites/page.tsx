@@ -6,6 +6,7 @@ import { sql } from '@/lib/db'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import type { Product } from '@/lib/types'
+import { PageHead } from '@/components/PageHead'
 
 export const metadata: Metadata = { title: 'Favoriti · Favorites', robots: { index: false } }
 
@@ -17,13 +18,15 @@ export default async function Favorites({ params }: { params: Promise<{ locale: 
   const products = await sql<Product[]>`select p.* from favorites f join products p on p.id = f.product_id
     where f.user_id = ${user.id} and p.active order by f.created_at desc`
   return (
-    <div className="container-x pt-14">
-      <h1 className="h-display text-3xl">{d.favorites}</h1>
+    <>
+    <PageHead eyebrow={d.account} title={d.favorites} />
+    <div className="container-x">
       {products.length === 0 ? <p className="mt-10 text-mute">{d.noFavorites}</p> : (
         <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
           {products.map((p) => <ProductCard key={p.id} p={p} locale={locale} />)}
         </div>
       )}
     </div>
+    </>
   )
 }

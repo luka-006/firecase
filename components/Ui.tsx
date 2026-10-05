@@ -69,11 +69,11 @@ export function CookieNotice({ locale }: { locale: Locale }) {
   }
   if (!show) return null
   return (
-    <div role="dialog" aria-label={d.cookieSettings} className="page-in fixed inset-x-4 bottom-4 z-40 mx-auto max-w-2xl border border-line bg-ink/95 p-5 shadow-2xl backdrop-blur sm:flex sm:items-center sm:gap-6">
+    <div role="dialog" aria-label={d.cookieSettings} className="page-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink/95 px-5 py-4 backdrop-blur sm:inset-x-auto sm:bottom-6 sm:left-6 sm:max-w-sm sm:border sm:p-5">
       <p className="text-xs leading-relaxed text-bone/70">
         {GA_ID ? d.cookieText : d.cookieTextBasic} <Link href={href(locale, 'cookies')} className="link">{d.more}</Link>
       </p>
-      <div className="mt-4 flex shrink-0 gap-2 sm:mt-0">
+      <div className="mt-3 flex shrink-0 gap-2 sm:mt-4">
         {GA_ID ? (
           <>
             <button onClick={() => choose('necessary')} className="btn-ghost btn-sm">{d.rejectAll}</button>

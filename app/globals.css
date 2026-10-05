@@ -63,6 +63,7 @@
 
   .prose-legal { @apply max-w-3xl text-[15px] leading-relaxed text-bone/85; }
   .prose-legal h2 { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.01em; @apply mt-12 mb-3 text-base text-bone; }
+  .prose-legal h2 { scroll-margin-top: 6rem; }
   .prose-legal h3 { @apply mt-6 mb-2 font-semibold text-bone; }
   .prose-legal p { @apply my-3; }
   .prose-legal ul, .prose-legal ol { @apply my-3 space-y-1.5 pl-5; }

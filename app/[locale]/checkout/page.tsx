@@ -6,6 +6,7 @@ import { getSettings } from '@/lib/settings'
 import { EU_COUNTRIES } from '@/lib/config'
 import type { Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
+import { PageHead } from '@/components/PageHead'
 
 export const metadata: Metadata = { title: 'Blagajna · Checkout', robots: { index: false } }
 
@@ -21,11 +22,13 @@ export default async function Checkout({ params }: { params: Promise<{ locale: s
   const codes = s.shipEu ? EU_COUNTRIES : ['HR']
   const countries = codes.map((c) => ({ code: c, name: names.of(c) ?? c })).sort((a, b) => (a.code === 'HR' ? -1 : b.code === 'HR' ? 1 : a.name.localeCompare(b.name)))
   return (
-    <div className="container-x pt-14">
-      <h1 className="h-display text-3xl sm:text-4xl">{t(locale).checkout}</h1>
+    <>
+    <PageHead eyebrow={t(locale).footerShop} title={t(locale).checkout} />
+    <div className="container-x">
       <CheckoutForm locale={locale} defaults={defaults} loggedIn={!!user} countries={countries}
         ship={{ shippingCents: s.shippingCents, freeThresholdCents: s.freeThresholdCents, euShippingCents: s.euShippingCents }}
         delivery={locale === 'en' ? s.deliveryEn : s.deliveryHr} />
     </div>
+    </>
   )
 }

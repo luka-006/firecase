@@ -9,6 +9,7 @@ import { money, formatDateTime } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import type { Order } from '@/lib/types'
+import { PageHead } from '@/components/PageHead'
 
 export const metadata: Metadata = { title: 'Moj račun · Account', robots: { index: false } }
 
@@ -25,9 +26,10 @@ export default async function Account({ params }: { params: Promise<{ locale: st
   if (!u) redirect(href(locale, 'login'))
 
   return (
-    <div className="container-x pt-14">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div><h1 className="h-display text-3xl">{d.account}</h1><p className="mt-2 text-sm text-mute">{u.email}</p></div>
+    <>
+    <PageHead eyebrow={u.email} title={d.account} />
+    <div className="container-x pt-8">
+      <div className="flex flex-wrap items-end justify-end gap-4">
         <div className="flex gap-2">
           <Link href={href(locale, 'favorites')} className="btn-ghost btn-sm">{d.favorites}</Link>
           <form action={logout}><input type="hidden" name="locale" value={locale} /><button className="btn-ghost btn-sm">{d.logout}</button></form>
@@ -72,5 +74,6 @@ export default async function Account({ params }: { params: Promise<{ locale: st
         </section>
       </div>
     </div>
+    </>
   )
 }

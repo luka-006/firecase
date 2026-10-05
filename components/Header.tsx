@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { CartButton, HeaderShell, LangSwitch, MobileMenu } from './HeaderClient'
+import { CartButton, HeaderShell, LangSwitch, MobileMenu, NavLinks } from './HeaderClient'
 import { HeartIcon, UserIcon } from './icons'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
@@ -24,11 +24,7 @@ export function Header({ locale, announcement }: { locale: Locale; announcement:
               <Image src="/logo-mark.svg" alt="" width={14} height={27} priority className="h-7 w-auto" />
               <Image src="/logo-word.svg" alt="Firecase" width={120} height={10} priority className="h-[11px] w-auto" />
             </Link>
-            <nav className="hidden items-center gap-7 md:flex">
-              {links.map((l) => (
-                <Link key={l.href} href={l.href} className="font-mono text-[11px] uppercase tracking-[0.16em] text-bone/65 transition hover:text-bone">{l.label}</Link>
-              ))}
-            </nav>
+            <NavLinks links={links} />
           </div>
           <div className="flex items-center gap-1">
             <span className="hidden md:inline-flex"><LangSwitch locale={locale} /></span>

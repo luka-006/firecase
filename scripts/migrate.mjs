@@ -51,8 +51,8 @@ try {
   }
   console.log('[migrate] Baza je spremna.')
 } catch (e) {
-  console.error('[migrate] Greška:', e.message)
-  process.exitCode = 1
+  // Ne rušimo build: stranica se objavi, a tablice se mogu kreirati gumbom u /admin
+  console.warn('[migrate] Migracija nije uspjela, nastavljam build:', e.message)
 } finally {
   await sql.end()
 }

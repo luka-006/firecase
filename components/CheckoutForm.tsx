@@ -41,12 +41,12 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
       <input type="hidden" name="cart" value={cart} />
       <div className="space-y-10">
         <fieldset className="space-y-4">
-          <legend className="h-display mb-4 text-lg">{d.contactDetails}</legend>
+          <legend className="h-display mb-6 text-xl"><span className="idx mr-3 align-top">01</span>{d.contactDetails}</legend>
           <Field label={d.email} name="email" type="email" required autoComplete="email" defaultValue={defaults.email} />
           <Field label={d.phone} name="phone" type="tel" required autoComplete="tel" defaultValue={defaults.phone} />
         </fieldset>
         <fieldset className="space-y-4">
-          <legend className="h-display mb-4 text-lg">{d.deliveryAddress}</legend>
+          <legend className="h-display mb-6 text-xl"><span className="idx mr-3 align-top">02</span>{d.deliveryAddress}</legend>
           <Field label={d.name} name="name" required autoComplete="name" defaultValue={defaults.name} />
           <Field label={d.address} name="address" required autoComplete="street-address" defaultValue={defaults.address} />
           <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
@@ -70,7 +70,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
       </div>
 
       <aside className="card h-fit space-y-5 p-6 lg:sticky lg:top-24">
-        <p className="h-display text-lg">{d.orderSummary}</p>
+        <p className="h-display text-xl"><span className="idx mr-3 align-top">03</span>{d.orderSummary}</p>
         <ul className="space-y-3">
           {items.map((i) => (
             <li key={i.key} className="flex items-center gap-3 text-sm">

@@ -5,16 +5,18 @@ import { CartLines, FreeShippingBar } from './CartLines'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
+import { PageHead } from './PageHead'
 
 export function CartView({ locale }: { locale: Locale }) {
   const { items, subtotal, shipping } = useCart()
   const d = t(locale)
   const ship = subtotal >= shipping.freeThresholdCents ? 0 : shipping.shippingCents
   return (
-    <div className="container-x pt-14">
-      <h1 className="h-display text-3xl sm:text-4xl">{d.cart}</h1>
+    <>
+    <PageHead eyebrow={d.footerShop} title={d.cart} />
+    <div className="container-x">
       {items.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-6 text-center">
+        <div className="mt-16 flex flex-col items-start gap-6">
           <p className="text-mute">{d.emptyCart}</p>
           <Link href={href(locale, 'shop')} className="btn">{d.continueShopping}</Link>
         </div>
@@ -31,5 +33,6 @@ export function CartView({ locale }: { locale: Locale }) {
         </div>
       )}
     </div>
+    </>
   )
 }
