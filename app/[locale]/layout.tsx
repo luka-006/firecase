@@ -24,10 +24,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const en = locale === 'en'
   return {
     metadataBase: new URL(SITE_URL),
-    title: { default: en ? 'Firecase – Premium lighter cases' : 'Firecase – Premium futrole za upaljače', template: '%s | Firecase' },
+    title: { default: en ? 'Firecase – Lighter cases' : 'Firecase – Futrole za upaljače', template: '%s | Firecase' },
     description: en
-      ? 'Premium lighter cases from Firecase. Protection and style for your lighter, delivered across Croatia. Free shipping over €30.'
-      : 'Premium futrole za upaljače Firecase. Zaštita i stil za vaš upaljač uz dostavu diljem Hrvatske. Besplatna dostava iznad 30 €.',
+      ? 'Lighter cases with delivery across Croatia. Free shipping on orders over €30 and 14 days to return.'
+      : 'Futrole za upaljače s dostavom po cijeloj Hrvatskoj. Besplatna dostava za narudžbe iznad 30 € i 14 dana za povrat.',
     keywords: en ? ['lighter case', 'lighter cover', 'BIC lighter case', 'Firecase'] : ['futrola za upaljač', 'futrole za upaljače', 'navlaka za upaljač', 'futrola za BIC upaljač', 'Firecase'],
     openGraph: { type: 'website', siteName: 'Firecase', locale: en ? 'en_US' : 'hr_HR', alternateLocale: en ? 'hr_HR' : 'en_US', images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Firecase' }] },
     verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } : undefined,

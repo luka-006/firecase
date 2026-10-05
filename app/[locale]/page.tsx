@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params
   const en = locale === 'en'
   return {
-    title: { absolute: en ? 'Firecase – Premium lighter cases' : 'Firecase – Premium futrole za upaljače' },
+    title: { absolute: en ? 'Firecase – Lighter cases' : 'Firecase – Futrole za upaljače' },
     alternates: { canonical: en ? '/en' : '/', languages: { hr: '/', en: '/en', 'x-default': '/' } },
   }
 }
