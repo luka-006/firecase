@@ -21,7 +21,7 @@ export function CollectionIndex({ items, note }: { items: IndexItem[]; note?: Re
               href={it.href}
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
-              className="group grid grid-cols-[72px_1fr_auto] items-center gap-5 py-5 transition-colors duration-500 hover:bg-ink-2 lg:grid-cols-[3rem_1fr_auto_1.5rem] lg:gap-6 lg:px-2 lg:py-8"
+              className="row-wipe group relative isolate grid grid-cols-[72px_1fr_auto] items-center gap-5 py-5 lg:grid-cols-[3rem_1fr_auto_1.5rem] lg:gap-6 lg:px-2 lg:py-8"
             >
               <span className="hidden font-mono text-xs text-mute lg:block">{pad(i + 1)}</span>
               <span className="frame relative block aspect-square lg:hidden" style={{ ['--c' as string]: '10px' }}>
@@ -43,15 +43,17 @@ export function CollectionIndex({ items, note }: { items: IndexItem[]; note?: Re
       {note}
       </div>
       <div className="hidden lg:col-span-5 lg:block">
-        <div className="sticky top-28">
+        <div className="sticky top-28" data-reveal>
           <div className="frame aspect-square">
             <div className="frame-in">
-              {items.map((it, i) =>
-                it.image ? (
-                  <Image key={it.slug} src={it.image} alt="" fill sizes="40vw" priority={i === 0}
-                    className={`object-cover transition-opacity duration-700 ${i === active ? 'opacity-100' : 'opacity-0'}`} />
-                ) : null,
-              )}
+              <div className="curtain absolute inset-0">
+                {items.map((it, i) =>
+                  it.image ? (
+                    <Image key={it.slug} src={it.image} alt="" fill sizes="40vw" priority={i === 0}
+                      className={`object-cover transition-[opacity,transform] duration-[1200ms] ease-[cubic-bezier(.16,1,.3,1)] ${i === active ? 'scale-100 opacity-100' : 'scale-[1.04] opacity-0'}`} />
+                  ) : null,
+                )}
+              </div>
             </div>
           </div>
           <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.2em] text-mute">{pad(active + 1)} / {pad(items.length)}</p>

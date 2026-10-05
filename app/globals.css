@@ -89,3 +89,43 @@
   .rise { opacity: 1; animation: none; }
   html { scroll-behavior: auto; }
 }
+
+/* Logotip u herou: obris se iscrta, plamen se pojavi pa lagano treperi */
+.mark-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: mark-draw 2.6s var(--ease-out-expo) 0.15s forwards; }
+@keyframes mark-draw { to { stroke-dashoffset: 0; } }
+.mark-flame { opacity: 0; transform-origin: 51% 52%; animation: flame-in 1.4s var(--ease-out-expo) 0.9s forwards, flame-flicker 5.5s ease-in-out 2.3s infinite; }
+@keyframes flame-in { from { opacity: 0; transform: translateY(3%) scaleY(0.92); } to { opacity: 1; transform: none; } }
+@keyframes flame-flicker { 0%, 100% { transform: none; } 35% { transform: scale(1.008, 1.03) skewX(-0.7deg); } 65% { transform: scale(0.996, 0.988) skewX(0.5deg); } }
+
+/* Linija koja se iscrta slijeva */
+.rule-draw { transform-origin: left; animation: rule-draw 1.6s var(--ease-out-expo) 0.5s both; }
+@keyframes rule-draw { from { transform: scaleX(0); } }
+
+/* Redak u popisu: pozadina klizi slijeva */
+.row-wipe::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-ink-2); transform: scaleX(0); transform-origin: left; transition: transform 0.7s var(--ease-out-expo); }
+.row-wipe:hover::before, .row-wipe:focus-visible::before { transform: scaleX(1); }
+
+/* Slika se otkriva odozdo kad uđe u kadar */
+.js [data-reveal] .curtain { clip-path: inset(100% 0 0 0); transition: clip-path 1.4s var(--ease-out-expo) var(--d, 0ms); }
+.js [data-reveal].in .curtain { clip-path: inset(0 0 0 0); }
+
+/* Logotip u podnožju izranja iza linije */
+.js [data-reveal] .wm-rise { transform: translateY(105%); transition: transform 1.6s var(--ease-out-expo); }
+.js [data-reveal].in .wm-rise { transform: none; }
+
+/* Rečenica na narančastoj podlozi: riječi se pale redom dok se skrola */
+@supports (animation-timeline: view()) {
+  .sweep-host { view-timeline-name: --sweep; }
+  .sw { animation: sweep linear both; animation-timeline: --sweep; animation-range: cover calc(14% + var(--i) * 1.6%) cover calc(26% + var(--i) * 1.6%); }
+  @keyframes sweep { from { opacity: 0.12; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark-draw { stroke-dashoffset: 0; animation: none; }
+  .mark-flame { opacity: 1; animation: none; }
+  .rule-draw { animation: none; }
+  .row-wipe::before { transition: none; }
+  .js [data-reveal] .curtain { clip-path: none; transition: none; }
+  .js [data-reveal] .wm-rise { transform: none; transition: none; }
+  .sw { animation: none; }
+}

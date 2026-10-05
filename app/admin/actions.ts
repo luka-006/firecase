@@ -10,6 +10,7 @@ import { renderInvoicePdf } from '@/lib/invoice/pdf'
 import { loadCert } from '@/lib/invoice/fiscal'
 import { sendRefunded, sendShipped } from '@/lib/mail'
 import { saveSettings, type Settings } from '@/lib/settings'
+import { SCHEMA } from '@/lib/schema.mjs'
 import type { Invoice, Order, Variant } from '@/lib/types'
 
 type State = { error?: string; ok?: string } | null
@@ -42,6 +43,13 @@ export async function adminLogin(_: State, f: FormData): Promise<State> {
 export async function adminLogout() {
   await clearAdminSession()
   redirect('/admin/login')
+}
+
+// ---------- Baza ----------
+export async function runMigrations() {
+  await requireAdmin()
+  await sql.unsafe(SCHEMA)
+  revalidatePath('/admin', 'layout')
 }
 
 // ---------- Proizvodi ----------
@@ -84,8 +92,9 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
       redirect(`/admin/products/${row.id}?saved=1`)
     }
   } catch (e) {
+    if ((e as { digest?: string }).digest?.startsWith('NEXT_REDIRECT')) throw e
     if ((e as { code?: string }).code === '23505') return { error: 'Proizvod s tim URL-om (slug) već postoji.' }
-    throw e
+    return { error: `Baza: ${(e as Error).message}` }
   }
   refresh()
   return { ok: 'Spremljeno.' }
@@ -190,7 +199,11 @@ export async function saveSettingsAction(_: State, f: FormData): Promise<State> 
   if (s.fiscalEnabled) {
     try { loadCert() } catch (e) { return { error: `Fiskalizacija se ne može uključiti: ${(e as Error).message}` } }
   }
-  await saveSettings(s)
+  try {
+    await saveSettings(s)
+  } catch (e) {
+    return { error: `Baza: ${(e as Error).message}` }
+  }
   updateTag('settings')
   revalidatePath('/[locale]', 'layout')
   return { ok: 'Postavke su spremljene.' }

@@ -5,6 +5,7 @@ import { money, formatDateTime } from '@/lib/money'
 import { Status } from '@/components/admin/Status'
 import { retryFiscal } from '../actions'
 import type { Invoice } from '@/lib/types'
+import { DbError } from '@/components/admin/DbError'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,12 @@ export default async function Invoices({ searchParams }: { searchParams: Promise
   await requireAdmin()
   const { year } = await searchParams
   const y = Number(year) || new Date().getFullYear()
-  const list = await sql<Invoice[]>`select * from invoices where year = ${y} order by seq desc`
+  let list: Invoice[]
+  try {
+    list = [...(await sql<Invoice[]>`select * from invoices where year = ${y} order by seq desc`)]
+  } catch (e) {
+    return <DbError error={e} />
+  }
   const total = list.reduce((a, i) => a + i.totalCents, 0)
   return (
     <div className="space-y-6">

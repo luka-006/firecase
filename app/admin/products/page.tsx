@@ -5,12 +5,18 @@ import { sql } from '@/lib/db'
 import { money } from '@/lib/money'
 import { toggleProduct } from '../actions'
 import type { Product } from '@/lib/types'
+import { DbError } from '@/components/admin/DbError'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Products() {
   await requireAdmin()
-  const products = await sql<Product[]>`select * from products order by sort asc, id desc`
+  let products: Product[]
+  try {
+    products = [...(await sql<Product[]>`select * from products order by sort asc, id desc`)]
+  } catch (e) {
+    return <DbError error={e} />
+  }
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

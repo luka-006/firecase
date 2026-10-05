@@ -7,16 +7,23 @@ import { money, formatDateTime } from '@/lib/money'
 import { Status } from '@/components/admin/Status'
 import { ActionForm } from '@/components/Ui'
 import { cancelPending, issueMissingInvoice, markDelivered, markShipped, refundOrder, retryFiscal } from '../../actions'
-import type { Order } from '@/lib/types'
+import type { Invoice, Order } from '@/lib/types'
+import { DbError } from '@/components/admin/DbError'
 
 export const dynamic = 'force-dynamic'
 
 export default async function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
   await requireAdmin()
   const { id } = await params
-  const [o] = await sql<Order[]>`select * from orders where id = ${Number(id) || 0}`
+  let o: Order | undefined
+  let invoices: Invoice[] = []
+  try {
+    ;[o] = await sql<Order[]>`select * from orders where id = ${Number(id) || 0}`
+    if (o) invoices = await getInvoicesForOrder(o.id)
+  } catch (e) {
+    return <DbError error={e} />
+  }
   if (!o) notFound()
-  const invoices = await getInvoicesForOrder(o.id)
   const addr = `${o.name}\n${o.address}\n${o.postal} ${o.city}\n${o.country}\n${o.phone}`
 
   return (

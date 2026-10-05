@@ -1,4 +1,5 @@
 import postgres from 'postgres'
+import { databaseUrl } from './schema.mjs'
 
 declare global {
   // eslint-disable-next-line no-var
@@ -7,7 +8,7 @@ declare global {
 
 export const sql =
   globalThis.__sql ??
-  postgres(process.env.DATABASE_URL || 'postgres://localhost:5432/firecase', {
+  postgres(databaseUrl() || 'postgres://localhost:5432/firecase', {
     max: 3,
     idle_timeout: 20,
     prepare: false,

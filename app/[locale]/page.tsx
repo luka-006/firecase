@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { CollectionIndex, type IndexItem } from '@/components/CollectionIndex'
@@ -44,6 +45,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     },
   ]
   const idx = 'idx mr-3 align-top sm:mr-4'
+  const words: [string, boolean][] = [...d.storyA.split(' ').map((w): [string, boolean] => [w, false]), ...d.storyB.split(' ').map((w): [string, boolean] => [w, true])]
   const facts: [string, string][] = [
     [d.delivery, d.freeOver(money(s.freeThresholdCents, locale))],
     [d.deliveryTime, locale === 'en' ? s.deliveryEn : s.deliveryHr],
@@ -56,7 +58,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
       <section className="relative -mt-16 overflow-hidden pt-16">
         <div className="gridlines pointer-events-none absolute inset-0" />
-        <Mark outline body="#2c2c2c" className="pointer-events-none absolute -right-[6%] top-[11%] h-[56%] w-auto md:right-[3%] md:top-[9%] md:h-[96%]" />
+        <Mark outline animated body="#2c2c2c" className="pointer-events-none absolute -right-[6%] top-[11%] h-[56%] w-auto md:right-[3%] md:top-[9%] md:h-[96%]" />
         <div className="container-x relative flex min-h-[calc(100svh-6.5rem)] flex-col justify-end pb-14 pt-32 md:pb-20">
           <h1 className="md:max-w-[56%]">
             <span className="eyebrow rise block" style={{ ['--d' as string]: '0ms' }}>{d.heroEyebrow}</span>
@@ -65,7 +67,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               <span className="rise block" style={{ ['--d' as string]: '240ms' }}><span className="text-flame">{d.heroEm}</span> {d.heroPost}</span>
             </span>
           </h1>
-          <div className="rise mt-12 flex flex-col gap-8 border-t border-line pt-8 md:flex-row md:items-end md:justify-between" style={{ ['--d' as string]: '420ms' }}>
+          <span aria-hidden="true" className="rule-draw mt-12 block h-px bg-line" />
+          <div className="rise flex flex-col gap-8 pt-8 md:flex-row md:items-end md:justify-between" style={{ ['--d' as string]: '420ms' }}>
             <p className="max-w-md text-[15px] leading-relaxed text-bone/65">{d.heroSub}</p>
             <Link href={href(locale, 'shop')} className="btn group self-start">{d.heroCta}<ArrowIcon className="size-4 transition duration-500 group-hover:translate-x-1" /></Link>
           </div>
@@ -96,10 +99,14 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         ) : <p className="text-mute">{d.noProducts}</p>}
       </section>
 
-      <section className="mt-28 bg-flame text-ink md:mt-44">
+      <section className="sweep-host mt-28 bg-flame text-ink md:mt-44">
         <div className="container-x py-24 md:py-40">
-          <p className="h-display max-w-6xl text-[clamp(1.9rem,5vw,4.8rem)] normal-case leading-[1.04]" data-reveal>
-            {d.storyA} <span className="opacity-50">{d.storyB}</span>
+          <p className="h-display max-w-6xl text-[clamp(1.9rem,5vw,4.8rem)] normal-case leading-[1.04]">
+            {words.map(([w, dim], i) => (
+              <Fragment key={i}>
+                <span className={dim ? 'sw opacity-50' : 'sw'} style={{ ['--i' as string]: i }}>{w}</span>{' '}
+              </Fragment>
+            ))}
           </p>
         </div>
       </section>

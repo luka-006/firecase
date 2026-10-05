@@ -14,12 +14,14 @@ export function Gallery({ images, alt }: { images: string[]; alt: string }) {
   if (!images.length) return <div className="frame aspect-square"><div className="frame-in" /></div>
   return (
     <div className="space-y-3">
-      <div className="frame aspect-square">
+      <div className="frame aspect-square" data-reveal>
         <div className="frame-in">
-          {images.map((src, idx) => (
-            <Image key={src} src={src} alt={idx === 0 ? alt : ''} fill priority={idx === 0} sizes="(min-width:1024px) 50vw, 100vw"
-              className={`object-cover transition-opacity duration-500 ${idx === i ? 'opacity-100' : 'opacity-0'}`} />
-          ))}
+          <div className="curtain absolute inset-0">
+            {images.map((src, idx) => (
+              <Image key={src} src={src} alt={idx === 0 ? alt : ''} fill priority={idx === 0} sizes="(min-width:1024px) 50vw, 100vw"
+                className={`object-cover transition-opacity duration-500 ${idx === i ? 'opacity-100' : 'opacity-0'}`} />
+            ))}
+          </div>
         </div>
       </div>
       {images.length > 1 && (

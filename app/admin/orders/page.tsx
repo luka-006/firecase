@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { OrdersTable } from '@/components/admin/OrdersTable'
 import type { Order } from '@/lib/types'
+import { DbError } from '@/components/admin/DbError'
 
 export const dynamic = 'force-dynamic'
 const FILTERS = [['', 'Sve'], ['paid', 'Za slanje'], ['shipped', 'Poslano'], ['delivered', 'Dostavljeno'], ['refunded', 'Vraćeno'], ['pending', 'Nedovršene'], ['cancelled', 'Otkazano']]
@@ -10,9 +11,14 @@ const FILTERS = [['', 'Sve'], ['paid', 'Za slanje'], ['shipped', 'Poslano'], ['d
 export default async function Orders({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   await requireAdmin()
   const { status = '' } = await searchParams
-  const orders = status
-    ? await sql<Order[]>`select * from orders where status = ${status} order by id desc limit 200`
-    : await sql<Order[]>`select * from orders where status <> 'pending' order by id desc limit 200`
+  let orders: Order[]
+  try {
+    orders = [...(status
+      ? await sql<Order[]>`select * from orders where status = ${status} order by id desc limit 200`
+      : await sql<Order[]>`select * from orders where status <> 'pending' order by id desc limit 200`)]
+  } catch (e) {
+    return <DbError error={e} />
+  }
   return (
     <div className="space-y-6">
       <h1 className="h-display text-2xl">Narudžbe</h1>

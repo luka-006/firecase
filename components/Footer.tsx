@@ -33,8 +33,8 @@ export function Footer({ locale }: { locale: Locale }) {
           </ul>
         </div>
       </div>
-      <div className="px-5 sm:px-8">
-        <Image src="/logo-word.svg" alt="" width={6067} height={501} className="h-auto w-full" />
+      <div className="overflow-hidden px-5 sm:px-8" data-reveal>
+        <Image src="/logo-word.svg" alt="" width={6067} height={501} className="wm-rise h-auto w-full" />
       </div>
       <div className="mt-10 border-t border-line">
         <p className="container-x py-6 font-mono text-[10px] uppercase tracking-[0.2em] text-mute">© {new Date().getFullYear()} Firecase</p>

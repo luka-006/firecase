@@ -5,6 +5,7 @@ import { sql } from '@/lib/db'
 import { ProductForm } from '@/components/admin/ProductForm'
 import { deleteProduct } from '../../actions'
 import type { Product } from '@/lib/types'
+import { DbError } from '@/components/admin/DbError'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +15,11 @@ export default async function EditProduct({ params, searchParams }: { params: Pr
   const { saved } = await searchParams
   let p: Product | null = null
   if (id !== 'new') {
-    ;[p] = await sql<Product[]>`select * from products where id = ${Number(id) || 0}`
+    try {
+      ;[p] = await sql<Product[]>`select * from products where id = ${Number(id) || 0}`
+    } catch (e) {
+      return <DbError error={e} />
+    }
     if (!p) notFound()
   }
   return (
