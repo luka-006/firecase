@@ -49,6 +49,16 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 
 Uz svaki proizvod u adminu upiši **link na AliExpressu** i **nabavnu cijenu** (za izračun zarade), a uz veličine opciju koju treba odabrati na AliExpressu (`HR naziv | EN naziv | AliExpress opcija`).
 
+## GPSR (odgovorna osoba u EU, AliExpress)
+
+Za svaki artikl na stranici proizvoda u adminu moraju stajati **proizvođač** i **odgovorna osoba u EU** (GPSR). To nije tvoja adresa u Kninu, nego podatak s oglasa ili ambalaže.
+
+1. Na AliExpressu otvori proizvod → **Manufacturer / Product compliance / EU responsible person** (naziv se razlikuje po prodavaču).
+2. Kopiraj **Manufacturer** (naziv, adresa, kontakt) u admin → *Proizvođač*.
+3. Kopiraj **EU Responsible Person** (tvrtka u EU s adresom i e-mailom) u admin → *Odgovorna osoba u EU*.
+4. Ako EU kontakt **ne postoji**, ne prodavaj taj artikl u EU dok ne nađeš drugi oglas s compliance podacima ili ugovoriš EU ovlaštenog zastupnika (plaćena usluga).
+5. Kad stigne prva roba, provjeri da podaci na ambalaži/letku odgovaraju onome na webu.
+
 ## Postavljanje na Vercel
 
 1. **Import** – Vercel → Add New → Project → odaberi GitHub repo `firecase` → Deploy.

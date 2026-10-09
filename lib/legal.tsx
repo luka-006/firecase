@@ -22,7 +22,7 @@ const Seller = ({ en }: { en?: boolean }) => (
 )
 const Mail = () => <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
 const ReturnAddr = ({ en }: { en?: boolean }) => (
-  <p><b>{SELLER.shortName}</b><br />{en ? 'BOX NOW or GLS parcel locker' : 'BOX NOW ili GLS paketomat'}, {SELLER.returnAddress}</p>
+  <p><b>{SELLER.shortName}</b><br />{SELLER.returnAddress}</p>
 )
 
 const hr: Record<LegalDoc, Doc> = {

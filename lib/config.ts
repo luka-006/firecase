@@ -13,7 +13,7 @@ export const SELLER = {
   registry: 'Obrtni registar',
   // Matični broj obrta (MBO) - upiši kad ga imaš, prikazuje se samo ako nije prazan
   registryNumber: '',
-  returnAddress: 'Tvrtkova 4, 22300 Knin',
+  returnAddress: 'Tvrtkova 1, 22300 Knin',
   vatNoteHr: 'Obveznik nije u sustavu PDV-a. PDV nije obračunat temeljem čl. 90. st. 1. Zakona o PDV-u.',
   vatNoteEn: 'The seller is not registered for VAT. VAT not charged pursuant to Art. 90(1) of the Croatian VAT Act.',
 }
