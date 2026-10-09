@@ -34,7 +34,7 @@ export default async function Dashboard() {
   const missing = [
     !process.env.STRIPE_SECRET_KEY && 'Stripe (STRIPE_SECRET_KEY) – bez toga nema plaćanja',
     !process.env.STRIPE_WEBHOOK_SECRET && 'Stripe webhook (STRIPE_WEBHOOK_SECRET)',
-    !process.env.SMTP_PASS && 'E-mail (SMTP_PASS) – kupci ne dobivaju potvrde',
+    !process.env.RESEND_API_KEY && 'E-mail (RESEND_API_KEY) – kupci ne dobivaju potvrde',
     !process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID && 'Vercel Blob – upload slika ne radi',
     !process.env.DEEPL_API_KEY && 'Automatski prijevod (DEEPL_API_KEY)',
     !s.fiscalEnabled && 'Fiskalizacija je isključena – obavezna prije prve prodaje',

@@ -21,14 +21,14 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 - [ ] **Dobavljač:** odabrati (Temu ne dopušta dropshipping), dogovoriti rok dostave i dobiti GPSR podatke (proizvođač, odgovorna osoba u EU)
 - [ ] **Proizvodi:** obrisati primjere, dodati prave fotografije, opise, veličine i cijene; rok dostave u `/admin/settings`
 - [ ] **Stripe:** otvoriti račun kao obrt, uključiti kartice, Apple Pay, Google Pay i PayPal, postaviti `STRIPE_SECRET_KEY` i webhook (`STRIPE_WEBHOOK_SECRET`)
-- [ ] **E-mail:** Gmail app password u `SMTP_PASS` (bez toga kupci ne dobivaju potvrdu narudžbe ni račun)
+- [ ] **E-mail:** Resend (`RESEND_API_KEY`), verificirana domena `firecase.net`, `MAIL_FROM=Firecase <info@firecase.net>` (bez toga kupci ne dobivaju potvrdu narudžbe ni račun)
 - [ ] **Fiskalizacija:** FINA certifikat (`FISCAL_CERT_BASE64`, `FISCAL_CERT_PASSWORD`), interni akt s oznakama poslovnog prostora i naplatnog uređaja, test u TEST okruženju pa prebacivanje na PRODUKCIJU; s knjigovođom potvrditi oznaku plaćanja za PayPal (`O`) i format QR koda
 - [ ] **Pravni tekstovi:** dati na pregled pravniku ili knjigovođi
 - [ ] **Probna kupnja:** Stripe test kartica `4242 4242 4242 4242`, provjeriti e-mail, PDF račun i povrat novca iz admina
 
 **Nakon toga**
-- [ ] **Domena:** registrirati (npr. `firecase.hr`), spojiti u Vercelu, promijeniti `NEXT_PUBLIC_SITE_URL` i URL webhooka u Stripeu
-- [ ] **E-mail na domeni** (npr. `info@firecase.hr`) umjesto Gmaila
+- [ ] **Domena:** `firecase.net` spojiti u Vercelu, `NEXT_PUBLIC_SITE_URL`, Stripe webhook
+- [ ] **Resend:** provjeri DNS (SPF/DKIM) na `firecase.net` i test pošiljatelja `info@firecase.net`
 - [ ] **Google:** `NEXT_PUBLIC_GA_ID`, Search Console (`NEXT_PUBLIC_GSC_VERIFICATION`) i slanje `sitemap.xml`
 - [ ] **Stripe live ključevi** umjesto test ključeva
 - [ ] **Automatski prijevod:** račun na deepl.com/pro-api (plan *DeepL API Free*), ključ u `DEEPL_API_KEY`, Redeploy
@@ -45,9 +45,13 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 2. Otvori narudžbu → **Otvori na AliExpressu** (link spremljen uz proizvod) → odaberi opciju koja piše uz stavku i količinu.
 3. Na AliExpressu kao adresu dostave upiši kupčevu: klik na polje u adminu ga kopira (ime, mobitel, ulica, poštanski broj, grad, županija, država). Kopiraj i napomenu prodavaču.
 4. Plati na AliExpressu i broj AliExpress narudžbe upiši u admin → narudžba prelazi u **Čeka slanje**.
-5. Kad prodavač pošalje, broj za praćenje upiši u admin → **Označi kao poslano** (kupac dobije e-mail).
+5. Kad prodavač pošalje, u adminu **Potvrdi slanje** (dostavna služba, broj za praćenje, opcionalna poveznica) — kupac dobije e-mail „Vaša narudžba je poslana”.
 
 Uz svaki proizvod u adminu upiši **link na AliExpressu** i **nabavnu cijenu** (za izračun zarade), a uz veličine opciju koju treba odabrati na AliExpressu (`HR naziv | EN naziv | AliExpress opcija`).
+
+## GPSR (AliExpress)
+
+Uz proizvod u adminu upiši **proizvođača** i **odgovornu osobu u EU** s oglasa (Compliance / EU responsible person). Bez toga artikl ne stavljaj u prodaju.
 
 ## Postavljanje na Vercel
 
@@ -59,25 +63,30 @@ Uz svaki proizvod u adminu upiši **link na AliExpressu** i **nabavnu cijenu** (
    - `AUTH_SECRET` – nasumičan niz, npr. `openssl rand -base64 32`
    - `ADMIN_PASSWORD` – lozinka za `/admin`
    - `CRON_SECRET` – nasumičan niz
-   - `NEXT_PUBLIC_SITE_URL` – npr. `https://firecase.hr` (nakon spajanja domene)
-   - `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `ORDER_NOTIFY_EMAIL` – Gmail: Google račun → Sigurnost → uključi 2FA → *App passwords* → generiraj lozinku i stavi je u `SMTP_PASS`
+   - `NEXT_PUBLIC_SITE_URL` – `https://firecase.net` (nakon spajanja domene)
+   - `RESEND_API_KEY`, `MAIL_FROM` (default `Firecase <info@firecase.net>`), `ORDER_NOTIFY_EMAIL` – Resend dashboard → API Keys; verificiraj domenu prije produkcije
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` – vidi dolje
    - `NEXT_PUBLIC_GA_ID` – Google Analytics 4 Measurement ID (`G-...`); učitava se tek kad posjetitelj prihvati kolačiće
    - `NEXT_PUBLIC_GSC_VERIFICATION` – Google Search Console → HTML tag → vrijednost `content`
-6. **Redeploy** (Deployments → ⋯ → Redeploy) nakon dodavanja varijabli.
+6. **Deployment Protection** – Settings → Deployment Protection: za **Production** isključi Vercel Authentication (shop mora biti javan na `firecase.net`). Za **Preview** može ostati uključeno.
+7. **Redeploy** (Deployments → ⋯ → Redeploy) nakon dodavanja varijabli.
 
 ## SEO
 
 Nakon spajanja domene: Google Search Console → dodaj domenu → pošalji `https://TVOJA-DOMENA/sitemap.xml`.
 
-## Stripe
+## Stripe (zaseban račun za Firecase)
 
-1. Otvori račun na stripe.com kao obrt i završi aktivaciju.
-2. Settings → Payment methods: uključi **Cards, Apple Pay, Google Pay, PayPal**.
-3. Developers → API keys → `Secret key` → `STRIPE_SECRET_KEY`.
-4. Developers → Webhooks → Add endpoint: `https://TVOJA-DOMENA/api/stripe/webhook`, događaji
-   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` → `Signing secret` → `STRIPE_WEBHOOK_SECRET`.
-5. Za testiranje koristi test ključeve (`sk_test_...`) i karticu `4242 4242 4242 4242`.
+Koristi **novi Stripe račun** vezan uz obrt / Firecase (ne miješaj s drugim projektima).
+
+1. stripe.com → registracija kao **Kasalo Digital / Firecase** (podaci obrta, IBAN).
+2. Settings → Business → public business name **Firecase**; Settings → Branding → logo/boje (opcionalno).
+3. Settings → Payment methods: **Cards, Apple Pay, Google Pay, PayPal**.
+4. Developers → API keys → **Restricted key** ili Secret key samo za ovaj Vercel projekt → `STRIPE_SECRET_KEY`.
+5. Webhooks → endpoint `https://firecase.net/api/stripe/webhook`, događaji:
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` → `STRIPE_WEBHOOK_SECRET`.
+6. Test: `sk_test_...`, kartica `4242 4242 4242 4242`. Na izvodu: descriptor **FIRECASE** (postavljeno u kodu).
+7. Live: zamijeni test ključeve live ključevima i ažuriraj webhook URL na produkcijskoj domeni.
 
 ## Fiskalizacija
 

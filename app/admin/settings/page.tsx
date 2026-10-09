@@ -25,6 +25,15 @@ export default async function SettingsPage() {
           </div>
         </details>
         <details className="card group/s">
+          <summary className="flex items-center justify-between px-5 py-4 font-medium">Prijedlozi (staff)<span className="font-mono text-mute transition group-open/s:rotate-45">+</span></summary>
+          <div className="border-t border-line p-5 text-sm">
+            <label className="flex items-center gap-3">
+              <input type="checkbox" name="autoAcceptProposals" defaultChecked={s.autoAcceptProposals} className="size-4 accent-[#d08a2e]" />
+              Automatski prihvati — prijedlog na pregledu odmah postaje neobjavljeni proizvod (bez prodajne cijene)
+            </label>
+          </div>
+        </details>
+        <details className="card group/s">
           <summary className="flex items-center justify-between px-5 py-4 font-medium">Traka s obavijesti (vrh stranice)<span className="font-mono text-mute transition group-open/s:rotate-45">+</span></summary>
           <div className="grid gap-4 border-t border-line p-5 sm:grid-cols-2">
           <Field label="Tekst (HR)" name="announcementHr" defaultValue={s.announcementHr} hint="Prazno = poruka o besplatnoj dostavi." />

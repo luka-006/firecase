@@ -16,6 +16,7 @@ export type Settings = {
   premises: string
   device: string
   seqMode: 'P' | 'N'
+  autoAcceptProposals: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -32,6 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
   premises: 'WEB1',
   device: '1',
   seqMode: 'P',
+  autoAcceptProposals: false,
 }
 
 async function load(): Promise<Settings> {

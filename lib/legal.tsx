@@ -21,8 +21,8 @@ const Seller = ({ en }: { en?: boolean }) => (
   </p>
 )
 const Mail = () => <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
-const ReturnAddr = ({ en }: { en?: boolean }) => (
-  <p><b>{SELLER.shortName}</b><br />{en ? 'BOX NOW or GLS parcel locker' : 'BOX NOW ili GLS paketomat'}, {SELLER.returnAddress}</p>
+const ReturnAddr = () => (
+  <p>{SELLER.legalName}, {SELLER.returnAddress}</p>
 )
 
 const hr: Record<LegalDoc, Doc> = {
@@ -61,9 +61,9 @@ const hr: Record<LegalDoc, Doc> = {
         <h2>6. Pravo na jednostrani raskid ugovora</h2>
         <p>Potrošač ima pravo jednostrano raskinuti ugovor u roku od 14 dana bez navođenja razloga. Rok počinje teći od dana kad potrošač ili treća osoba koju je odredio (osim prijevoznika) preuzme robu. Ako je više proizvoda iz jedne narudžbe isporučeno odvojeno, rok teče od preuzimanja posljednjeg proizvoda.</p>
         <p>Za ostvarivanje prava potrošač nas mora obavijestiti nedvosmislenom izjavom poslanom e-mailom na <Mail /> ili poštom na adresu sjedišta. Može se koristiti <Link href={href('hr', 'withdrawal')}>obrazac za jednostrani raskid ugovora</Link>, ali to nije obavezno. Rok je poštovan ako je obavijest poslana prije isteka roka.</p>
-        <p>Robu treba vratiti bez odgađanja, a najkasnije u roku od 14 dana od dana slanja obavijesti o raskidu, na adresu:</p>
+        <p>Robu je potrebno vratiti bez odgađanja, a najkasnije u roku od 14 dana od dana slanja obavijesti o raskidu, na adresu prodavatelja:</p>
         <ReturnAddr />
-        <p>Prije slanja javite nam se e-mailom kako bismo vam poslali upute za povrat. <b>Izravne troškove povrata robe snosi potrošač.</b></p>
+        <p><b>Izravne troškove povrata robe snosi potrošač.</b></p>
         <p>Prodavatelj će bez odgađanja, a najkasnije u roku od 14 dana od dana zaprimanja obavijesti o raskidu, vratiti sve primljene uplate, uključujući troškove dostave. Povrat se izvršava istim sredstvom plaćanja kojim je plaćena narudžba. Prodavatelj može zadržati povrat dok ne primi robu ili dok potrošač ne dostavi dokaz da je robu poslao, ovisno o tome što nastupi prije.</p>
         <p>Potrošač odgovara za umanjenu vrijednost robe koja je posljedica rukovanja robom na način koji nije nužan za utvrđivanje prirode, obilježja i funkcionalnosti robe.</p>
 
@@ -116,7 +116,8 @@ const hr: Record<LegalDoc, Doc> = {
           <li>Vercel Inc., SAD – hosting stranice i anonimna statistika posjeta.</li>
           <li>Neon Inc. – baza podataka (podaci pohranjeni u EU).</li>
           <li>Stripe Payments Europe Ltd., Irska – obrada plaćanja; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luksemburg – ako plaćate PayPalom.</li>
-          <li>Google Ireland Ltd. – slanje e-mailova (potvrde narudžbi, računi) i, uz privolu, Google Analytics.</li>
+          <li>Resend Inc. (SAD) – slanje transakcijskih e-mailova (potvrde narudžbi, obavijesti o slanju, računi u privitku).</li>
+          <li>Google Ireland Ltd. – uz privolu, Google Analytics.</li>
           <li>Dobavljači i dostavne službe – ime, adresa i broj mobitela, isključivo radi dostave.</li>
           <li>Porezna uprava – podaci o računu radi fiskalizacije; knjigovodstveni servis – računi, ako ga koristimo.</li>
         </ul>
@@ -191,9 +192,8 @@ const hr: Record<LegalDoc, Doc> = {
         <h2>Jednostrani raskid ugovora (14 dana)</h2>
         <p>Ugovor možete raskinuti u roku od 14 dana od dana primitka robe, bez navođenja razloga.</p>
         <ol>
-          <li>Pošaljite nam izjavu o raskidu na <Mail />. Možete koristiti <Link href={href('hr', 'withdrawal')}>obrazac za jednostrani raskid</Link>.</li>
-          <li>Poslat ćemo vam upute za povrat.</li>
-          <li>Robu pošaljite najkasnije 14 dana nakon slanja izjave na adresu:</li>
+          <li>Pošaljite nam nedvosmislenu izjavu o raskidu na <Mail /> (može se koristiti <Link href={href('hr', 'withdrawal')}>obrazac za jednostrani raskid ugovora</Link>).</li>
+          <li>Robu vratite na adresu prodavatelja najkasnije u roku od 14 dana od slanja izjave:</li>
         </ol>
         <ReturnAddr />
         <p>Izravne troškove povrata snosite vi. Povrat novca, uključujući trošak dostave, izvršavamo u roku od 14 dana od primitka izjave, istim sredstvom plaćanja, a možemo ga zadržati do primitka robe ili dokaza o slanju. Detalji su u <Link href={href('hr', 'terms')}>Uvjetima poslovanja</Link>.</p>
@@ -276,7 +276,7 @@ const en: Record<LegalDoc, Doc> = {
         <p>Consumers may withdraw from the contract within 14 days without giving any reason. The period starts on the day the consumer, or a third party designated by them (other than the carrier), takes possession of the goods; for multiple goods delivered separately, from the day the last item is received.</p>
         <p>To withdraw, inform us by an unequivocal statement sent by email to <Mail /> or by post to our registered address. You may use the <Link href={href('en', 'withdrawal')}>withdrawal form</Link>, but it is not mandatory. The deadline is met if you send the notice before the period expires.</p>
         <p>Return the goods without undue delay and no later than 14 days after sending the withdrawal notice to:</p>
-        <ReturnAddr en />
+        <ReturnAddr />
         <p>Please email us before sending so we can give you return instructions. <b>The consumer bears the direct cost of returning the goods.</b></p>
         <p>We will refund all payments received, including delivery costs, without undue delay and no later than 14 days from receiving the withdrawal notice, using the same payment method. We may withhold the refund until we have received the goods or proof that they have been sent back, whichever is earlier. The consumer is liable for any diminished value of the goods resulting from handling beyond what is necessary to establish their nature, characteristics and functioning.</p>
 
@@ -329,7 +329,8 @@ const en: Record<LegalDoc, Doc> = {
           <li>Vercel Inc., USA – website hosting and anonymous statistics.</li>
           <li>Neon Inc. – database (data stored in the EU).</li>
           <li>Stripe Payments Europe Ltd., Ireland – payment processing; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luxembourg – if you pay with PayPal.</li>
-          <li>Google Ireland Ltd. – sending emails (order confirmations, invoices) and, with consent, Google Analytics.</li>
+          <li>Resend Inc. (USA) – transactional email (order confirmations, shipping notices, invoices as attachments).</li>
+          <li>Google Ireland Ltd. – with consent, Google Analytics.</li>
           <li>Suppliers and couriers – name, address and mobile number, for delivery only.</li>
           <li>Croatian Tax Administration – invoice data for fiscalisation; our accountant – invoices, if used.</li>
         </ul>
@@ -408,7 +409,7 @@ const en: Record<LegalDoc, Doc> = {
           <li>We will send you return instructions.</li>
           <li>Send the goods no later than 14 days after your statement to:</li>
         </ol>
-        <ReturnAddr en />
+        <ReturnAddr />
         <p>You bear the direct cost of the return. We refund the full amount, including shipping, within 14 days of receiving your statement, using the same payment method; we may withhold it until we receive the goods or proof of sending. See our <Link href={href('en', 'terms')}>Terms and Conditions</Link>.</p>
         <h2>Defects</h2>
         <p>If a product is defective, email <Mail /> with your order number, a description and a photo. We are liable for material defects for two years from delivery.</p>
@@ -446,7 +447,7 @@ const en: Record<LegalDoc, Doc> = {
         <h2>Seller details</h2>
         <Seller en />
         <h2>Return address</h2>
-        <ReturnAddr en />
+        <ReturnAddr />
       </>
     ),
   },

@@ -12,7 +12,7 @@ import { getSettingsFresh, shippingFor } from '@/lib/settings'
 import { stripe } from '@/lib/stripe'
 import { newPublicId } from '@/lib/orders'
 import { sendPasswordReset } from '@/lib/mail'
-import { EU_COUNTRIES, SITE_URL } from '@/lib/config'
+import { EU_COUNTRIES, SITE_URL, STRIPE_STATEMENT_DESCRIPTOR } from '@/lib/config'
 import type { OrderItem } from '@/lib/types'
 
 type State = { error?: string; ok?: string } | null
@@ -91,8 +91,12 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       locale: locale === 'hr' ? 'hr' : 'en',
       customer_email: c.email,
       client_reference_id: String(order.id),
-      metadata: { orderId: String(order.id) },
-      payment_intent_data: { metadata: { orderId: String(order.id) }, description: `Firecase #${order.id}` },
+      metadata: { orderId: String(order.id), shop: 'firecase' },
+      payment_intent_data: {
+        metadata: { orderId: String(order.id), shop: 'firecase' },
+        description: `Firecase narudžba #${order.id}`,
+        statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR,
+      },
       line_items: [
         ...items.map((i) => ({
           quantity: i.qty,
