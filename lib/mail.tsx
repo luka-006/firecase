@@ -4,6 +4,7 @@ import { t } from './dict'
 import { AdminNewOrderEmail, adminNewOrderSubject } from './emails/admin-new-order'
 import { OrderReceivedEmail } from './emails/order-received'
 import { OrderShippedEmail } from './emails/order-shipped'
+import { OtpCodeEmail } from './emails/otp-code'
 import { PasswordResetEmail } from './emails/password-reset'
 import { RefundEmail } from './emails/refund'
 import { renderEmail } from './emails/render-email'
@@ -55,6 +56,11 @@ export async function sendRefunded(o: Order, pdf?: { number: string; pdf: Uint8A
     ? [{ filename: `storno-${pdf.number.replace(/\//g, '-')}.pdf`, content: Buffer.from(pdf.pdf) }]
     : undefined
   return sendRendered(o.email, d.mailRefundSubject(o.id), <RefundEmail order={o} />, attachments)
+}
+
+export async function sendOtpCode(email: string, code: string, locale: 'hr' | 'en'): Promise<SendMailResult> {
+  const d = t(locale)
+  return sendRendered(email, d.mailOtpSubject, <OtpCodeEmail code={code} locale={locale} />)
 }
 
 export async function sendPasswordReset(email: string, link: string, en: boolean): Promise<SendMailResult> {

@@ -15,7 +15,7 @@ import { SCHEMA } from '@/lib/schema.mjs'
 import type { Invoice, Order, Variant } from '@/lib/types'
 
 type State = { error?: string; ok?: string } | null
-const str = (f: FormData, k: string) => String(f.get(k) ?? '').trim()
+const str = (f: FormData, k: string, max = 5000) => String(f.get(k) ?? '').trim().slice(0, max)
 const cents = (v: string) => {
   const n = parseFloat(v.replace(/\s/g, '').replace(',', '.'))
   return Number.isFinite(n) ? Math.round(n * 100) : null
@@ -79,8 +79,14 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   await requireAdmin()
   const id = Number(f.get('id')) || null
   const nameHr = str(f, 'nameHr')
-  const price = cents(str(f, 'price'))
-  if (!nameHr || price === null || price <= 0) return { error: 'Naziv (HR) i cijena su obavezni.' }
+  const priceRaw = str(f, 'price')
+  const price = priceRaw === '' ? 0 : cents(priceRaw)
+  const wantActive = f.get('active') === 'on'
+  if (!nameHr || price === null || price < 0) return { error: 'Naziv (HR) i cijena su obavezni.' }
+  if (price <= 0 && wantActive) return { error: 'Prije objave upišite prodajnu cijenu veću od 0 €.' }
+  if (price === 0 && !wantActive) {
+    /* neobjavljeni proizvod iz prijedloga */
+  } else if (price <= 0) return { error: 'Neispravna cijena.' }
   const compare = str(f, 'compare') ? cents(str(f, 'compare')) : null
   if (compare !== null && compare <= price) return { error: 'Stara cijena mora biti veća od nove (ili ostavi prazno).' }
   let images: string[] = []
@@ -88,6 +94,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   const variants: Variant[] = str(f, 'variants').split('\n').map((l) => l.trim()).filter(Boolean)
     .map((l) => { const [hr, en, sup] = l.split('|').map((x) => x.trim()); return sup ? { hr, en: en || hr, sup } : { hr, en: en || hr } })
   const stockRaw = str(f, 'stock')
+  const proposalId = Number(f.get('proposalId')) || null
   const data = {
     slug: slugify(str(f, 'slug') || nameHr),
     nameHr, nameEn: str(f, 'nameEn'),
@@ -101,6 +108,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
     manufacturer: str(f, 'manufacturer'), euResponsible: str(f, 'euResponsible'),
     supplierUrl: str(f, 'supplierUrl'), costCents: str(f, 'cost') ? cents(str(f, 'cost')) : null,
     safetyHr: str(f, 'safetyHr'), safetyEn: str(f, 'safetyEn'),
+    ...(proposalId ? { proposalId } : {}),
   }
   if (!data.slug) return { error: 'Neispravan URL (slug).' }
   try {
@@ -111,6 +119,9 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
     } else {
       const [row] = await sql<{ id: number }[]>`insert into products ${sql(data)} returning id`
       await sql`insert into price_history (product_id, price_cents) values (${row.id}, ${price})`
+      if (proposalId) {
+        await sql`update product_proposals set status = 'accepted', product_id = ${row.id}, updated_at = now() where id = ${proposalId}`
+      }
       refresh()
       redirect(`/admin/products/${row.id}?saved=1`)
     }
@@ -130,9 +141,32 @@ export async function deleteProduct(f: FormData) {
   redirect('/admin/products')
 }
 
+// ---------- Prijedlozi proizvoda ----------
+export async function rejectProposal(_: State, f: FormData): Promise<State> {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  const reason = str(f, 'reason', 2000)
+  if (!reason) return { error: 'Upišite razlog odbijanja.' }
+  await sql`
+    update product_proposals set status = 'rejected', reject_reason = ${reason}, updated_at = now()
+    where id = ${id} and status in ('review', 'draft')`
+  revalidatePath('/admin/prijedlozi')
+  revalidatePath(`/admin/prijedlozi/${id}`)
+  return { ok: 'Prijedlog je odbijen.' }
+}
+
+export async function acceptProposal(f: FormData) {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  redirect(`/admin/products/new?proposal=${id}`)
+}
+
 export async function toggleProduct(f: FormData) {
   await requireAdmin()
-  await sql`update products set active = not active where id = ${Number(f.get('id'))}`
+  const id = Number(f.get('id'))
+  const [p] = await sql<{ active: boolean; priceCents: number }[]>`select active, price_cents from products where id = ${id}`
+  if (p && !p.active && p.priceCents <= 0) return
+  await sql`update products set active = not active where id = ${id}`
   refresh()
   revalidatePath('/admin/products')
 }
@@ -277,6 +311,7 @@ export async function saveSettingsAction(_: State, f: FormData): Promise<State> 
     announcementHr: str(f, 'announcementHr'), announcementEn: str(f, 'announcementEn'),
     fiscalEnabled: f.get('fiscalEnabled') === 'on', fiscalEnv: str(f, 'fiscalEnv') === 'prod' ? 'prod' : 'test',
     premises, device, seqMode: str(f, 'seqMode') === 'N' ? 'N' : 'P',
+    autoAcceptProposals: f.get('autoAcceptProposals') === 'on',
   }
   if (s.fiscalEnabled) {
     try { loadCert() } catch (e) { return { error: `Fiskalizacija se ne može uključiti: ${(e as Error).message}` } }
