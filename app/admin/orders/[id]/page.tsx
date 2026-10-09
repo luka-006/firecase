@@ -8,7 +8,8 @@ import { Status, orderStage } from '@/components/admin/Status'
 import { CopyField } from '@/components/admin/AdminUi'
 import { ActionForm } from '@/components/Ui'
 import { DbError } from '@/components/admin/DbError'
-import { cancelPending, issueMissingInvoice, markDelivered, markShipped, refundOrder, retryFiscal, setSupplierOrder } from '../../actions'
+import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryFiscal, setSupplierOrder, updateShipmentDetails } from '../../actions'
+import { ConfirmShipForm } from '@/components/admin/ConfirmShipForm'
 import type { Invoice, Order, Product } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -114,15 +115,19 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
 
           {(o.status === 'paid' || o.status === 'shipped') && (
             <section className="card space-y-4 p-5">
-              {stepTitle(2, o.status === 'paid' ? 'Upiši broj za praćenje i obavijesti kupca' : 'Poslano', o.status === 'shipped')}
-              <form action={markShipped} className="flex flex-wrap items-end gap-3">
-                <input type="hidden" name="id" value={o.id} />
-                <label className="block flex-1">
-                  <span className="label">Broj za praćenje</span>
-                  <input name="tracking" defaultValue={o.tracking} placeholder="s AliExpressa, kad prodavač pošalje" className="input" />
-                </label>
-                <button className="btn btn-sm">{o.status === 'paid' ? 'Označi kao poslano' : 'Ažuriraj'}</button>
-              </form>
+              {stepTitle(2, o.status === 'paid' ? 'Potvrdi slanje i obavijesti kupca' : 'Poslano', o.status === 'shipped')}
+              <ConfirmShipForm
+                orderId={o.id}
+                status={o.status}
+                tracking={o.tracking}
+                carrier={o.carrier ?? ''}
+                trackingUrl={o.trackingUrl ?? ''}
+                shippedEmailSentAt={o.shippedEmailSentAt?.toISOString() ?? null}
+                shippedEmailError={o.shippedEmailError ?? null}
+                confirmAction={confirmShipment}
+                resendAction={resendShippedEmail}
+                updateOnlyAction={updateShipmentDetails}
+              />
               {o.status === 'shipped' && (
                 <form action={markDelivered}><input type="hidden" name="id" value={o.id} /><button className="btn-ghost btn-sm">Označi kao dostavljeno</button></form>
               )}
@@ -177,6 +182,17 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
         </div>
 
         <div className="space-y-6">
+          {(o.confirmationEmailError || o.confirmationEmailSentAt) && (
+            <section className="card p-5 text-sm">
+              <h2 className="mb-3 font-medium">E-mail potvrde narudžbe</h2>
+              {o.confirmationEmailError ? (
+                <p className="text-red-300">Greška: {o.confirmationEmailError}</p>
+              ) : o.confirmationEmailSentAt ? (
+                <p className="text-mute">Poslan: {formatDateTime(o.confirmationEmailSentAt)}</p>
+              ) : null}
+            </section>
+          )}
+
           <section className="card p-5 text-sm">
             <h2 className="mb-3 font-medium">Kupac</h2>
             <p>{o.name}</p>

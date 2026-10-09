@@ -9,6 +9,7 @@ import { fiscalize, getInvoicesForOrder, issueInvoice } from '@/lib/invoice'
 import { renderInvoicePdf } from '@/lib/invoice/pdf'
 import { loadCert } from '@/lib/invoice/fiscal'
 import { sendRefunded, sendShipped } from '@/lib/mail'
+import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
 import type { Invoice, Order, Variant } from '@/lib/types'
@@ -144,11 +145,62 @@ async function orderOf(f: FormData) {
   return o
 }
 
-export async function markShipped(f: FormData) {
+function carrierFromForm(f: FormData) {
+  const custom = str(f, 'carrierCustom')
+  const preset = str(f, 'carrierPreset')
+  return (custom || preset).slice(0, 120)
+}
+
+function trackingUrlFromForm(f: FormData) {
+  const raw = str(f, 'trackingUrl')
+  if (!raw) return ''
+  try {
+    const u = new URL(raw)
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return ''
+    return u.toString().slice(0, 500)
+  } catch {
+    return ''
+  }
+}
+
+/** Prvo slanje: status shipped + e-mail kupcu (s potvrdom u UI). */
+export async function confirmShipment(f: FormData) {
   const o = await orderOf(f)
-  const [u] = await sql<Order[]>`update orders set status = 'shipped', shipped_at = now(), tracking = ${str(f, 'tracking')}
-    where id = ${o.id} and status in ('paid', 'shipped') returning *`
-  if (u) await sendShipped(u)
+  if (o.status !== 'paid') return
+  if (str(f, 'confirm') !== 'yes') return
+  const tracking = str(f, 'tracking')
+  if (!tracking) return
+  const carrier = carrierFromForm(f)
+  const trackingUrl = trackingUrlFromForm(f)
+  const [u] = await sql<Order[]>`
+    update orders set status = 'shipped', shipped_at = now(), tracking = ${tracking},
+      carrier = ${carrier}, tracking_url = ${trackingUrl}
+    where id = ${o.id} and status = 'paid' returning *`
+  if (!u) return
+  const mail = await sendShipped(u)
+  await logShippedEmail(u.id, mail.ok ? { ok: true } : { ok: false, error: mail.error })
+  revalidatePath(`/admin/orders/${o.id}`)
+  revalidatePath('/admin/orders')
+}
+
+/** Ažuriranje trackinga nakon slanja — bez automatskog e-maila. */
+export async function updateShipmentDetails(f: FormData) {
+  const o = await orderOf(f)
+  if (o.status !== 'shipped') return
+  const tracking = str(f, 'tracking')
+  await sql`
+    update orders set tracking = ${tracking}, carrier = ${carrierFromForm(f)}, tracking_url = ${trackingUrlFromForm(f)}
+    where id = ${o.id}`
+  revalidatePath(`/admin/orders/${o.id}`)
+}
+
+/** Eksplicitno ponovno slanje e-maila o slanju. */
+export async function resendShippedEmail(f: FormData) {
+  const o = await orderOf(f)
+  if (str(f, 'confirmResend') !== 'yes') return
+  if (o.status !== 'shipped') return
+  const mail = await sendShipped(o)
+  await logShippedEmail(o.id, mail.ok ? { ok: true } : { ok: false, error: mail.error })
   revalidatePath(`/admin/orders/${o.id}`)
 }
 
@@ -188,9 +240,10 @@ export async function refundOrder(_: State, f: FormData): Promise<State> {
     const storno = await issueInvoice(u, original)
     pdf = { number: storno.number, pdf: await renderInvoicePdf(storno) }
   }
-  await sendRefunded(u, pdf)
+  const mail = await sendRefunded(u, pdf)
+  if (!mail.ok) console.error('[mail] povrat novca', o.id, mail.error)
   revalidatePath(`/admin/orders/${o.id}`)
-  return { ok: 'Novac je vraćen' + (original ? ' i izdan je storno račun.' : '.') }
+  return { ok: 'Novac je vraćen' + (original ? ' i izdan je storno račun.' : '.') + (mail.ok ? '' : ' (e-mail kupcu nije poslan – provjeri Resend.)') }
 }
 
 export async function issueMissingInvoice(f: FormData) {

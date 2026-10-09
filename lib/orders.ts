@@ -7,6 +7,7 @@ import { stripe } from './stripe'
 import { issueInvoice } from './invoice'
 import { renderInvoicePdf } from './invoice/pdf'
 import { sendAdminNewOrder, sendOrderConfirmation } from './mail'
+import { logConfirmationEmail } from './mail/order-email-log'
 import { getSettingsFresh } from './settings'
 import type { Order } from './types'
 
@@ -63,9 +64,10 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     console.error('[invoice] izdavanje nije uspjelo za narudžbu', order.id, (e as Error).message)
   }
   const settings = await getSettingsFresh()
-  await Promise.all([
-    sendOrderConfirmation(order, pdf, order.locale === 'en' ? settings.deliveryEn : settings.deliveryHr),
-    sendAdminNewOrder(order),
-  ])
+  const delivery = order.locale === 'en' ? settings.deliveryEn : settings.deliveryHr
+  const confirmResult = await sendOrderConfirmation(order, pdf, delivery || undefined)
+  await logConfirmationEmail(order.id, confirmResult.ok ? { ok: true } : { ok: false, error: confirmResult.error })
+  const adminResult = await sendAdminNewOrder(order)
+  if (!adminResult.ok) console.error('[mail] admin nova narudžba', order.id, adminResult.error)
   return order
 }

@@ -75,6 +75,12 @@ export type Order = {
   stripePaymentIntent: string | null
   paymentMethod: string | null
   tracking: string
+  carrier: string
+  trackingUrl: string
+  confirmationEmailSentAt: Date | null
+  confirmationEmailError: string | null
+  shippedEmailSentAt: Date | null
+  shippedEmailError: string | null
   supplierOrder: string
   paidAt: Date | null
   shippedAt: Date | null

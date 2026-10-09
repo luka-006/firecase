@@ -116,7 +116,8 @@ const hr: Record<LegalDoc, Doc> = {
           <li>Vercel Inc., SAD – hosting stranice i anonimna statistika posjeta.</li>
           <li>Neon Inc. – baza podataka (podaci pohranjeni u EU).</li>
           <li>Stripe Payments Europe Ltd., Irska – obrada plaćanja; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luksemburg – ako plaćate PayPalom.</li>
-          <li>Google Ireland Ltd. – slanje e-mailova (potvrde narudžbi, računi) i, uz privolu, Google Analytics.</li>
+          <li>Resend Inc. (SAD) – slanje transakcijskih e-mailova (potvrde narudžbi, obavijesti o slanju, računi u privitku).</li>
+          <li>Google Ireland Ltd. – uz privolu, Google Analytics.</li>
           <li>Dobavljači i dostavne službe – ime, adresa i broj mobitela, isključivo radi dostave.</li>
           <li>Porezna uprava – podaci o računu radi fiskalizacije; knjigovodstveni servis – računi, ako ga koristimo.</li>
         </ul>
@@ -328,7 +329,8 @@ const en: Record<LegalDoc, Doc> = {
           <li>Vercel Inc., USA – website hosting and anonymous statistics.</li>
           <li>Neon Inc. – database (data stored in the EU).</li>
           <li>Stripe Payments Europe Ltd., Ireland – payment processing; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luxembourg – if you pay with PayPal.</li>
-          <li>Google Ireland Ltd. – sending emails (order confirmations, invoices) and, with consent, Google Analytics.</li>
+          <li>Resend Inc. (USA) – transactional email (order confirmations, shipping notices, invoices as attachments).</li>
+          <li>Google Ireland Ltd. – with consent, Google Analytics.</li>
           <li>Suppliers and couriers – name, address and mobile number, for delivery only.</li>
           <li>Croatian Tax Administration – invoice data for fiscalisation; our accountant – invoices, if used.</li>
         </ul>
