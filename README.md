@@ -27,7 +27,7 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 - [ ] **Probna kupnja:** Stripe test kartica `4242 4242 4242 4242`, provjeriti e-mail, PDF račun i povrat novca iz admina
 
 **Nakon toga**
-- [ ] **Domena:** registrirati (npr. `firecase.hr`), spojiti u Vercelu, promijeniti `NEXT_PUBLIC_SITE_URL` i URL webhooka u Stripeu
+- [ ] **Domena:** `firecase.net` spojiti u Vercelu, `NEXT_PUBLIC_SITE_URL`, Stripe webhook
 - [ ] **E-mail na domeni** (npr. `info@firecase.hr`) umjesto Gmaila
 - [ ] **Google:** `NEXT_PUBLIC_GA_ID`, Search Console (`NEXT_PUBLIC_GSC_VERIFICATION`) i slanje `sitemap.xml`
 - [ ] **Stripe live ključevi** umjesto test ključeva
@@ -49,15 +49,9 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 
 Uz svaki proizvod u adminu upiši **link na AliExpressu** i **nabavnu cijenu** (za izračun zarade), a uz veličine opciju koju treba odabrati na AliExpressu (`HR naziv | EN naziv | AliExpress opcija`).
 
-## GPSR (odgovorna osoba u EU, AliExpress)
+## GPSR (AliExpress)
 
-Za svaki artikl na stranici proizvoda u adminu moraju stajati **proizvođač** i **odgovorna osoba u EU** (GPSR). To nije tvoja adresa u Kninu, nego podatak s oglasa ili ambalaže.
-
-1. Na AliExpressu otvori proizvod → **Manufacturer / Product compliance / EU responsible person** (naziv se razlikuje po prodavaču).
-2. Kopiraj **Manufacturer** (naziv, adresa, kontakt) u admin → *Proizvođač*.
-3. Kopiraj **EU Responsible Person** (tvrtka u EU s adresom i e-mailom) u admin → *Odgovorna osoba u EU*.
-4. Ako EU kontakt **ne postoji**, ne prodavaj taj artikl u EU dok ne nađeš drugi oglas s compliance podacima ili ugovoriš EU ovlaštenog zastupnika (plaćena usluga).
-5. Kad stigne prva roba, provjeri da podaci na ambalaži/letku odgovaraju onome na webu.
+Uz proizvod u adminu upiši **proizvođača** i **odgovornu osobu u EU** s oglasa (Compliance / EU responsible person). Bez toga artikl ne stavljaj u prodaju.
 
 ## Postavljanje na Vercel
 
@@ -69,25 +63,30 @@ Za svaki artikl na stranici proizvoda u adminu moraju stajati **proizvođač** i
    - `AUTH_SECRET` – nasumičan niz, npr. `openssl rand -base64 32`
    - `ADMIN_PASSWORD` – lozinka za `/admin`
    - `CRON_SECRET` – nasumičan niz
-   - `NEXT_PUBLIC_SITE_URL` – npr. `https://firecase.hr` (nakon spajanja domene)
+   - `NEXT_PUBLIC_SITE_URL` – `https://firecase.net` (nakon spajanja domene)
    - `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `ORDER_NOTIFY_EMAIL` – Gmail: Google račun → Sigurnost → uključi 2FA → *App passwords* → generiraj lozinku i stavi je u `SMTP_PASS`
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` – vidi dolje
    - `NEXT_PUBLIC_GA_ID` – Google Analytics 4 Measurement ID (`G-...`); učitava se tek kad posjetitelj prihvati kolačiće
    - `NEXT_PUBLIC_GSC_VERIFICATION` – Google Search Console → HTML tag → vrijednost `content`
-6. **Redeploy** (Deployments → ⋯ → Redeploy) nakon dodavanja varijabli.
+6. **Deployment Protection** – Settings → Deployment Protection: za **Production** isključi Vercel Authentication (shop mora biti javan na `firecase.net`). Za **Preview** može ostati uključeno.
+7. **Redeploy** (Deployments → ⋯ → Redeploy) nakon dodavanja varijabli.
 
 ## SEO
 
 Nakon spajanja domene: Google Search Console → dodaj domenu → pošalji `https://TVOJA-DOMENA/sitemap.xml`.
 
-## Stripe
+## Stripe (zaseban račun za Firecase)
 
-1. Otvori račun na stripe.com kao obrt i završi aktivaciju.
-2. Settings → Payment methods: uključi **Cards, Apple Pay, Google Pay, PayPal**.
-3. Developers → API keys → `Secret key` → `STRIPE_SECRET_KEY`.
-4. Developers → Webhooks → Add endpoint: `https://TVOJA-DOMENA/api/stripe/webhook`, događaji
-   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` → `Signing secret` → `STRIPE_WEBHOOK_SECRET`.
-5. Za testiranje koristi test ključeve (`sk_test_...`) i karticu `4242 4242 4242 4242`.
+Koristi **novi Stripe račun** vezan uz obrt / Firecase (ne miješaj s drugim projektima).
+
+1. stripe.com → registracija kao **Kasalo Digital / Firecase** (podaci obrta, IBAN).
+2. Settings → Business → public business name **Firecase**; Settings → Branding → logo/boje (opcionalno).
+3. Settings → Payment methods: **Cards, Apple Pay, Google Pay, PayPal**.
+4. Developers → API keys → **Restricted key** ili Secret key samo za ovaj Vercel projekt → `STRIPE_SECRET_KEY`.
+5. Webhooks → endpoint `https://firecase.net/api/stripe/webhook`, događaji:
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired` → `STRIPE_WEBHOOK_SECRET`.
+6. Test: `sk_test_...`, kartica `4242 4242 4242 4242`. Na izvodu: descriptor **FIRECASE** (postavljeno u kodu).
+7. Live: zamijeni test ključeve live ključevima i ažuriraj webhook URL na produkcijskoj domeni.
 
 ## Fiskalizacija
 

@@ -26,6 +26,11 @@ export const ROUTES = {
 } as const
 export type RouteKey = keyof typeof ROUTES
 
+/** Javni URL segment samo na engleskom (npr. /shop), ne na hrvatskom (/trgovina). */
+export function isEnPublicSegment(segment: string) {
+  return Object.values(ROUTES).some((r) => r.en === segment && r.en !== r.hr)
+}
+
 export function href(locale: Locale, key: RouteKey, param?: string, query?: string) {
   const seg = ROUTES[key][locale]
   const p =
