@@ -4,7 +4,7 @@ import { fulfillCheckoutSession, handleChargeRefunded } from '@/lib/orders'
 import { sql } from '@/lib/db'
 
 export const runtime = 'nodejs'
-export const maxDuration = 30
+export const maxDuration = 60
 
 export async function POST(req: Request) {
   const s = stripe()

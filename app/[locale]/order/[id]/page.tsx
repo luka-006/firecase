@@ -6,6 +6,7 @@ import { CheckIcon } from '@/components/icons'
 import { fulfillCheckoutSession, getOrderByPublicId } from '@/lib/orders'
 import { getUser } from '@/lib/auth'
 import { getInvoicesForOrder } from '@/lib/invoice'
+import { scheduleKickInvoiceForOrder } from '@/lib/invoice/schedule'
 import { stripe } from '@/lib/stripe'
 import { money, formatDateTime } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
@@ -37,8 +38,9 @@ export default async function OrderPage({ params, searchParams }: Props) {
       }
     }
   }
-  const invoices = order.status !== 'pending' ? await getInvoicesForOrder(order.id) : []
   const paid = !['pending', 'cancelled'].includes(order.status)
+  if (paid) scheduleKickInvoiceForOrder(order.id)
+  const invoices = paid ? await getInvoicesForOrder(order.id) : []
   const user = await getUser()
   const guestOfferAccount = paid && !order.userId && !user
 

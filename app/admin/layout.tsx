@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import '../globals.css'
 import { isAdmin } from '@/lib/auth'
+import { schedulePendingInvoiceDrain } from '@/lib/invoice/schedule'
 import { adminLogout } from './actions'
 import { AdminNav } from '@/components/admin/AdminUi'
 
@@ -10,6 +11,7 @@ export const metadata: Metadata = { title: 'Admin | Firecase', robots: { index: 
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await isAdmin()
+  if (admin) schedulePendingInvoiceDrain(5)
   return (
     <html lang="hr">
       <body className="min-h-svh">

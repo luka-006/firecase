@@ -4,10 +4,9 @@ import type Stripe from 'stripe'
 import { revalidateTag } from 'next/cache'
 import { sql } from './db'
 import { stripe } from './stripe'
-import { getInvoicePdfBytes, stornoOrderInvoice, waitForOrderInvoice } from './invoice'
-import { sendAdminNewOrder, sendOrderConfirmation } from './mail'
-import { logConfirmationEmail } from './mail/order-email-log'
-import { getSettingsFresh } from './settings'
+import { schedulePostPaymentForOrder } from './invoice/schedule'
+import { stornoOrderInvoice } from './invoice'
+import { sendAdminNewOrder } from './mail'
 import type { Order } from './types'
 
 export const newPublicId = () => crypto.randomBytes(16).toString('base64url')
@@ -48,41 +47,28 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     const id = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent.id
     pi = await s.paymentIntents.retrieve(id, { expand: ['latest_charge'] })
   }
-  const [order] = await sql<Order[]>`
+
+  let order: Order | null = null
+  const [freshPaid] = await sql<Order[]>`
     update orders set status = 'paid', paid_at = now(), stripe_payment_intent = ${pi?.id ?? null},
       payment_method = ${paymentLabel(pi)}
     where id = ${orderId} and status = 'pending' returning *`
-  if (!order) return null
 
-  for (const i of order.items) {
-    await sql`update products set stock = greatest(stock - ${i.qty}, 0) where id = ${i.productId} and stock is not null`
-  }
-  revalidateTag('products', 'max')
-
-  const adminResult = await sendAdminNewOrder(order)
-  if (!adminResult.ok) console.error('[mail] admin nova narudžba', order.id, adminResult.error)
-
-  const settings = await getSettingsFresh()
-  const delivery = order.locale === 'en' ? settings.deliveryEn : settings.deliveryHr
-
-  let pdf: { number: string; pdf: Uint8Array } | undefined
-  let invoicePending = false
-  try {
-    const inv = await waitForOrderInvoice(order, 45_000)
-    if (inv?.soloPdfUrl && inv.fiscalStatus === 'ok') {
-      pdf = { number: inv.number, pdf: await getInvoicePdfBytes(inv) }
-    } else if (inv && inv.fiscalStatus !== 'ok') {
-      invoicePending = true
-    } else if (!inv) {
-      invoicePending = true
+  if (freshPaid) {
+    order = freshPaid
+    for (const i of order.items) {
+      await sql`update products set stock = greatest(stock - ${i.qty}, 0) where id = ${i.productId} and stock is not null`
     }
-  } catch (e) {
-    console.error('[invoice] izdavanje nije uspjelo za narudžbu', order.id, (e as Error).message)
-    invoicePending = true
+    revalidateTag('products', 'max')
+    const adminResult = await sendAdminNewOrder(order)
+    if (!adminResult.ok) console.error('[mail] admin nova narudžba', order.id, adminResult.error)
+  } else {
+    const [existing] = await sql<Order[]>`select * from orders where id = ${orderId} and status <> 'pending'`
+    if (!existing) return null
+    order = existing
   }
 
-  const confirmResult = await sendOrderConfirmation(order, pdf, delivery || undefined, { invoicePending })
-  await logConfirmationEmail(order.id, confirmResult.ok ? { ok: true } : { ok: false, error: confirmResult.error })
+  schedulePostPaymentForOrder(order)
   return order
 }
 
