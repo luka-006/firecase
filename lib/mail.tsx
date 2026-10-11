@@ -27,6 +27,7 @@ export async function sendOrderConfirmation(
   o: Order,
   invoicePdf?: { number: string; pdf: Uint8Array },
   delivery?: string,
+  opts?: { invoicePending?: boolean },
 ): Promise<SendMailResult> {
   const d = t(o.locale)
   const attachments = invoicePdf
@@ -35,7 +36,7 @@ export async function sendOrderConfirmation(
   return sendRendered(
     o.email,
     d.mailOrderReceivedSubject,
-    <OrderReceivedEmail order={o} deliveryEstimate={delivery} />,
+    <OrderReceivedEmail order={o} deliveryEstimate={delivery} invoicePending={opts?.invoicePending} />,
     attachments,
   )
 }
@@ -50,12 +51,16 @@ export async function sendShipped(o: Order): Promise<SendMailResult> {
   return sendRendered(o.email, d.mailOrderShippedSubject, <OrderShippedEmail order={o} />)
 }
 
-export async function sendRefunded(o: Order, pdf?: { number: string; pdf: Uint8Array }): Promise<SendMailResult> {
+export async function sendRefunded(
+  o: Order,
+  pdf?: { number: string; pdf: Uint8Array },
+  opts?: { soloStornoManual?: boolean },
+): Promise<SendMailResult> {
   const d = t(o.locale)
   const attachments = pdf
     ? [{ filename: `storno-${pdf.number.replace(/\//g, '-')}.pdf`, content: Buffer.from(pdf.pdf) }]
     : undefined
-  return sendRendered(o.email, d.mailRefundSubject(o.id), <RefundEmail order={o} />, attachments)
+  return sendRendered(o.email, d.mailRefundSubject(o.id), <RefundEmail order={o} soloStornoManual={opts?.soloStornoManual} />, attachments)
 }
 
 export async function sendOtpCode(email: string, code: string, locale: 'hr' | 'en'): Promise<SendMailResult> {

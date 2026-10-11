@@ -11,11 +11,6 @@ export type Settings = {
   deliveryEn: string
   announcementHr: string
   announcementEn: string
-  fiscalEnabled: boolean
-  fiscalEnv: 'test' | 'prod'
-  premises: string
-  device: string
-  seqMode: 'P' | 'N'
   autoAcceptProposals: boolean
 }
 
@@ -28,11 +23,6 @@ export const DEFAULT_SETTINGS: Settings = {
   deliveryEn: '4–8 days',
   announcementHr: '',
   announcementEn: '',
-  fiscalEnabled: false,
-  fiscalEnv: 'test',
-  premises: 'WEB1',
-  device: '1',
-  seqMode: 'P',
   autoAcceptProposals: false,
 }
 

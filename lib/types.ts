@@ -156,5 +156,9 @@ export type Invoice = {
   fiscalStatus: 'off' | 'ok' | 'pending' | 'error'
   fiscalError: string | null
   fiscalAttempts: number
+  soloId: string | null
+  soloNumber: string | null
+  soloPdfUrl: string | null
+  soloStornoAt: Date | null
   data: InvoiceData
 }

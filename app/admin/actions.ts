@@ -5,9 +5,7 @@ import { revalidatePath, updateTag } from 'next/cache'
 import { sql } from '@/lib/db'
 import { clearAdminSession, isAdmin, requireAdmin, setAdminSession } from '@/lib/auth'
 import { stripe } from '@/lib/stripe'
-import { fiscalize, getInvoicesForOrder, issueInvoice } from '@/lib/invoice'
-import { renderInvoicePdf } from '@/lib/invoice/pdf'
-import { loadCert } from '@/lib/invoice/fiscal'
+import { ensureOrderInvoice, getInvoicesForOrder, retryIssueInvoice, stornoOrderInvoice } from '@/lib/invoice'
 import { sendRefunded, sendShipped } from '@/lib/mail'
 import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
@@ -268,31 +266,31 @@ export async function refundOrder(_: State, f: FormData): Promise<State> {
     return { error: `Stripe: ${(e as Error).message}` }
   }
   const [u] = await sql<Order[]>`update orders set status = 'refunded' where id = ${o.id} returning *`
-  const original = (await getInvoicesForOrder(o.id)).find((i) => !i.stornoOf)
-  let pdf: { number: string; pdf: Uint8Array } | undefined
-  if (original) {
-    const storno = await issueInvoice(u, original)
-    pdf = { number: storno.number, pdf: await renderInvoicePdf(storno) }
-  }
-  const mail = await sendRefunded(u, pdf)
+  const storno = await stornoOrderInvoice(u)
+  const mail = await sendRefunded(u, undefined, { soloStornoManual: storno.manual && !storno.ok })
   if (!mail.ok) console.error('[mail] povrat novca', o.id, mail.error)
   revalidatePath(`/admin/orders/${o.id}`)
-  return { ok: 'Novac je vraćen' + (original ? ' i izdan je storno račun.' : '.') + (mail.ok ? '' : ' (e-mail kupcu nije poslan – provjeri Resend.)') }
+  const stornoNote = storno.ok
+    ? ' Solo storno je poslan.'
+    : storno.manual
+      ? ' Storno u Soloa provjerite ručno.'
+      : ''
+  return { ok: 'Novac je vraćen.' + stornoNote + (mail.ok ? '' : ' (e-mail kupcu nije poslan – provjeri Resend.)') }
 }
 
 export async function issueMissingInvoice(f: FormData) {
   const o = await orderOf(f)
   const existing = await getInvoicesForOrder(o.id)
-  if (!existing.length && o.status !== 'pending' && o.status !== 'cancelled') await issueInvoice(o)
+  if (!existing.length && o.status !== 'pending' && o.status !== 'cancelled') await ensureOrderInvoice(o)
   revalidatePath(`/admin/orders/${o.id}`)
 }
 
-export async function retryFiscal(f: FormData) {
+export async function retryIssueInvoiceAction(f: FormData) {
   await requireAdmin()
-  const [inv] = await sql<Invoice[]>`select * from invoices where id = ${Number(f.get('id'))}`
-  if (inv && inv.fiscalStatus !== 'ok') await fiscalize(inv)
+  const id = Number(f.get('id'))
+  const inv = await retryIssueInvoice(id)
   revalidatePath('/admin/invoices')
-  revalidatePath(`/admin/orders/${inv?.orderId}`)
+  if (inv) revalidatePath(`/admin/orders/${inv.orderId}`)
 }
 
 // ---------- Postavke ----------
@@ -302,19 +300,11 @@ export async function saveSettingsAction(_: State, f: FormData): Promise<State> 
   const threshold = cents(str(f, 'threshold'))
   const eu = cents(str(f, 'euShipping'))
   if (shipping === null || threshold === null || eu === null) return { error: 'Neispravni iznosi.' }
-  const premises = str(f, 'premises').replace(/[^A-Za-z0-9]/g, '').slice(0, 20)
-  const device = str(f, 'device').replace(/[^0-9]/g, '').slice(0, 6)
-  if (!premises || !device) return { error: 'Oznaka poslovnog prostora i naplatnog uređaja su obavezne.' }
   const s: Settings = {
     shippingCents: shipping, freeThresholdCents: threshold, shipEu: f.get('shipEu') === 'on', euShippingCents: eu,
     deliveryHr: str(f, 'deliveryHr'), deliveryEn: str(f, 'deliveryEn'),
     announcementHr: str(f, 'announcementHr'), announcementEn: str(f, 'announcementEn'),
-    fiscalEnabled: f.get('fiscalEnabled') === 'on', fiscalEnv: str(f, 'fiscalEnv') === 'prod' ? 'prod' : 'test',
-    premises, device, seqMode: str(f, 'seqMode') === 'N' ? 'N' : 'P',
     autoAcceptProposals: f.get('autoAcceptProposals') === 'on',
-  }
-  if (s.fiscalEnabled) {
-    try { loadCert() } catch (e) { return { error: `Fiskalizacija se ne može uključiti: ${(e as Error).message}` } }
   }
   try {
     await saveSettings(s)
@@ -326,12 +316,3 @@ export async function saveSettingsAction(_: State, f: FormData): Promise<State> 
   return { ok: 'Postavke su spremljene.' }
 }
 
-export async function checkCertificate(_: State): Promise<State> {
-  if (!(await isAdmin())) return { error: 'Niste prijavljeni.' }
-  try {
-    const c = loadCert()
-    return { ok: `Certifikat OK · ${c.subject} · vrijedi do ${c.validTo.toLocaleDateString('hr-HR')}` }
-  } catch (e) {
-    return { error: (e as Error).message }
-  }
-}

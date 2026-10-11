@@ -143,6 +143,10 @@ const hr = {
   mailOrderShippedSubject: 'Vaša narudžba je poslana',
   mailOrderNo: (id: number) => `Narudžba #${id}`,
   mailOrderReceivedLead: 'Plaćanje je potvrđeno. U privitku je fiskalizirani račun u PDF-u.',
+  mailOrderReceivedLeadPending:
+    'Plaćanje je potvrđeno. Račun se još izdaje — PDF možete preuzeti na stranici narudžbe čim bude spreman.',
+  orderGuestCreateAccount: 'Napravite račun',
+  orderGuestCreateAccountHint: 'Opcionalno: spremite narudžbe i favorite s istom e-mail adresom.',
   mailOrderShippedLead: 'Vaša narudžba je poslana i uskoro stiže na adresu.',
   mailItems: 'Artikli',
   mailDeliveryAddress: 'Adresa dostave',
@@ -159,7 +163,8 @@ const hr = {
   mailDeliveryEstimate: (text: string) => `Očekivani rok dostave: ${text}.`,
   mailRefundSubject: (id: number) => `Povrat novca za narudžbu #${id} – Firecase`,
   mailRefundLead: (amount: string, id: number) =>
-    `Iznos od ${amount} za narudžbu #${id} vraćen je na vaše izvorno sredstvo plaćanja. Storno račun je u privitku.`,
+    `Iznos od ${amount} za narudžbu #${id} vraćen je na vaše izvorno sredstvo plaćanja.`,
+  mailRefundSoloManual: 'Storno fiskalnog računa provjerite u Soloa (automatski storno nije uspio).',
   mailResetSubject: 'Postavljanje nove lozinke – Firecase',
   mailResetLead: 'Kliknite gumb za postavljanje nove lozinke. Poveznica vrijedi 1 sat.',
   mailResetIgnore: 'Ako niste zatražili promjenu, zanemarite ovaj e-mail.',
@@ -338,6 +343,10 @@ const en: Dict = {
   mailOrderShippedSubject: 'Your order has been shipped',
   mailOrderNo: (id: number) => `Order #${id}`,
   mailOrderReceivedLead: 'Payment is confirmed. Your fiscal invoice is attached as a PDF.',
+  mailOrderReceivedLeadPending:
+    'Payment is confirmed. Your invoice is still being issued — download the PDF from your order page when it is ready.',
+  orderGuestCreateAccount: 'Create an account',
+  orderGuestCreateAccountHint: 'Optional: save orders and favorites with the same email address.',
   mailOrderShippedLead: 'Your order has shipped and is on its way to you.',
   mailItems: 'Items',
   mailDeliveryAddress: 'Delivery address',
@@ -354,7 +363,8 @@ const en: Dict = {
   mailDeliveryEstimate: (text: string) => `Expected delivery: ${text}.`,
   mailRefundSubject: (id: number) => `Refund for order #${id} – Firecase`,
   mailRefundLead: (amount: string, id: number) =>
-    `We have refunded ${amount} for order #${id} to your original payment method. The credit note is attached.`,
+    `We have refunded ${amount} for order #${id} to your original payment method.`,
+  mailRefundSoloManual: 'Please complete the invoice storno in Solo (automatic storno did not succeed).',
   mailResetSubject: 'Reset your password – Firecase',
   mailResetLead: 'Click the button to set a new password. The link is valid for 1 hour.',
   mailResetIgnore: 'If you did not request this, ignore this email.',

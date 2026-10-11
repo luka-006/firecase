@@ -37,8 +37,8 @@ export default async function Dashboard() {
     !process.env.RESEND_API_KEY && 'E-mail (RESEND_API_KEY) – kupci ne dobivaju potvrde',
     !process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID && 'Vercel Blob – upload slika ne radi',
     !process.env.DEEPL_API_KEY && 'Automatski prijevod (DEEPL_API_KEY)',
-    !s.fiscalEnabled && 'Fiskalizacija je isključena – obavezna prije prve prodaje',
-    s.fiscalEnabled && s.fiscalEnv === 'test' && 'Fiskalizacija radi u TEST okruženju',
+    !process.env.SOLO_API_TOKEN && 'Solo (SOLO_API_TOKEN) – bez toga se ne izdaju računi',
+    !process.env.SOLO_TIP_USLUGE && 'Solo tip usluge (SOLO_TIP_USLUGE)',
   ].filter(Boolean) as string[]
 
   const Card = ({ href, n, title, sub, hot }: { href: string; n: number; title: string; sub: string; hot?: boolean }) => (
@@ -54,7 +54,7 @@ export default async function Dashboard() {
       <h1 className="h-display text-2xl">Pregled</h1>
       {dbError ? <DbError error={dbError} /> : null}
       {st.fiscalPending > 0 && (
-        <Link href="/admin/invoices" className="block border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">{st.fiscalPending} račun(a) čeka fiskalizaciju →</Link>
+        <Link href="/admin/invoices" className="block border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">{st.fiscalPending} račun(a) čeka izdavanje u Soloa →</Link>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

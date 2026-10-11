@@ -10,9 +10,11 @@ import { OrderItemsTable } from './order-items'
 export function OrderReceivedEmail({
   order,
   deliveryEstimate,
+  invoicePending,
 }: {
   order: Order
   deliveryEstimate?: string
+  invoicePending?: boolean
 }) {
   const l = order.locale
   const d = t(l)
@@ -24,7 +26,9 @@ export function OrderReceivedEmail({
     <EmailLayout preview={d.mailOrderReceivedSubject}>
       <Text style={heading}>{d.mailOrderReceivedSubject}</Text>
       <Text style={{ ...muted, marginTop: 0 }}>{d.mailOrderNo(order.id)}</Text>
-      <Text style={{ color: '#e8e4df', margin: '16px 0' }}>{d.mailOrderReceivedLead}</Text>
+      <Text style={{ color: '#e8e4df', margin: '16px 0' }}>
+        {invoicePending ? d.mailOrderReceivedLeadPending : d.mailOrderReceivedLead}
+      </Text>
       {deliveryEstimate ? <Text style={muted}>{d.mailDeliveryEstimate(deliveryEstimate)}</Text> : null}
       <OrderItemsTable items={order.items} shippingCents={order.shippingCents} totalCents={order.totalCents} locale={l} />
       <Section style={{ marginTop: 22 }}>

@@ -5,13 +5,13 @@ const COLORS: Record<string, string> = {
 }
 const LABELS: Record<string, string> = {
   pending: 'Nedovršena', todo: 'Za naručiti', ordered: 'Naručeno, čeka slanje', shipped: 'Poslano', delivered: 'Dostavljeno', cancelled: 'Otkazano', refunded: 'Vraćen novac',
-  ok: 'Fiskalizirano', off: 'Bez fiskalizacije', error: 'Greška',
+  ok: 'Izdano (Solo)', off: 'Isključeno', error: 'Greška',
 }
 // Plaćena narudžba je "za naručiti" dok se ne upiše broj narudžbe kod dobavljača
 export const orderStage = (o: { status: string; supplierOrder?: string }) =>
   o.status === 'paid' ? (o.supplierOrder ? 'ordered' : 'todo') : o.status
 
 export function Status({ s, fiscal }: { s: string; fiscal?: boolean }) {
-  const label = fiscal && s === 'pending' ? 'Čeka fiskalizaciju' : LABELS[s] ?? s
+  const label = fiscal && s === 'pending' ? 'Čeka Solo' : LABELS[s] ?? s
   return <span className={`inline-block px-2.5 py-0.5 text-[11px] ${COLORS[s] ?? 'bg-zinc-800'}`}>{label}</span>
 }
