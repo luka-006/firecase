@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   outputFileTracingIncludes: { '/**': ['./assets/**'] },
-  serverExternalPackages: ['xml-crypto', '@xmldom/xmldom', 'node-forge', 'pdf-lib', '@pdf-lib/fontkit', 'nodemailer'],
+  serverExternalPackages: ['xml-crypto', '@xmldom/xmldom', 'node-forge', 'pdf-lib', '@pdf-lib/fontkit'],
   async headers() {
     return [
       {

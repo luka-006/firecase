@@ -4,7 +4,9 @@ import Link from 'next/link'
 import { ClearCart } from '@/components/Ui'
 import { CheckIcon } from '@/components/icons'
 import { fulfillCheckoutSession, getOrderByPublicId } from '@/lib/orders'
+import { getUser } from '@/lib/auth'
 import { getInvoicesForOrder } from '@/lib/invoice'
+import { scheduleKickInvoiceForOrder } from '@/lib/invoice/schedule'
 import { stripe } from '@/lib/stripe'
 import { money, formatDateTime } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
@@ -36,8 +38,11 @@ export default async function OrderPage({ params, searchParams }: Props) {
       }
     }
   }
-  const invoices = order.status !== 'pending' ? await getInvoicesForOrder(order.id) : []
   const paid = !['pending', 'cancelled'].includes(order.status)
+  if (paid) scheduleKickInvoiceForOrder(order.id)
+  const invoices = paid ? await getInvoicesForOrder(order.id) : []
+  const user = await getUser()
+  const guestOfferAccount = paid && !order.userId && !user
 
   return (
     <div className="container-x max-w-2xl pt-16">
@@ -64,10 +69,20 @@ export default async function OrderPage({ params, searchParams }: Props) {
           <div className="flex justify-between text-mute"><span>{d.shipping}</span><span className="tabular-nums">{order.shippingCents ? money(order.shippingCents, locale) : d.free}</span></div>
           <div className="flex justify-between font-medium"><span>{d.total}</span><span className="tabular-nums">{money(order.totalCents, locale)}</span></div>
         </div>
-        {invoices.map((inv) => (
-          <a key={inv.id} href={`/api/invoice/${inv.id}?t=${order.publicId}`} className="btn-ghost btn-sm mt-5 mr-2">{d.downloadInvoice} · {inv.number}</a>
-        ))}
+        {invoices.map((inv) =>
+          inv.soloPdfUrl ? (
+            <a key={inv.id} href={`/api/invoice/${inv.id}?t=${order.publicId}`} className="btn-ghost btn-sm mt-5 mr-2">{d.downloadInvoice} · {inv.number}</a>
+          ) : (
+            <p key={inv.id} className="mt-5 text-sm text-mute">{d.mailOrderReceivedLeadPending}</p>
+          ),
+        )}
       </div>
+      {guestOfferAccount && (
+        <div className="card mt-6 p-5 text-center text-sm">
+          <p className="text-mute">{d.orderGuestCreateAccountHint}</p>
+          <Link href={`${href(locale, 'register')}?email=${encodeURIComponent(order.email)}`} className="btn btn-sm mt-4">{d.orderGuestCreateAccount}</Link>
+        </div>
+      )}
       <div className="mt-10 text-center"><Link href={href(locale, 'shop')} className="btn">{d.continueShopping}</Link></div>
     </div>
   )

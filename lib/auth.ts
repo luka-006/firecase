@@ -1,10 +1,12 @@
 import 'server-only'
+import crypto from 'node:crypto'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 const USER_COOKIE = 'fc_session'
 const ADMIN_COOKIE = 'fc_admin'
+const STAFF_COOKIE = 'fc_staff'
 
 function key() {
   const s = process.env.AUTH_SECRET
@@ -58,4 +60,36 @@ export async function setAdminSession() {
 
 export async function clearAdminSession() {
   ;(await cookies()).delete(ADMIN_COOKIE)
+}
+
+export async function isStaff() {
+  const p = await verify((await cookies()).get(STAFF_COOKIE)?.value)
+  return p?.role === 'staff'
+}
+
+export async function requireStaff() {
+  if (!(await isStaff())) redirect('/staff/login')
+}
+
+export async function setStaffSession() {
+  ;(await cookies()).set(STAFF_COOKIE, await sign({ role: 'staff' }, '12h'), cookieOpts(60 * 60 * 12))
+}
+
+export async function clearStaffSession() {
+  ;(await cookies()).delete(STAFF_COOKIE)
+}
+
+export function staffApiAuthorized(req: Request) {
+  const expected = process.env.STAFF_API_TOKEN
+  if (!expected) return false
+  const h = req.headers.get('authorization') || ''
+  const m = /^Bearer\s+(.+)$/i.exec(h)
+  if (!m) return false
+  const given = m[1]
+  if (given.length !== expected.length) return false
+  try {
+    return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected))
+  } catch {
+    return false
+  }
 }

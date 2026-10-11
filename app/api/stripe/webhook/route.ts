@@ -1,10 +1,10 @@
 import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
-import { fulfillCheckoutSession } from '@/lib/orders'
+import { fulfillCheckoutSession, handleChargeRefunded } from '@/lib/orders'
 import { sql } from '@/lib/db'
 
 export const runtime = 'nodejs'
-export const maxDuration = 30
+export const maxDuration = 60
 
 export async function POST(req: Request) {
   const s = stripe()
@@ -25,6 +25,9 @@ export async function POST(req: Request) {
         break
       case 'checkout.session.expired':
         await sql`update orders set status = 'cancelled' where id = ${Number(event.data.object.metadata?.orderId) || 0} and status = 'pending'`
+        break
+      case 'charge.refunded':
+        await handleChargeRefunded(event.data.object)
         break
     }
   } catch (e) {

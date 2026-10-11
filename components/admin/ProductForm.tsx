@@ -110,9 +110,10 @@ function Section({ title, open, children, grid = true }: { title: string; open?:
   )
 }
 
-export function ProductForm({ p }: { p: Product | null }) {
+export function ProductForm({ p, proposalId, initial }: { p: Product | null; proposalId?: number | null; initial?: Partial<Product> }) {
+  const base = p ?? (initial ? ({ ...initial, id: 0 } as Product) : null)
   const [state, action, pending] = useActionState(saveProduct, null)
-  const [images, setImages] = useState<string[]>(p?.images ?? [])
+  const [images, setImages] = useState<string[]>(base?.images ?? [])
   const [uploading, setUploading] = useState(false)
   const [upErr, setUpErr] = useState('')
 
@@ -143,19 +144,20 @@ export function ProductForm({ p }: { p: Product | null }) {
 
   return (
     <form action={action} className="space-y-8">
-      <input type="hidden" name="id" value={p?.id ?? ''} />
+      <input type="hidden" name="id" value={p?.id ? String(p.id) : ''} />
+      {proposalId ? <input type="hidden" name="proposalId" value={proposalId} /> : null}
       <input type="hidden" name="images" value={JSON.stringify(images)} />
 
       <Section title="Osnovno" open>
-        <Pair label="Naziv" base="name" hr={p?.nameHr} en={p?.nameEn} required />
-        <In label="Cijena (€) *" name="price" defaultValue={eur(p?.priceCents)} inputMode="decimal" required placeholder="14,99" />
-        <In label="Stara cijena (€)" name="compare" defaultValue={eur(p?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
+        <Pair label="Naziv" base="name" hr={base?.nameHr} en={base?.nameEn} required />
+        <In label="Cijena (€) *" name="price" defaultValue={base?.priceCents ? eur(base.priceCents) : ''} inputMode="decimal" required={!!(base?.active ?? false)} placeholder="14,99" hint={!base?.priceCents ? 'Obavezno prije objave (Vidljiv na stranici).' : undefined} />
+        <In label="Stara cijena (€)" name="compare" defaultValue={eur(base?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
         <div className="md:col-span-2">
-          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(p?.variants ?? []).map((v) => [v.hr, v.en, v.sup].filter(Boolean).join(' | ')).join('\n')} hint="Jedna po retku: HR naziv | EN naziv | opcija na AliExpressu (neobavezno). Npr. BIC J6 (standardni) | BIC J6 (regular) | Black J6. Prazno = bez izbora." />
+          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(base?.variants ?? []).map((v) => [v.hr, v.en, v.sup].filter(Boolean).join(' | ')).join('\n')} hint="Jedna po retku: HR naziv | EN naziv | opcija na AliExpressu (neobavezno). Npr. BIC J6 (standardni) | BIC J6 (regular) | Black J6. Prazno = bez izbora." />
         </div>
         <div className="flex flex-wrap gap-6 text-sm md:col-span-2">
-          <label className="flex items-center gap-3"><input type="checkbox" name="active" defaultChecked={p?.active ?? true} className="size-4 accent-[#d08a2e]" /> Vidljiv na stranici</label>
-          <label className="flex items-center gap-3"><input type="checkbox" name="featured" defaultChecked={p?.featured ?? false} className="size-4 accent-[#d08a2e]" /> Istaknut na naslovnici</label>
+          <label className="flex items-center gap-3"><input type="checkbox" name="active" defaultChecked={base?.active ?? false} className="size-4 accent-[#d08a2e]" /> Vidljiv na stranici</label>
+          <label className="flex items-center gap-3"><input type="checkbox" name="featured" defaultChecked={base?.featured ?? false} className="size-4 accent-[#d08a2e]" /> Istaknut na naslovnici</label>
         </div>
       </Section>
 
@@ -183,32 +185,32 @@ export function ProductForm({ p }: { p: Product | null }) {
 
       <Section title="Opis" open>
         <p className="-mt-2 text-xs text-mute md:col-span-2">Engleski se popunjava sam dok pišete hrvatski. Ako engleski uredite ručno, više se ne mijenja (gumb „Prevedi s HR” ga vraća na automatski).</p>
-        <Pair label="Kratki opis" base="short" hr={p?.shortHr} en={p?.shortEn} rows={2} />
-        <Pair label="Opis" base="desc" hr={p?.descHr} en={p?.descEn} rows={6} />
-        <Pair label="Materijal" base="material" hr={p?.materialHr} en={p?.materialEn} placeholder="Aluminij" />
+        <Pair label="Kratki opis" base="short" hr={base?.shortHr} en={base?.shortEn} rows={2} />
+        <Pair label="Opis" base="desc" hr={base?.descHr} en={base?.descEn} rows={6} />
+        <Pair label="Materijal" base="material" hr={base?.materialHr} en={base?.materialEn} placeholder="Aluminij" />
       </Section>
 
       <Section title="Dobavljač (AliExpress)" open>
         <div className="md:col-span-2">
-          <In label="Link proizvoda na AliExpressu" name="supplierUrl" type="url" defaultValue={p?.supplierUrl} placeholder="https://www.aliexpress.com/item/…" hint="Vidi se samo u adminu. Kod narudžbe dobivaš gumb koji otvara ovaj link." />
+          <In label="Link proizvoda na AliExpressu" name="supplierUrl" type="url" defaultValue={base?.supplierUrl} placeholder="https://www.aliexpress.com/item/…" hint="Vidi se samo u adminu. Kod narudžbe dobivaš gumb koji otvara ovaj link." />
         </div>
-        <In label="Nabavna cijena po komadu (€)" name="cost" defaultValue={eur(p?.costCents)} inputMode="decimal" placeholder="4,20" hint="Što plaćaš na AliExpressu, s dostavom. Koristi se za izračun zarade." />
+        <In label="Nabavna cijena po komadu (€)" name="cost" defaultValue={eur(base?.costCents)} inputMode="decimal" placeholder="4,20" hint="Što plaćaš na AliExpressu, s dostavom. Koristi se za izračun zarade." />
       </Section>
 
       <Section title="Napredno" grid>
-        <In label="Zaliha" name="stock" defaultValue={p?.stock ?? ''} inputMode="numeric" hint="Prazno = neograničeno (dropshipping)." />
-        <In label="Redoslijed" name="sort" defaultValue={p?.sort ?? 0} inputMode="numeric" hint="Manji broj = prikazuje se prije." />
-        <In label="URL (slug)" name="slug" defaultValue={p?.slug} hint="Prazno = automatski iz naziva." />
-        <In label="Šifra (SKU)" name="sku" defaultValue={p?.sku} />
+        <In label="Zaliha" name="stock" defaultValue={base?.stock ?? ''} inputMode="numeric" hint="Prazno = neograničeno (dropshipping)." />
+        <In label="Redoslijed" name="sort" defaultValue={base?.sort ?? 0} inputMode="numeric" hint="Manji broj = prikazuje se prije." />
+        <In label="URL (slug)" name="slug" defaultValue={base?.slug} hint="Prazno = automatski iz naziva." />
+        <In label="Šifra (SKU)" name="sku" defaultValue={base?.sku} />
       </Section>
 
       <Section title="Sigurnost proizvoda (GPSR)">
         <div className="md:col-span-2">
           <p className="mt-1 text-xs text-mute">Uredba (EU) 2023/988 traži da na stranici proizvoda budu podaci o proizvođaču, a za proizvođače izvan EU i o odgovornoj osobi u EU. Traži ih od dobavljača.</p>
         </div>
-        <Ta label="Proizvođač (naziv, adresa, e-mail)" name="manufacturer" rows={3} defaultValue={p?.manufacturer} />
-        <Ta label="Odgovorna osoba u EU (naziv, adresa, e-mail)" name="euResponsible" rows={3} defaultValue={p?.euResponsible} />
-        <Pair label="Upozorenja" base="safety" hr={p?.safetyHr} en={p?.safetyEn} rows={3} />
+        <Ta label="Proizvođač (naziv, adresa, e-mail)" name="manufacturer" rows={3} defaultValue={base?.manufacturer} />
+        <Ta label="Odgovorna osoba u EU (naziv, adresa, e-mail)" name="euResponsible" rows={3} defaultValue={base?.euResponsible} />
+        <Pair label="Upozorenja" base="safety" hr={base?.safetyHr} en={base?.safetyEn} rows={3} />
       </Section>
 
       <div className="sticky bottom-4 flex items-center gap-4 rounded-sm border border-line bg-ink/90 p-4 backdrop-blur">

@@ -1,7 +1,7 @@
 import { requireAdmin } from '@/lib/auth'
 import { getSettingsFresh } from '@/lib/settings'
 import { ActionForm, Field } from '@/components/Ui'
-import { checkCertificate, saveSettingsAction } from '../actions'
+import { saveSettingsAction } from '../actions'
 
 export const dynamic = 'force-dynamic'
 const eur = (c: number) => (c / 100).toFixed(2).replace('.', ',')
@@ -25,6 +25,15 @@ export default async function SettingsPage() {
           </div>
         </details>
         <details className="card group/s">
+          <summary className="flex items-center justify-between px-5 py-4 font-medium">Prijedlozi (staff)<span className="font-mono text-mute transition group-open/s:rotate-45">+</span></summary>
+          <div className="border-t border-line p-5 text-sm">
+            <label className="flex items-center gap-3">
+              <input type="checkbox" name="autoAcceptProposals" defaultChecked={s.autoAcceptProposals} className="size-4 accent-[#d08a2e]" />
+              Automatski prihvati — prijedlog na pregledu odmah postaje neobjavljeni proizvod (bez prodajne cijene)
+            </label>
+          </div>
+        </details>
+        <details className="card group/s">
           <summary className="flex items-center justify-between px-5 py-4 font-medium">Traka s obavijesti (vrh stranice)<span className="font-mono text-mute transition group-open/s:rotate-45">+</span></summary>
           <div className="grid gap-4 border-t border-line p-5 sm:grid-cols-2">
           <Field label="Tekst (HR)" name="announcementHr" defaultValue={s.announcementHr} hint="Prazno = poruka o besplatnoj dostavi." />
@@ -32,27 +41,13 @@ export default async function SettingsPage() {
           </div>
         </details>
         <details className="card group/s">
-          <summary className="flex items-center justify-between px-5 py-4 font-medium">Računi i fiskalizacija<span className="font-mono text-mute transition group-open/s:rotate-45">+</span></summary>
-          <div className="grid gap-4 border-t border-line p-5 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <p className="mt-1 text-xs text-mute">Certifikat se postavlja u Vercelu kao FISCAL_CERT_BASE64 i FISCAL_CERT_PASSWORD. Prvo testiraj u TEST okruženju, zatim prebaci na PRODUKCIJU.</p>
-          </div>
-          <Field label="Oznaka poslovnog prostora" name="premises" defaultValue={s.premises} />
-          <Field label="Oznaka naplatnog uređaja" name="device" defaultValue={s.device} />
-          <label className="block"><span className="label">Slijednost brojeva</span>
-            <select name="seqMode" defaultValue={s.seqMode} className="input"><option value="P">Na razini poslovnog prostora (P)</option><option value="N">Na razini naplatnog uređaja (N)</option></select>
-          </label>
-          <label className="block"><span className="label">Okruženje</span>
-            <select name="fiscalEnv" defaultValue={s.fiscalEnv} className="input"><option value="test">TEST (cistest)</option><option value="prod">PRODUKCIJA</option></select>
-          </label>
-          <label className="flex items-center gap-3 text-sm sm:col-span-2"><input type="checkbox" name="fiscalEnabled" defaultChecked={s.fiscalEnabled} className="size-4 accent-[#d08a2e]" /> Fiskalizacija uključena</label>
+          <summary className="flex items-center justify-between px-5 py-4 font-medium">Računi (Solo)<span className="font-mono text-mute transition group-open/s:rotate-45">+</span></summary>
+          <div className="border-t border-line p-5 text-sm text-mute">
+            <p>Računi i fiskalizacija idu isključivo preko Solo API-ja (poslovni prostor WEB1, uređaj 1, operater Luka Kasalo).</p>
+            <p className="mt-3">Env na Vercelu: <code className="text-flame-2">SOLO_API_TOKEN</code>, <code className="text-flame-2">SOLO_TIP_USLUGE</code> (ID iz Soloa → Usluge → Tipovi usluga), opcionalno <code className="text-flame-2">SOLO_TIP_RACUNA=4</code> (bez oznake, ne-PDV).</p>
           </div>
         </details>
       </ActionForm>
-      <section className="card p-5">
-        <h2 className="mb-3 font-medium">Provjera certifikata</h2>
-        <ActionForm action={checkCertificate} submit="Provjeri certifikat" />
-      </section>
     </div>
   )
 }

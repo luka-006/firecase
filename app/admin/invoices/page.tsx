@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { money, formatDateTime } from '@/lib/money'
 import { Status } from '@/components/admin/Status'
-import { retryFiscal } from '../actions'
+import { retryIssueInvoiceAction } from '../actions'
 import type { Invoice } from '@/lib/types'
 import { DbError } from '@/components/admin/DbError'
 
@@ -46,7 +46,7 @@ export default async function Invoices({ searchParams }: { searchParams: Promise
                 <td className="p-3">
                   <Status s={i.fiscalStatus} fiscal />
                   {i.fiscalStatus === 'pending' && (
-                    <form action={retryFiscal} className="mt-1 inline-block pl-2"><input type="hidden" name="id" value={i.id} /><button className="text-xs text-flame-2 underline">ponovi</button></form>
+                    <form action={retryIssueInvoiceAction} className="mt-1 inline-block pl-2"><input type="hidden" name="id" value={i.id} /><button className="text-xs text-flame-2 underline">ponovi izdavanje</button></form>
                   )}
                   {i.jir && <span className="block font-mono text-[10px] text-mute">JIR {i.jir}</span>}
                 </td>
