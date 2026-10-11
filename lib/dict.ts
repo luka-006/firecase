@@ -158,6 +158,7 @@ const hr = {
   mailViewOrder: 'Pregled narudžbe',
   mailWithdrawalNote:
     'Pravo na jednostrani raskid ugovora: ugovor možete raskinuti u roku od 14 dana od primitka robe bez navođenja razloga. Detalji su u Uvjetima poslovanja. Račun je u privitku.',
+  mailReturnGoodsAddress: 'Adresa za povrat robe',
   mailSupplierShipNote:
     'Paket se šalje izravno iz skladišta dobavljača. Dostava može potrajati duže nego kod klasične pošte; očekivani rok dostave naveden je u potvrdi narudžbe i na stranici Dostava.',
   mailDeliveryEstimate: (text: string) => `Očekivani rok dostave: ${text}.`,
@@ -358,6 +359,7 @@ const en: Dict = {
   mailViewOrder: 'View order',
   mailWithdrawalNote:
     'Right of withdrawal: you may withdraw from this contract within 14 days of receiving the goods without giving any reason. Full details are in the Terms and Conditions. The invoice is attached.',
+  mailReturnGoodsAddress: 'Return address for goods',
   mailSupplierShipNote:
     'Your parcel ships directly from our supplier’s warehouse. Delivery may take longer than with a domestic retailer; the expected delivery time is stated in your order confirmation and on the Shipping page.',
   mailDeliveryEstimate: (text: string) => `Expected delivery: ${text}.`,

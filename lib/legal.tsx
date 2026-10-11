@@ -21,9 +21,7 @@ const Seller = ({ en }: { en?: boolean }) => (
   </p>
 )
 const Mail = () => <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
-const ReturnAddr = () => (
-  <p>{SELLER.legalName}, {SELLER.returnAddress}</p>
-)
+const ReturnAddr = () => <p>{SELLER.returnAddress}</p>
 
 const hr: Record<LegalDoc, Doc> = {
   terms: {

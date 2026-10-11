@@ -1,6 +1,6 @@
 import { Button, Link, Section, Text } from '@react-email/components'
 import type { Locale } from '../routes'
-import { SITE_URL } from '../config'
+import { SELLER, SITE_URL } from '../config'
 import { t } from '../dict'
 import { href } from '../routes'
 import type { Order } from '../types'
@@ -50,6 +50,9 @@ export function OrderReceivedEmail({
         <Link href={termsUrl} style={{ color: '#fb923c' }}>
           {d.terms}
         </Link>
+      </Text>
+      <Text style={{ ...muted, marginTop: 12, fontSize: 13 }}>
+        {d.mailReturnGoodsAddress}: {SELLER.returnAddress}
       </Text>
       <Section style={{ marginTop: 24, textAlign: 'center' }}>
         <Button href={orderUrl} style={btn}>

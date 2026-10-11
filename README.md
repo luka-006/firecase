@@ -35,7 +35,6 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 
 **Moguće nadogradnje (nije napravljeno)**
 - Kodovi za popust, newsletter, recenzije proizvoda
-- Odabir BOX NOW paketomata u blagajni
 - Automatsko slanje narudžbe na AliExpress (AliExpress DS API; zasad pomoćnik za ručno naručivanje)
 - Izvoz računa za knjigovođu (CSV), dvostupanjska prijava za admin
 

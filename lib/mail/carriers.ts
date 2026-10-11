@@ -3,7 +3,6 @@ export const SHIPPING_CARRIERS = [
   'Cainiao / AliExpress Standard',
   'Hrvatska pošta',
   'DPD',
-  'GLS',
   'Overseas Warehouse',
   '4PX',
   'Yanwen',
