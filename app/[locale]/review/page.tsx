@@ -74,7 +74,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     const justSent = sp.sent === '1'
     return (
       <>
-        <PageHead eyebrow={eyebrow} title={justSent ? d.reviewThanksTitle : d.reviewAlreadyTitle} intro={justSent ? d.reviewThanksLead : d.reviewAlreadyLead} />
+        <PageHead eyebrow={eyebrow} title={justSent ? d.reviewThanksTitle : d.reviewAlreadyTitle} />
         <div className="container-x pb-24">
           <div className="max-w-xl">
           <ul className="mt-8 divide-y divide-line border-y border-line">
@@ -113,13 +113,10 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   }
   return (
     <>
-      <PageHead eyebrow={eyebrow} title={d.reviewPageTitle} intro={d.reviewPageLead} />
-      <div className="container-x pb-24">
+      <PageHead eyebrow={eyebrow} title={d.reviewPageTitle} />
+      <div className="container-x pb-24 pt-10">
         <div className="max-w-xl">
-          <p className="mt-8 text-xs leading-relaxed text-mute">{d.reviewsLegal}</p>
-          <div className="mt-8">
-            <ReviewForm locale={locale} token={token} targets={targets} defaultName={defaultDisplayName(order.name)} />
-          </div>
+          <ReviewForm locale={locale} token={token} targets={targets} defaultName={defaultDisplayName(order.name)} />
         </div>
       </div>
     </>

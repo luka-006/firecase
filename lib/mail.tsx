@@ -60,13 +60,12 @@ export async function sendReviewRequest(o: Order, url: string): Promise<SendMail
 export async function sendRefunded(
   o: Order,
   pdf?: { number: string; pdf: Uint8Array },
-  opts?: { soloStornoManual?: boolean },
 ): Promise<SendMailResult> {
   const d = t(o.locale)
   const attachments = pdf
     ? [{ filename: `storno-${pdf.number.replace(/\//g, '-')}.pdf`, content: Buffer.from(pdf.pdf) }]
     : undefined
-  return sendRendered(o.email, d.mailRefundSubject(o.id), <RefundEmail order={o} soloStornoManual={opts?.soloStornoManual} />, attachments)
+  return sendRendered(o.email, d.mailRefundSubject(o.id), <RefundEmail order={o} />, attachments)
 }
 
 export async function sendOtpCode(email: string, code: string, locale: 'hr' | 'en'): Promise<SendMailResult> {

@@ -291,7 +291,7 @@ export async function refundOrder(_: State, f: FormData): Promise<State> {
   }
   const [u] = await sql<Order[]>`update orders set status = 'refunded' where id = ${o.id} returning *`
   const storno = await stornoOrderInvoice(u)
-  const mail = await sendRefunded(u, undefined, { soloStornoManual: storno.manual && !storno.ok })
+  const mail = await sendRefunded(u)
   if (!mail.ok) console.error('[mail] povrat novca', o.id, mail.error)
   revalidatePath(`/admin/orders/${o.id}`)
   const stornoNote = storno.ok

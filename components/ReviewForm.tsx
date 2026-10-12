@@ -48,7 +48,6 @@ export function ReviewForm({
       <label className="block">
         <span className="label">{d.reviewName}</span>
         <input name="displayName" defaultValue={defaultName} maxLength={40} autoComplete="off" className="input" />
-        <span className="mt-1 block text-xs text-mute">{d.reviewNameHint}</span>
       </label>
     </ActionForm>
   )

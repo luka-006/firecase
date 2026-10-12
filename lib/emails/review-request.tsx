@@ -41,8 +41,6 @@ export function ReviewRequestEmail({ order, url }: { order: Order; url: string }
           {d.mailReviewCta}
         </Button>
       </Section>
-      <Text style={{ ...muted, marginTop: 22, fontSize: 13 }}>{d.mailReviewCheck}</Text>
-      <Text style={{ ...muted, marginTop: 8, fontSize: 12 }}>{d.mailReviewOnce}</Text>
     </EmailLayout>
   )
 }

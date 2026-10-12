@@ -36,7 +36,6 @@ export function OrderShippedEmail({ order }: { order: Order }) {
           </Button>
         </Section>
       ) : null}
-      <Text style={{ ...muted, marginTop: 22, fontSize: 13 }}>{d.mailSupplierShipNote}</Text>
     </EmailLayout>
   )
 }

@@ -21,7 +21,7 @@ export async function submitReview(_: State, f: FormData): Promise<State> {
   const [order] = await sql<Order[]>`select * from orders where id = ${orderId}`
   if (!order) return { error: d.reviewInvalid }
   const existing = await getOrderReviews(order.id)
-  if (existing.length) return { error: d.reviewAlreadyLead }
+  if (existing.length) return { error: d.reviewAlreadyTitle }
   if (!['shipped', 'delivered'].includes(order.status)) return { error: d.reviewClosed }
 
   const targets = reviewTargets(order.items)
@@ -46,7 +46,7 @@ export async function submitReview(_: State, f: FormData): Promise<State> {
     await insertReviews(order.id, rows, displayName, locale)
   } catch (e) {
     const code = (e as { code?: string }).code
-    if (code === 'EXISTS' || code === '23505') return { error: d.reviewAlreadyLead }
+    if (code === 'EXISTS' || code === '23505') return { error: d.reviewAlreadyTitle }
     if (code === 'CLOSED') return { error: d.reviewClosed }
     console.error('[review]', (e as Error).message)
     return { error: d.errors.generic }

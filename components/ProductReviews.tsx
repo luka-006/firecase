@@ -33,7 +33,6 @@ export function ProductReviews({
         <Stars value={average} label={d.reviewOutOf5(avg)} />
         <span className="font-mono text-xs text-mute">{avg} · {d.reviewCount(count)}</span>
       </p>
-      <p className="mt-4 max-w-xl text-xs leading-relaxed text-mute">{d.reviewsLegal}</p>
       <ul className="mt-8 divide-y divide-line border-y border-line">
         {reviews.map((r) => (
           <li key={r.id} className="py-6">
@@ -42,7 +41,6 @@ export function ProductReviews({
               <span className="text-sm">{r.displayName}</span>
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-mute">{reviewDate(r.createdAt, locale)}</span>
             </div>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-flame">{d.reviewsVerified}</p>
             {r.variant ? <p className="mt-2 text-xs text-mute">{r.variant}</p> : null}
             {r.body ? <p className="mt-3 max-w-2xl whitespace-pre-wrap break-words text-sm leading-relaxed text-bone/80">{r.body}</p> : null}
           </li>
@@ -60,7 +58,6 @@ export function ReviewsStrip({ locale, reviews }: { locale: Locale; reviews: Hom
       <div className="container-x grid gap-6 py-8 md:grid-cols-[13rem_1fr] md:items-start md:gap-10 md:py-10">
         <div>
           <h2 id="recenzije-home" className="eyebrow">{d.reviewsHeading}</h2>
-          <p className="mt-3 text-xs leading-relaxed text-mute">{d.reviewsLegal}</p>
         </div>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {reviews.map((r) => {
@@ -74,7 +71,6 @@ export function ReviewsStrip({ locale, reviews }: { locale: Locale; reviews: Hom
                   {' · '}
                   <Link href={href(locale, 'product', r.productSlug)} className="link">{name}</Link>
                 </p>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-flame">{d.reviewsVerified}</p>
               </li>
             )
           })}

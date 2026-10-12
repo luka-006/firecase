@@ -85,7 +85,7 @@ export async function handleChargeRefunded(charge: Stripe.Charge) {
   if (!storno.ok) console.error('[solo] storno nakon refunda', order.id, storno.error)
 
   const { sendRefunded } = await import('./mail')
-  const mail = await sendRefunded(updated, undefined, { soloStornoManual: storno.manual && !storno.ok })
+  const mail = await sendRefunded(updated)
   if (!mail.ok) console.error('[mail] povrat novca', order.id, mail.error)
   return updated
 }

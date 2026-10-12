@@ -79,8 +79,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
       </div>
       {guestOfferAccount && (
         <div className="card mt-6 p-5 text-center text-sm">
-          <p className="text-mute">{d.orderGuestCreateAccountHint}</p>
-          <Link href={`${href(locale, 'register')}?email=${encodeURIComponent(order.email)}`} className="btn btn-sm mt-4">{d.orderGuestCreateAccount}</Link>
+          <Link href={`${href(locale, 'register')}?email=${encodeURIComponent(order.email)}`} className="btn btn-sm">{d.orderGuestCreateAccount}</Link>
         </div>
       )}
       <div className="mt-10 text-center"><Link href={href(locale, 'shop')} className="btn">{d.continueShopping}</Link></div>
