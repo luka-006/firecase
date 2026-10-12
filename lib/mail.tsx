@@ -7,6 +7,7 @@ import { OrderShippedEmail } from './emails/order-shipped'
 import { OtpCodeEmail } from './emails/otp-code'
 import { PasswordResetEmail } from './emails/password-reset'
 import { RefundEmail } from './emails/refund'
+import { ReviewRequestEmail } from './emails/review-request'
 import { renderEmail } from './emails/render-email'
 import { sendEmail, type MailAttachment, type SendMailResult } from './mail/send'
 import type { Order } from './types'
@@ -49,6 +50,11 @@ export async function sendAdminNewOrder(o: Order): Promise<SendMailResult> {
 export async function sendShipped(o: Order): Promise<SendMailResult> {
   const d = t(o.locale)
   return sendRendered(o.email, d.mailOrderShippedSubject, <OrderShippedEmail order={o} />)
+}
+
+export async function sendReviewRequest(o: Order, url: string): Promise<SendMailResult> {
+  const d = t(o.locale === 'en' ? 'en' : 'hr')
+  return sendRendered(o.email, d.mailReviewSubject, <ReviewRequestEmail order={o} url={url} />)
 }
 
 export async function sendRefunded(

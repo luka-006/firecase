@@ -34,7 +34,7 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 - [ ] **Automatski prijevod:** račun na deepl.com/pro-api (plan *DeepL API Free*), ključ u `DEEPL_API_KEY`, Redeploy
 
 **Moguće nadogradnje (nije napravljeno)**
-- Kodovi za popust, newsletter, recenzije proizvoda
+- Kodovi za popust, newsletter
 - Automatsko slanje narudžbe na AliExpress (AliExpress DS API; zasad pomoćnik za ručno naručivanje)
 - Izvoz računa za knjigovođu (CSV), dvostupanjska prijava za admin
 
@@ -45,6 +45,7 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 3. Na AliExpressu kao adresu dostave upiši kupčevu: klik na polje u adminu ga kopira (ime, mobitel, ulica, poštanski broj, grad, županija, država). Kopiraj i napomenu prodavaču.
 4. Plati na AliExpressu i broj AliExpress narudžbe upiši u admin → narudžba prelazi u **Čeka slanje**.
 5. Kad prodavač pošalje, u adminu **Potvrdi slanje** (dostavna služba, broj za praćenje, opcionalna poveznica) — kupac dobije e-mail „Vaša narudžba je poslana”.
+6. 14 dana kasnije kupac dobije jedan e-mail s poveznicom za recenziju (bez prijave). U `/admin/reviews` je odobri ili odbij. Javno se vide samo odobrene. Za test, na poslanoj narudžbi: **Pošalji zahtjev za recenziju**.
 
 Uz svaki proizvod u adminu upiši **link na AliExpressu** i **nabavnu cijenu** (za izračun zarade), a uz veličine opciju koju treba odabrati na AliExpressu (`HR naziv | EN naziv | AliExpress opcija`).
 

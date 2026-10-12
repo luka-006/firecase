@@ -7,6 +7,7 @@ import path from 'node:path'
 import { render } from '@react-email/render'
 import { OrderReceivedEmail } from '../lib/emails/order-received'
 import { OrderShippedEmail } from '../lib/emails/order-shipped'
+import { ReviewRequestEmail } from '../lib/emails/review-request'
 import type { Order } from '../lib/types'
 
 const outDir = process.env.EMAIL_PREVIEW_DIR || '/opt/cursor/artifacts/email-previews'
@@ -50,6 +51,8 @@ const sampleOrder: Order = {
   confirmationEmailError: null,
   shippedEmailSentAt: null,
   shippedEmailError: null,
+  reviewRequestSentAt: null,
+  reviewRequestError: null,
   supplierOrder: '',
   paidAt: new Date(),
   shippedAt: null,
@@ -68,8 +71,10 @@ const shipped: Order = {
 async function main() {
   const receivedHtml = await render(<OrderReceivedEmail order={sampleOrder} deliveryEstimate="7–14 radnih dana" />)
   const shippedHtml = await render(<OrderShippedEmail order={shipped} />)
+  const reviewHtml = await render(<ReviewRequestEmail order={shipped} url="https://firecase.net/recenzija?t=preview" />)
   fs.writeFileSync(path.join(outDir, 'mail-1-order-received.html'), receivedHtml)
   fs.writeFileSync(path.join(outDir, 'mail-2-order-shipped.html'), shippedHtml)
+  fs.writeFileSync(path.join(outDir, 'mail-3-review-request.html'), reviewHtml)
   console.log('Wrote', outDir)
 }
 

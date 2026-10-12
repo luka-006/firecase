@@ -5,6 +5,8 @@ import { CollectionIndex, type IndexItem } from '@/components/CollectionIndex'
 import { Mark } from '@/components/Mark'
 import { ArrowIcon, PlusIcon } from '@/components/icons'
 import { getActiveProducts } from '@/lib/products'
+import { getHomepageReviews } from '@/lib/reviews'
+import { ReviewsStrip } from '@/components/ProductReviews'
 import { getSettings } from '@/lib/settings'
 import { SELLER, SITE_URL } from '@/lib/config'
 import { money } from '@/lib/money'
@@ -26,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const locale = (await params).locale as Locale
   const d = t(locale)
-  const [products, s] = await Promise.all([getActiveProducts(), getSettings()])
+  const [products, s, homeReviews] = await Promise.all([getActiveProducts(), getSettings(), getHomepageReviews()])
   const items: IndexItem[] = products.slice(0, 8).map((p) => ({
     slug: p.slug,
     href: href(locale, 'product', p.slug),
@@ -110,6 +112,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           </p>
         </div>
       </section>
+
+      <ReviewsStrip locale={locale} reviews={homeReviews} />
 
       <section className="container-x pt-24 md:pt-40" aria-labelledby="faq">
         <div className="grid gap-10 md:grid-cols-12 md:gap-16">

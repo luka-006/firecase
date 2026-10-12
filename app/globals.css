@@ -49,6 +49,14 @@
   .label { @apply mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-mute; }
   .card { @apply border border-line bg-ink-2; }
   .link { @apply underline decoration-line underline-offset-4 transition hover:decoration-flame; }
+  .star-input { position: relative; display: inline-flex; flex-direction: row-reverse; gap: 2px; }
+  .star-input input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .star-input input:focus-visible { outline: none; }
+  .star-input label { display: inline-flex; cursor: pointer; color: rgb(141 137 130 / 0.45); user-select: none; }
+  .star-input label:hover,
+  .star-input label:hover ~ label,
+  .star-input input:checked ~ label { color: var(--color-flame); }
+  .star-input input:focus-visible + label { outline: 2px solid var(--color-flame); outline-offset: 3px; }
 
   /* Okvir s ukošenim kutovima (preuzet iz oblika logotipa) */
   .frame { position: relative; --c: 22px; background: var(--color-line); transition: background-color .4s ease;

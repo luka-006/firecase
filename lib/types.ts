@@ -118,10 +118,30 @@ export type Order = {
   confirmationEmailError: string | null
   shippedEmailSentAt: Date | null
   shippedEmailError: string | null
+  reviewRequestSentAt: Date | null
+  reviewRequestError: string | null
   supplierOrder: string
   paidAt: Date | null
   shippedAt: Date | null
   createdAt: Date
+}
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export type Review = {
+  id: number
+  orderId: number
+  productId: number | null
+  itemIndex: number
+  productName: string
+  variant: string
+  rating: number
+  body: string
+  displayName: string
+  locale: Locale
+  status: ReviewStatus
+  createdAt: Date
+  moderatedAt: Date | null
 }
 
 export type InvoiceData = {

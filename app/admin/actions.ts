@@ -7,6 +7,7 @@ import { clearAdminSession, isAdmin, requireAdmin, setAdminSession } from '@/lib
 import { stripe } from '@/lib/stripe'
 import { ensureOrderInvoice, getInvoicesForOrder, retryIssueInvoice, stornoOrderInvoice } from '@/lib/invoice'
 import { sendRefunded, sendShipped } from '@/lib/mail'
+import { deliverReviewRequest } from '@/lib/review-mail'
 import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
@@ -224,6 +225,29 @@ export async function updateShipmentDetails(f: FormData) {
     update orders set tracking = ${tracking}, carrier = ${carrierFromForm(f)}, tracking_url = ${trackingUrlFromForm(f)}
     where id = ${o.id}`
   revalidatePath(`/admin/orders/${o.id}`)
+}
+
+/** Odmah pošalji zahtjev za recenziju (test). Cron inače šalje jednom, 14 dana nakon slanja. */
+export async function sendReviewRequestAction(_: State, f: FormData): Promise<State> {
+  const o = await orderOf(f)
+  const result = await deliverReviewRequest(o, { force: true })
+  revalidatePath(`/admin/orders/${o.id}`)
+  if (!result.ok) return { error: result.error }
+  return { ok: 'Zahtjev za recenziju je poslan.' }
+}
+
+export async function moderateReview(f: FormData) {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  const op = str(f, 'op')
+  if (!id) return
+  if (op === 'delete') await sql`delete from reviews where id = ${id}`
+  else if (op === 'approve') await sql`update reviews set status = 'approved', moderated_at = now() where id = ${id}`
+  else if (op === 'reject') await sql`update reviews set status = 'rejected', moderated_at = now() where id = ${id}`
+  else return
+  updateTag('reviews')
+  revalidatePath('/[locale]', 'layout')
+  revalidatePath('/admin/reviews')
 }
 
 /** Eksplicitno ponovno slanje e-maila o slanju. */

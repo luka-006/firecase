@@ -7,12 +7,14 @@ const font =
 export function EmailLayout({
   preview,
   children,
+  lang = 'hr',
 }: {
   preview: string
   children: React.ReactNode
+  lang?: 'hr' | 'en'
 }) {
   return (
-    <Html lang="hr">
+    <Html lang={lang}>
       <Head>
         <link
           href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap"

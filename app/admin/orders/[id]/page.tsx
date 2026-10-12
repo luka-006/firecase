@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, signReviewToken } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { getInvoicesForOrder } from '@/lib/invoice'
 import { money, formatDateTime } from '@/lib/money'
@@ -8,8 +8,9 @@ import { Status, orderStage } from '@/components/admin/Status'
 import { CopyField } from '@/components/admin/AdminUi'
 import { ActionForm } from '@/components/Ui'
 import { DbError } from '@/components/admin/DbError'
-import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryIssueInvoiceAction, setSupplierOrder, updateShipmentDetails } from '../../actions'
+import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryIssueInvoiceAction, sendReviewRequestAction, setSupplierOrder, updateShipmentDetails } from '../../actions'
 import { ConfirmShipForm } from '@/components/admin/ConfirmShipForm'
+import { href } from '@/lib/routes'
 import type { Invoice, Order, Product } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -46,6 +47,9 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
     return <DbError error={e} />
   }
   if (!o) notFound()
+  const reviewPath = o.status === 'shipped' || o.status === 'delivered'
+    ? href(o.locale === 'en' ? 'en' : 'hr', 'review', undefined, `t=${encodeURIComponent(await signReviewToken(o.id))}`)
+    : null
 
   // Podaci za dobavljača: iz narudžbe, a za starije narudžbe iz trenutnog proizvoda
   const lines = o.items.map((i) => {
@@ -191,6 +195,19 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
               ) : o.confirmationEmailSentAt ? (
                 <p className="text-mute">Poslan: {formatDateTime(o.confirmationEmailSentAt)}</p>
               ) : null}
+            </section>
+          )}
+
+          {reviewPath && (
+            <section className="card space-y-3 p-5 text-sm">
+              <h2 className="font-medium">Recenzija</h2>
+              <p className="text-xs text-mute">E-mail ide automatski 14 dana nakon slanja, samo jednom. Gumb šalje odmah, za test.</p>
+              {o.reviewRequestError && <p className="text-red-300">{o.reviewRequestError}</p>}
+              {o.reviewRequestSentAt && <p className="text-xs text-mute">Poslan: {formatDateTime(o.reviewRequestSentAt)}</p>}
+              <a href={reviewPath} target="_blank" rel="noopener noreferrer" className="link text-xs">Otvori stranicu recenzije ↗</a>
+              <ActionForm action={sendReviewRequestAction} submit={o.reviewRequestSentAt ? 'Pošalji zahtjev ponovno' : 'Pošalji zahtjev za recenziju'}>
+                <input type="hidden" name="id" value={o.id} />
+              </ActionForm>
             </section>
           )}
 
