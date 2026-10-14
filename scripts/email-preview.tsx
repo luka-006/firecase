@@ -76,16 +76,13 @@ const sampleOrder: Order = {
 const shipped: Order = {
   ...sampleOrder,
   status: 'shipped',
-  tracking: 'LP123456789HR',
-  carrier: 'Cainiao / AliExpress Standard',
-  trackingUrl: 'https://t.17track.net/en#nums=LP123456789HR',
   shippedAt: new Date(),
 }
 
 async function main() {
   const receivedHtml = await render(<OrderReceivedEmail order={sampleOrder} deliveryEstimate="8–16 dana" />)
   const invoiceHtml = await render(<InvoiceEmail order={sampleOrder} />)
-  const shippedHtml = await render(<OrderShippedEmail order={shipped} />)
+  const shippedHtml = await render(<OrderShippedEmail order={shipped} deliveryEstimate="8–16 dana" />)
   const reviewHtml = await render(<ReviewRequestEmail order={shipped} url="https://firecase.net/recenzija?t=preview" />)
   fs.writeFileSync(path.join(outDir, 'mail-1-order-received.html'), receivedHtml)
   fs.writeFileSync(path.join(outDir, 'mail-2-invoice.html'), invoiceHtml)

@@ -46,7 +46,7 @@ export function StatusFilter({ options }: { options: [string, string, number?][]
   )
 }
 
-// Polje s gumbom za kopiranje (adresa kupca za AliExpress)
+// Polje s gumbom za kopiranje adrese kupca
 export function CopyField({ label, value }: { label: string; value: string }) {
   const [ok, setOk] = useState(false)
   return (

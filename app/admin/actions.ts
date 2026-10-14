@@ -178,53 +178,17 @@ async function orderOf(f: FormData) {
   return o
 }
 
-function carrierFromForm(f: FormData) {
-  const custom = str(f, 'carrierCustom')
-  const preset = str(f, 'carrierPreset')
-  return (custom || preset).slice(0, 120)
-}
-
-function trackingUrlFromForm(f: FormData) {
-  const raw = str(f, 'trackingUrl')
-  if (!raw) return ''
-  try {
-    const u = new URL(raw)
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return ''
-    return u.toString().slice(0, 500)
-  } catch {
-    return ''
-  }
-}
-
-/** Prvo slanje: status shipped + e-mail kupcu (s potvrdom u UI). */
 export async function confirmShipment(f: FormData) {
   const o = await orderOf(f)
   if (o.status !== 'paid') return
-  if (str(f, 'confirm') !== 'yes') return
-  const tracking = str(f, 'tracking')
-  if (!tracking) return
-  const carrier = carrierFromForm(f)
-  const trackingUrl = trackingUrlFromForm(f)
   const [u] = await sql<Order[]>`
-    update orders set status = 'shipped', shipped_at = now(), tracking = ${tracking},
-      carrier = ${carrier}, tracking_url = ${trackingUrl}
+    update orders set status = 'shipped', shipped_at = now()
     where id = ${o.id} and status = 'paid' returning *`
   if (!u) return
   const mail = await sendShipped(u)
   await logShippedEmail(u.id, mail.ok ? { ok: true } : { ok: false, error: mail.error })
   revalidatePath(`/admin/orders/${o.id}`)
   revalidatePath('/admin/orders')
-}
-
-/** Ažuriranje trackinga nakon slanja — bez automatskog e-maila. */
-export async function updateShipmentDetails(f: FormData) {
-  const o = await orderOf(f)
-  if (o.status !== 'shipped') return
-  const tracking = str(f, 'tracking')
-  await sql`
-    update orders set tracking = ${tracking}, carrier = ${carrierFromForm(f)}, tracking_url = ${trackingUrlFromForm(f)}
-    where id = ${o.id}`
-  revalidatePath(`/admin/orders/${o.id}`)
 }
 
 /** Odmah pošalji zahtjev za recenziju (test). Cron inače šalje jednom, 14 dana nakon slanja. */
@@ -253,7 +217,6 @@ export async function moderateReview(f: FormData) {
 /** Eksplicitno ponovno slanje e-maila o slanju. */
 export async function resendShippedEmail(f: FormData) {
   const o = await orderOf(f)
-  if (str(f, 'confirmResend') !== 'yes') return
   if (o.status !== 'shipped') return
   const mail = await sendShipped(o)
   await logShippedEmail(o.id, mail.ok ? { ok: true } : { ok: false, error: mail.error })

@@ -1,12 +1,11 @@
-import { supplierHost, supplierHref } from '@/lib/supplier-link'
+import { supplierHref } from '@/lib/supplier-link'
 
-export function SupplierLink({ url, className = 'link' }: { url: string; className?: string }) {
-  const host = supplierHost(url)
+export function SupplierLink({ url, className = 'link', label = 'Dobavljač' }: { url: string; className?: string; label?: string }) {
   const href = supplierHref(url)
-  if (!host || !href) return null
+  if (!href) return null
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
-      {host} ↗
+      {label} ↗
     </a>
   )
 }

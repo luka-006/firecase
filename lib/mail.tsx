@@ -12,6 +12,7 @@ import { RefundEmail } from './emails/refund'
 import { ReviewRequestEmail } from './emails/review-request'
 import { renderEmail } from './emails/render-email'
 import { sendEmail, type MailAttachment, type SendMailResult } from './mail/send'
+import { getSettingsFresh } from './settings'
 import type { Order } from './types'
 
 export type { SendMailResult, MailAttachment }
@@ -60,7 +61,13 @@ export async function sendAdminNewOrder(o: Order): Promise<SendMailResult> {
 
 export async function sendShipped(o: Order): Promise<SendMailResult> {
   const d = t(o.locale)
-  return sendRendered(o.email, d.mailOrderShippedSubject, <OrderShippedEmail order={o} />)
+  const settings = await getSettingsFresh()
+  const delivery = o.locale === 'en' ? settings.deliveryEn : settings.deliveryHr
+  return sendRendered(
+    o.email,
+    d.mailOrderShippedSubject,
+    <OrderShippedEmail order={o} deliveryEstimate={delivery || undefined} />,
+  )
 }
 
 export async function sendReviewRequest(o: Order, url: string): Promise<SendMailResult> {

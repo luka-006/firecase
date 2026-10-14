@@ -62,8 +62,8 @@ export default async function Dashboard() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card href="/admin/orders?status=todo" n={st.todo} title="Za naručiti" sub="Plaćeno, još nije naručeno na AliExpressu" hot />
-        <Card href="/admin/orders?status=ordered" n={st.ordered} title="Čeka slanje" sub="Naručeno, upiši broj za praćenje" hot />
+        <Card href="/admin/orders?status=todo" n={st.todo} title="Za naručiti" sub="Plaćeno" hot />
+        <Card href="/admin/orders?status=ordered" n={st.ordered} title="Čeka slanje" sub="Naručeno" hot />
         <div className="card p-5">
           <p className="h-display text-3xl">{money(st.month)}</p>
           <p className="mt-3 font-medium">Promet ovaj mjesec</p>

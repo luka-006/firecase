@@ -1,6 +1,6 @@
 import type { Locale } from './routes'
 
-// sup = opcija koju treba odabrati kod dobavljača (npr. boja/veličina na AliExpressu)
+// sup = opcija koju treba odabrati kod dobavljača
 export type Variant = { hr: string; en: string; sup?: string }
 
 export type ProposalStatus = 'draft' | 'review' | 'rejected' | 'accepted'
