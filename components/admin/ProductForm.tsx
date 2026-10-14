@@ -2,6 +2,7 @@
 import Image from 'next/image'
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
 import { saveProduct, translateToEn } from '@/app/admin/actions'
+import { SupplierLink } from '@/components/SupplierLink'
 import type { Product } from '@/lib/types'
 
 // Smanji fotografiju u pregledniku (najviše 2000 px) da upload ostane ispod Vercelovog limita
@@ -24,6 +25,16 @@ async function shrink(file: File): Promise<File> {
 
 const eur = (c?: number | null) => (c ? (c / 100).toFixed(2).replace('.', ',') : '')
 
+function SupplierField({ defaultValue }: { defaultValue?: string }) {
+  const [url, setUrl] = useState(defaultValue ?? '')
+  return (
+    <label className="block">
+      <span className="label">Link proizvoda na AliExpressu</span>
+      <input name="supplierUrl" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.aliexpress.com/item/…" className="input" />
+      {url.trim() ? <span className="mt-2 block text-sm"><SupplierLink url={url} /></span> : null}
+    </label>
+  )
+}
 function In({ label, name, defaultValue, hint, ...rest }: { label: string; name: string; defaultValue?: string | number | null; hint?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="block">
@@ -192,7 +203,7 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
 
       <Section title="Dobavljač (AliExpress)" open>
         <div className="md:col-span-2">
-          <In label="Link proizvoda na AliExpressu" name="supplierUrl" type="url" defaultValue={base?.supplierUrl} placeholder="https://www.aliexpress.com/item/…" hint="Vidi se samo u adminu. Kod narudžbe dobivaš gumb koji otvara ovaj link." />
+          <SupplierField defaultValue={base?.supplierUrl} />
         </div>
         <In label="Nabavna cijena po komadu (€)" name="cost" defaultValue={eur(base?.costCents)} inputMode="decimal" placeholder="4,20" hint="Što plaćaš na AliExpressu, s dostavom. Koristi se za izračun zarade." />
       </Section>

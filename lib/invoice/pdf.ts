@@ -113,6 +113,7 @@ export async function renderInvoicePdf(inv: Invoice): Promise<Uint8Array> {
     row(i.variant ? `${i.name} (${i.variant})` : i.name, String(i.qty), money(i.unitCents), money(i.totalCents))
   }
   row(L('Dostava', 'Shipping'), '1', money(d.shippingCents), money(d.shippingCents))
+  if (d.discountCents > 0) row(L('Popust 10%', 'Discount 10%'), '1', money(-d.discountCents), money(-d.discountCents))
   y -= 10
   hline(y)
   y -= 22

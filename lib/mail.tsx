@@ -1,7 +1,9 @@
 import 'server-only'
 import { SELLER } from './config'
 import { t } from './dict'
+import { AdminInvoiceFailedEmail, adminInvoiceFailedSubject } from './emails/admin-invoice-failed'
 import { AdminNewOrderEmail, adminNewOrderSubject } from './emails/admin-new-order'
+import { InvoiceEmail } from './emails/invoice-ready'
 import { OrderReceivedEmail } from './emails/order-received'
 import { OrderShippedEmail } from './emails/order-shipped'
 import { OtpCodeEmail } from './emails/otp-code'
@@ -24,22 +26,31 @@ async function sendRendered(
   return sendEmail({ to, subject, html, text, attachments })
 }
 
-export async function sendOrderConfirmation(
-  o: Order,
-  invoicePdf?: { number: string; pdf: Uint8Array },
-  delivery?: string,
-  opts?: { invoicePending?: boolean },
-): Promise<SendMailResult> {
+export async function sendOrderConfirmation(o: Order, delivery?: string): Promise<SendMailResult> {
   const d = t(o.locale)
-  const attachments = invoicePdf
-    ? [{ filename: `racun-${invoicePdf.number.replace(/\//g, '-')}.pdf`, content: Buffer.from(invoicePdf.pdf) }]
-    : undefined
   return sendRendered(
     o.email,
-    d.mailOrderReceivedSubject,
-    <OrderReceivedEmail order={o} deliveryEstimate={delivery} invoicePending={opts?.invoicePending} />,
-    attachments,
+    d.mailOrderReceivedSubject(o.id),
+    <OrderReceivedEmail order={o} deliveryEstimate={delivery} />,
   )
+}
+
+export async function sendInvoiceEmail(
+  o: Order,
+  invoicePdf: { number: string; pdf: Uint8Array },
+): Promise<SendMailResult> {
+  const d = t(o.locale)
+  return sendRendered(
+    o.email,
+    d.mailInvoiceSubject(o.id),
+    <InvoiceEmail order={o} />,
+    [{ filename: `racun-${invoicePdf.number.replace(/\//g, '-')}.pdf`, content: Buffer.from(invoicePdf.pdf) }],
+  )
+}
+
+export async function sendAdminInvoiceFailed(o: Order, error: string): Promise<SendMailResult> {
+  const to = process.env.ORDER_NOTIFY_EMAIL || SELLER.email
+  return sendRendered(to, adminInvoiceFailedSubject(o), <AdminInvoiceFailedEmail order={o} error={error} />)
 }
 
 export async function sendAdminNewOrder(o: Order): Promise<SendMailResult> {

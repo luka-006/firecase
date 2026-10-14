@@ -8,7 +8,7 @@ import { t } from '@/lib/dict'
 import { PageHead } from './PageHead'
 
 export function CartView({ locale }: { locale: Locale }) {
-  const { items, subtotal, shipping } = useCart()
+  const { items, subtotal, discount, shipping } = useCart()
   const d = t(locale)
   const ship = subtotal >= shipping.freeThresholdCents ? 0 : shipping.shippingCents
   return (
@@ -26,8 +26,9 @@ export function CartView({ locale }: { locale: Locale }) {
           <aside className="card h-fit space-y-4 p-6 lg:sticky lg:top-24">
             <FreeShippingBar locale={locale} />
             <div className="flex justify-between text-sm"><span className="text-mute">{d.subtotal}</span><span className="tabular-nums">{money(subtotal, locale)}</span></div>
+            {discount > 0 && <div className="flex justify-between text-sm"><span className="text-mute">{d.discount}</span><span className="tabular-nums">{money(-discount, locale)}</span></div>}
             <div className="flex justify-between text-sm"><span className="text-mute">{d.shipping} (HR)</span><span className="tabular-nums">{ship ? money(ship, locale) : d.free}</span></div>
-            <div className="flex justify-between border-t border-line pt-4 font-medium"><span>{d.total}</span><span className="tabular-nums">{money(subtotal + ship, locale)}</span></div>
+            <div className="flex justify-between border-t border-line pt-4 font-medium"><span>{d.total}</span><span className="tabular-nums">{money(subtotal - discount + ship, locale)}</span></div>
             <Link href={href(locale, 'checkout')} className="btn w-full">{d.goToCheckout}</Link>
           </aside>
         </div>

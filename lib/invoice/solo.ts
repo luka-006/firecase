@@ -90,6 +90,14 @@ export function buildSoloInvoiceBody(order: Order, data: InvoiceData) {
       unitCents: data.shippingCents,
     })
   }
+  const discountCents = data.discountCents || 0
+  if (discountCents > 0) {
+    lines.push({
+      desc: order.locale === 'en' ? 'Discount 10%' : 'Popust 10%',
+      qty: 1,
+      unitCents: -discountCents,
+    })
+  }
 
   let n = 0
   for (const line of lines) {

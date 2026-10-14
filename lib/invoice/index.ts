@@ -23,12 +23,14 @@ function invoiceDataFromOrder(order: Order, storno?: Invoice): InvoiceData {
         totalCents: i.unitCents * i.qty,
       }))
   const shippingCents = storno ? -storno.data.shippingCents : order.shippingCents
+  const discountCents = storno ? -(storno.data.discountCents || 0) : order.discountCents || 0
   const totalCents = storno ? -storno.totalCents : order.totalCents
   return {
     seller: { legalName: SELLER.legalName, address: SELLER.address, postal: SELLER.postal, city: SELLER.city, oib: SELLER.oib, email: SELLER.email },
     buyer: { name: order.name, email: order.email, address: order.address, postal: order.postal, city: order.city, country: order.country },
     items,
     shippingCents,
+    discountCents,
     totalCents,
     paymentLabel: order.paymentMethod || 'Kartica',
     orderPublicId: order.publicId,

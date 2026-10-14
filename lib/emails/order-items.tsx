@@ -8,11 +8,13 @@ import { absImageUrl } from './util'
 export function OrderItemsTable({
   items,
   shippingCents,
+  discountCents = 0,
   totalCents,
   locale,
 }: {
   items: OrderItem[]
   shippingCents: number
+  discountCents?: number
   totalCents: number
   locale: Locale
 }) {
@@ -43,7 +45,17 @@ export function OrderItemsTable({
           </Row>
         )
       })}
-      <Row style={{ borderTop: '1px solid #2a2a2a', paddingTop: 10, marginTop: 4 }}>
+      {discountCents > 0 && (
+        <Row style={{ borderTop: '1px solid #2a2a2a', paddingTop: 10, marginTop: 4 }}>
+          <Column>
+            <Text style={{ margin: 0, color: '#a8a29e' }}>{d.discount}</Text>
+          </Column>
+          <Column align="right">
+            <Text style={{ margin: 0, color: '#e8e4df' }}>{money(-discountCents, locale)}</Text>
+          </Column>
+        </Row>
+      )}
+      <Row style={{ borderTop: discountCents > 0 ? undefined : '1px solid #2a2a2a', paddingTop: 10, marginTop: 4 }}>
         <Column>
           <Text style={{ margin: 0, color: '#a8a29e' }}>{d.mailShipping}</Text>
         </Column>

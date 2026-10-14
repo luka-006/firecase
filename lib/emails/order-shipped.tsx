@@ -14,7 +14,7 @@ export function OrderShippedEmail({ order }: { order: Order }) {
       <Text style={heading}>{d.mailOrderShippedSubject}</Text>
       <Text style={{ ...muted, marginTop: 0 }}>{d.mailOrderNo(order.id)}</Text>
       <Text style={{ color: '#e8e4df', margin: '16px 0' }}>{d.mailOrderShippedLead}</Text>
-      <OrderItemsTable items={order.items} shippingCents={order.shippingCents} totalCents={order.totalCents} locale={l} />
+      <OrderItemsTable items={order.items} shippingCents={order.shippingCents} discountCents={order.discountCents || 0} totalCents={order.totalCents} locale={l} />
       {(order.carrier || order.tracking) && (
         <Section style={{ marginTop: 22, padding: 16, backgroundColor: '#1a1a1a', borderRadius: 12, border: '1px solid #2a2a2a' }}>
           {order.carrier ? (

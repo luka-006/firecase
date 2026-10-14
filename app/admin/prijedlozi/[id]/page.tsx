@@ -7,6 +7,7 @@ import { money } from '@/lib/money'
 import { ActionForm } from '@/components/Ui'
 import { acceptProposal, rejectProposal } from '../../actions'
 import { DbError } from '@/components/admin/DbError'
+import { SupplierLink } from '@/components/SupplierLink'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,9 +58,7 @@ export default async function AdminProposalDetail({ params }: { params: Promise<
           </div>
           <p><b>Naziv EN:</b> {p.nameEn || '—'}</p>
           <p><b>Nabava:</b> {p.costCents != null ? money(p.costCents) : '—'}</p>
-          <p className="md:col-span-2"><b>Dobavljač:</b>{' '}
-            {p.supplierUrl ? <a href={p.supplierUrl} className="link" target="_blank" rel="noopener noreferrer">{p.supplierUrl}</a> : '—'}
-          </p>
+          {p.supplierUrl ? <p className="md:col-span-2"><SupplierLink url={p.supplierUrl} /></p> : null}
           <p><b>Dostava (HR):</b> {p.estDeliveryHr || '—'}</p>
           <p><b>Dostava (EN):</b> {p.estDeliveryEn || '—'}</p>
           <p><b>Težina / dimenzije:</b> {p.weightDims || '—'}</p>
