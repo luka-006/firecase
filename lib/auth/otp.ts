@@ -52,7 +52,12 @@ export async function verifyEmailOtp(email: string, code: string) {
     await sql`update email_otp_codes set attempts = attempts + 1 where id = ${row.id}`
     return { ok: false as const, reason: 'invalid' as const }
   }
-  await sql`delete from email_otp_codes where id = ${row.id}`
+  return { ok: true as const, email: normalized, id: row.id }
+}
+
+/** Delete a code only after login has succeeded. */
+export async function consumeEmailOtp(id: number, email: string) {
+  const normalized = email.trim().toLowerCase()
+  await sql`delete from email_otp_codes where id = ${id} and email = ${normalized}`
   await clearRateLimit('otp_resend', normalized)
-  return { ok: true as const, email: normalized }
 }

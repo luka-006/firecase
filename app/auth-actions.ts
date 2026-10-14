@@ -6,7 +6,8 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { sql } from '@/lib/db'
 import { setUserSession } from '@/lib/auth'
-import { createEmailOtp, verifyEmailOtp } from '@/lib/auth/otp'
+import { createEmailOtp, consumeEmailOtp, verifyEmailOtp } from '@/lib/auth/otp'
+import { ensureVerifiedUser } from '@/lib/auth/ensure-user'
 import { verifyTurnstile } from '@/lib/auth/turnstile'
 import { clientIpFromHeaders } from '@/lib/client-ip'
 import { t } from '@/lib/dict'
@@ -61,6 +62,7 @@ export async function verifyAuthCode(_: State, f: FormData): Promise<State> {
   const code = str(f, 'code', 6)
   const name = str(f, 'name', 120)
   if (!z.email().safeParse(email).success || code.length !== 6) return { error: d.errors.required }
+  if (mode === 'register' && !name) return { error: d.authRegisterNameRequired }
 
   const v = await verifyEmailOtp(email, code)
   if (!v.ok) {
@@ -68,23 +70,18 @@ export async function verifyAuthCode(_: State, f: FormData): Promise<State> {
     return { error: d.mailOtpInvalid }
   }
 
-  const [existing] = await sql<{ id: number; passwordHash: string | null }[]>`
-    select id, password_hash from users where email = ${email}`
-  if (existing) {
-    await sql`update users set email_verified_at = coalesce(email_verified_at, now()) where id = ${existing.id}`
-    await setUserSession({ id: existing.id, email })
-    redirect(href(locale, 'account'))
+  try {
+    const user = await ensureVerifiedUser(email, mode === 'register' ? name : '')
+    await setUserSession({ id: user.id, email: user.email })
+  } catch (e) {
+    console.error('[auth]', (e as Error).message)
+    return { error: d.errors.generic }
   }
-
-  if (mode === 'login') {
-    return { error: d.mailOtpInvalid }
+  try {
+    await consumeEmailOtp(v.id, email)
+  } catch (e) {
+    console.error('[auth] consume', (e as Error).message)
   }
-  if (!name) return { error: d.authRegisterNameRequired }
-
-  const [u] = await sql<{ id: number }[]>`
-    insert into users (email, password_hash, name, email_verified_at)
-    values (${email}, null, ${name}, now()) returning id`
-  await setUserSession({ id: u.id, email })
   redirect(href(locale, 'account'))
 }
 
