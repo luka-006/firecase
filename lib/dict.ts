@@ -58,7 +58,7 @@ const hr = {
   faqT: 'Česta pitanja',
   faq: [
     ['Kako znam koja mi veličina treba?', 'Na stranici proizvoda piše za koji je upaljač koja veličina. Ako niste sigurni, pošaljite nam e-mail prije narudžbe pa ćemo vam reći.'],
-    ['Koliko traje dostava?', 'Rok piše na stranici proizvoda.'],
+    ['Koliko traje dostava?', '8–16 dana.'],
     ['Mogu li vratiti futrolu?', 'Možete, u roku od 14 dana od primitka i bez objašnjavanja zašto. Upute su na stranici Povrat i reklamacije.'],
     ['Je li plaćanje sigurno?', 'Da. Karticom, Apple Payom, Google Payom ili PayPalom.'],
   ] as [string, string][],
@@ -280,7 +280,7 @@ const en: Dict = {
   faqT: 'FAQ',
   faq: [
     ['How do I know which size I need?', 'The product page says which size fits which lighter. If you are not sure, email us before ordering and we will tell you.'],
-    ['How long does delivery take?', 'The delivery time is on the product page.'],
+    ['How long does delivery take?', '8–16 days.'],
     ['Can I return a case?', 'Yes, within 14 days of delivery, no reason needed. Instructions are on the Returns page.'],
     ['Is payment secure?', 'Yes. Card, Apple Pay, Google Pay or PayPal.'],
   ],

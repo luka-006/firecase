@@ -69,7 +69,7 @@ const shipped: Order = {
 }
 
 async function main() {
-  const receivedHtml = await render(<OrderReceivedEmail order={sampleOrder} deliveryEstimate="7–14 radnih dana" />)
+  const receivedHtml = await render(<OrderReceivedEmail order={sampleOrder} deliveryEstimate="8–16 dana" />)
   const shippedHtml = await render(<OrderShippedEmail order={shipped} />)
   const reviewHtml = await render(<ReviewRequestEmail order={shipped} url="https://firecase.net/recenzija?t=preview" />)
   fs.writeFileSync(path.join(outDir, 'mail-1-order-received.html'), receivedHtml)

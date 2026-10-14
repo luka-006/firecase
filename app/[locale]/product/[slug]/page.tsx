@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: Props) {
   const delivery = locale === 'en' ? s.deliveryEn : s.deliveryHr
   const lowest = p.lowest30 ?? p.priceCents
   const img = (u: string) => (u.startsWith('http') ? u : SITE_URL + u)
-  const days = (s.deliveryHr.match(/\d+/g) ?? ['3', '7']).map(Number)
+  const days = (s.deliveryHr.match(/\d+/g) ?? ['8', '16']).map(Number)
   const jsonLd = [{
     '@context': 'https://schema.org', '@type': 'Product', name, image: p.images.map(img), description: loc(p, 'short', locale) || desc.slice(0, 300),
     sku: p.sku || String(p.id), brand: { '@type': 'Brand', name: 'Firecase' }, category: locale === 'en' ? 'Lighter cases' : 'Futrole za upaljače',
