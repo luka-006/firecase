@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { CheckoutForm } from '@/components/CheckoutForm'
+import { getActiveProducts } from '@/lib/products'
 import { getUser } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { getSettings } from '@/lib/settings'
@@ -12,7 +13,7 @@ export const metadata: Metadata = { title: 'Blagajna · Checkout', robots: { ind
 
 export default async function Checkout({ params }: { params: Promise<{ locale: string }> }) {
   const locale = (await params).locale as Locale
-  const [s, user] = await Promise.all([getSettings(), getUser()])
+  const [s, user, products] = await Promise.all([getSettings(), getUser(), getActiveProducts()])
   let defaults: Record<string, string> = {}
   if (user) {
     const [u] = await sql<Record<string, string>[]>`select name, email, phone, address, city, postal, country from users where id = ${user.id}`
@@ -27,7 +28,11 @@ export default async function Checkout({ params }: { params: Promise<{ locale: s
     <div className="container-x">
       <CheckoutForm locale={locale} defaults={defaults} loggedIn={!!user} countries={countries}
         ship={{ shippingCents: s.shippingCents, freeThresholdCents: s.freeThresholdCents, euShippingCents: s.euShippingCents }}
-        delivery={locale === 'en' ? s.deliveryEn : s.deliveryHr} />
+        delivery={locale === 'en' ? s.deliveryEn : s.deliveryHr}
+        upsellProducts={products.slice(0, 8).map((p) => ({
+          id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents,
+          vi: p.variants.length ? 0 : -1, variantHr: p.variants[0]?.hr ?? '', variantEn: p.variants[0]?.en ?? '',
+        }))} />
     </div>
     </>
   )

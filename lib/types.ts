@@ -1,6 +1,6 @@
 import type { Locale } from './routes'
 
-// sup = opcija koju treba odabrati kod dobavljača (npr. boja/veličina na AliExpressu)
+// sup = opcija koju treba odabrati kod dobavljača
 export type Variant = { hr: string; en: string; sup?: string }
 
 export type ProposalStatus = 'draft' | 'review' | 'rejected' | 'accepted'
@@ -105,6 +105,7 @@ export type Order = {
   note: string
   items: OrderItem[]
   subtotalCents: number
+  discountCents: number
   shippingCents: number
   totalCents: number
   locale: Locale
@@ -116,12 +117,35 @@ export type Order = {
   trackingUrl: string
   confirmationEmailSentAt: Date | null
   confirmationEmailError: string | null
+  invoiceEmailSentAt: Date | null
+  invoiceEmailError: string | null
+  invoiceAdminNotifiedAt: Date | null
   shippedEmailSentAt: Date | null
   shippedEmailError: string | null
+  reviewRequestSentAt: Date | null
+  reviewRequestError: string | null
   supplierOrder: string
   paidAt: Date | null
   shippedAt: Date | null
   createdAt: Date
+}
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export type Review = {
+  id: number
+  orderId: number
+  productId: number | null
+  itemIndex: number
+  productName: string
+  variant: string
+  rating: number
+  body: string
+  displayName: string
+  locale: Locale
+  status: ReviewStatus
+  createdAt: Date
+  moderatedAt: Date | null
 }
 
 export type InvoiceData = {
@@ -129,6 +153,7 @@ export type InvoiceData = {
   buyer: { name: string; email: string; address: string; postal: string; city: string; country: string }
   items: { name: string; variant?: string; qty: number; unitCents: number; totalCents: number }[]
   shippingCents: number
+  discountCents: number
   totalCents: number
   paymentLabel: string
   orderPublicId: string

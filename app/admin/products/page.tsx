@@ -6,6 +6,7 @@ import { money } from '@/lib/money'
 import { toggleProduct } from '../actions'
 import type { Product } from '@/lib/types'
 import { DbError } from '@/components/admin/DbError'
+import { SupplierLink } from '@/components/SupplierLink'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +27,7 @@ export default async function Products() {
       <div className="overflow-x-auto rounded-sm border border-line">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-ink-2 text-left text-xs uppercase tracking-wider text-mute">
-            <tr><th className="p-3">Proizvod</th><th className="p-3">Model</th><th className="p-3">Cijena</th><th className="p-3">Zaliha</th><th className="p-3">Vidljiv</th></tr>
+            <tr><th className="p-3">Proizvod</th><th className="p-3">Model</th><th className="p-3">Dobavljač</th><th className="p-3">Cijena</th><th className="p-3">Zaliha</th><th className="p-3">Vidljiv</th></tr>
           </thead>
           <tbody className="divide-y divide-line">
             {products.map((p) => (
@@ -38,6 +39,7 @@ export default async function Products() {
                   </Link>
                 </td>
                 <td className="p-3 text-mute">{p.fits || '-'}</td>
+                <td className="p-3">{p.supplierUrl ? <SupplierLink url={p.supplierUrl} /> : null}</td>
                 <td className="p-3 tabular-nums">{money(p.priceCents)}{p.compareCents && <span className="ml-1 text-xs text-mute line-through">{money(p.compareCents)}</span>}</td>
                 <td className="p-3 text-mute">{p.stock ?? '∞'}</td>
                 <td className="p-3">

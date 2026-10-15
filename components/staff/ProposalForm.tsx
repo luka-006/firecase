@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useActionState, useState } from 'react'
 import { saveProposal } from '@/app/staff/actions'
+import { SupplierLink } from '@/components/SupplierLink'
 import { QUALITY_TAGS, type ProductProposal } from '@/lib/types'
 
 const eur = (c?: number | null) => (c ? (c / 100).toFixed(2).replace('.', ',') : '')
@@ -13,6 +14,7 @@ export function ProposalForm({ p }: { p: ProductProposal | null }) {
   const [uploading, setUploading] = useState(false)
   const [upErr, setUpErr] = useState('')
   const [urlInput, setUrlInput] = useState('')
+  const [supplierUrl, setSupplierUrl] = useState(p?.supplierUrl ?? '')
 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return
@@ -73,7 +75,11 @@ export function ProposalForm({ p }: { p: ProductProposal | null }) {
 
       <section className="card grid gap-4 p-5 md:grid-cols-2">
         <h2 className="font-medium md:col-span-2">Dobavljač i logistika</h2>
-        <label className="block md:col-span-2"><span className="label">Link dobavljača</span><input name="supplierUrl" type="url" defaultValue={p?.supplierUrl} className="input" /></label>
+        <label className="block md:col-span-2">
+          <span className="label">Link dobavljača</span>
+          <input name="supplierUrl" type="url" value={supplierUrl} onChange={(e) => setSupplierUrl(e.target.value)} className="input" />
+          {supplierUrl.trim() ? <span className="mt-2 block text-sm"><SupplierLink url={supplierUrl} /></span> : null}
+        </label>
         <label className="block"><span className="label">Nabavna cijena (€)</span><input name="cost" defaultValue={eur(p?.costCents)} className="input" inputMode="decimal" /></label>
         <label className="block"><span className="label">Težina / dimenzije</span><input name="weightDims" defaultValue={p?.weightDims} className="input" /></label>
         <label className="block"><span className="label">Procijenjena dostava (HR)</span><input name="estDeliveryHr" defaultValue={p?.estDeliveryHr} className="input" /></label>

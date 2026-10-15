@@ -10,6 +10,7 @@ export const ROUTES = {
   cart: { internal: 'cart', hr: 'kosarica', en: 'cart' },
   checkout: { internal: 'checkout', hr: 'blagajna', en: 'checkout' },
   order: { internal: 'order', hr: 'narudzba', en: 'order' },
+  review: { internal: 'review', hr: 'recenzija', en: 'review' },
   account: { internal: 'account', hr: 'moj-racun', en: 'account' },
   login: { internal: 'login', hr: 'prijava', en: 'login' },
   register: { internal: 'register', hr: 'registracija', en: 'register' },

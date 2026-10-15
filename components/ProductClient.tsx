@@ -9,6 +9,7 @@ import { favoriteState, toggleFavorite } from '@/app/actions'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import type { Variant } from '@/lib/types'
+import { variantsAreColours } from '@/lib/variants'
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
@@ -178,7 +179,7 @@ export function BuyBox({ locale, product }: BuyProps) {
     <div className="space-y-6">
       {product.variants.length > 0 && (
         <div>
-          <p className="label">{d.variant}</p>
+          <p className="label">{variantsAreColours(product.variants) ? d.colour : d.variant}</p>
           <div className="flex flex-wrap gap-2">
             {product.variants.map((v, idx) => (
               <button key={idx} onClick={() => setVi(idx)}

@@ -2,8 +2,11 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BuyBox, Gallery } from '@/components/ProductClient'
+import { ProductReviews } from '@/components/ProductReviews'
+import { Stars, formatRating } from '@/components/Stars'
 import { ChevronIcon, ReturnIcon, TruckIcon } from '@/components/icons'
 import { getActiveProducts, getProductBySlug } from '@/lib/products'
+import { getProductReviewBundle } from '@/lib/reviews'
 import { ProductCard } from '@/components/ProductCard'
 import { getSettings } from '@/lib/settings'
 import { money } from '@/lib/money'
@@ -37,6 +40,7 @@ export default async function ProductPage({ params }: Props) {
   const locale = l as Locale
   const [p, s, all] = await Promise.all([getProductBySlug(slug), getSettings(), getActiveProducts()])
   if (!p) notFound()
+  const reviewBundle = await getProductReviewBundle(p.id)
   const d = t(locale)
   const related = all.filter((x) => x.id !== p.id).slice(0, 3)
   const name = loc(p, 'name', locale)
@@ -47,10 +51,19 @@ export default async function ProductPage({ params }: Props) {
   const delivery = locale === 'en' ? s.deliveryEn : s.deliveryHr
   const lowest = p.lowest30 ?? p.priceCents
   const img = (u: string) => (u.startsWith('http') ? u : SITE_URL + u)
-  const days = (s.deliveryHr.match(/\d+/g) ?? ['3', '7']).map(Number)
+  const days = (s.deliveryHr.match(/\d+/g) ?? ['8', '16']).map(Number)
   const jsonLd = [{
     '@context': 'https://schema.org', '@type': 'Product', name, image: p.images.map(img), description: loc(p, 'short', locale) || desc.slice(0, 300),
     sku: p.sku || String(p.id), brand: { '@type': 'Brand', name: 'Firecase' }, category: locale === 'en' ? 'Lighter cases' : 'Futrole za upaljače',
+    ...(reviewBundle.count > 0 ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: Number(formatRating(reviewBundle.average)),
+        reviewCount: reviewBundle.count,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    } : {}),
     offers: {
       '@type': 'Offer', priceCurrency: 'EUR', price: (p.priceCents / 100).toFixed(2), url: SITE_URL + href(locale, 'product', p.slug),
       availability: soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock', itemCondition: 'https://schema.org/NewCondition',
@@ -94,6 +107,12 @@ export default async function ProductPage({ params }: Props) {
             <span className={`font-mono text-2xl tabular-nums ${p.compareCents ? 'text-flame-2' : ''}`}>{money(p.priceCents, locale)}</span>
             {p.compareCents && <span className="text-mute line-through tabular-nums">{money(p.compareCents, locale)}</span>}
           </div>
+          {reviewBundle.count > 0 && (
+            <a href="#recenzije" className="mt-4 inline-flex items-center gap-2">
+              <Stars value={reviewBundle.average} label={d.reviewOutOf5(formatRating(reviewBundle.average))} className="size-3.5" />
+              <span className="font-mono text-xs text-mute">{formatRating(reviewBundle.average)} · {d.reviewCount(reviewBundle.count)}</span>
+            </a>
+          )}
           {p.compareCents && <p className="mt-1 text-xs text-mute">{d.lowest30}: {money(lowest, locale)}</p>}
           {loc(p, 'short', locale) && <p className="mt-6 leading-relaxed text-bone/70">{loc(p, 'short', locale)}</p>}
           <div className="mt-8">
@@ -120,6 +139,7 @@ export default async function ProductPage({ params }: Props) {
           </div>
         </div>
       </div>
+      <ProductReviews locale={locale} count={reviewBundle.count} average={reviewBundle.average} reviews={reviewBundle.reviews} />
       {related.length > 0 && (
         <section className="pt-28 md:pt-40">
           <h2 className="h-display mb-10 text-3xl leading-none sm:text-5xl" data-reveal>{d.related}</h2>

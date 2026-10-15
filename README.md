@@ -34,23 +34,24 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 - [ ] **Automatski prijevod:** račun na deepl.com/pro-api (plan *DeepL API Free*), ključ u `DEEPL_API_KEY`, Redeploy
 
 **Moguće nadogradnje (nije napravljeno)**
-- Kodovi za popust, newsletter, recenzije proizvoda
-- Automatsko slanje narudžbe na AliExpress (AliExpress DS API; zasad pomoćnik za ručno naručivanje)
+- Kodovi za popust, newsletter
+- Automatsko slanje narudžbe dobavljaču
 - Izvoz računa za knjigovođu (CSV), dvostupanjska prijava za admin
 
-## Kako obraditi narudžbu (AliExpress)
+## Kako obraditi narudžbu
 
 1. Stigne e-mail „Nova narudžba“. U `/admin` je vidiš pod **Za naručiti**.
-2. Otvori narudžbu → **Otvori na AliExpressu** (link spremljen uz proizvod) → odaberi opciju koja piše uz stavku i količinu.
-3. Na AliExpressu kao adresu dostave upiši kupčevu: klik na polje u adminu ga kopira (ime, mobitel, ulica, poštanski broj, grad, županija, država). Kopiraj i napomenu prodavaču.
-4. Plati na AliExpressu i broj AliExpress narudžbe upiši u admin → narudžba prelazi u **Čeka slanje**.
-5. Kad prodavač pošalje, u adminu **Potvrdi slanje** (dostavna služba, broj za praćenje, opcionalna poveznica) — kupac dobije e-mail „Vaša narudžba je poslana”.
+2. Otvori narudžbu → **Dobavljač** (link spremljen uz proizvod) i odaberi opciju uz stavku.
+3. Adresu kupca kopiraš klikom na polje.
+4. Broj narudžbe kod dobavljača upiši u admin → narudžba prelazi u **Čeka slanje**.
+5. Kad je poslano, **Potvrdi slanje**. Kupac dobije e-mail.
+6. 14 dana kasnije kupac dobije jedan e-mail s poveznicom za recenziju. U `/admin/reviews` je odobri ili odbij. Javno se vide samo odobrene. Za test, na poslanoj narudžbi: **Pošalji zahtjev za recenziju**.
 
-Uz svaki proizvod u adminu upiši **link na AliExpressu** i **nabavnu cijenu** (za izračun zarade), a uz veličine opciju koju treba odabrati na AliExpressu (`HR naziv | EN naziv | AliExpress opcija`).
+Uz svaki proizvod upiši **link dobavljača** i **nabavnu cijenu**. Uz veličine: `HR naziv | EN naziv | opcija dobavljača`.
 
-## GPSR (AliExpress)
+## GPSR
 
-Uz proizvod u adminu upiši **proizvođača** i **odgovornu osobu u EU** s oglasa (Compliance / EU responsible person). Bez toga artikl ne stavljaj u prodaju.
+Uz proizvod upiši **proizvođača** i **odgovornu osobu u EU**. Bez toga artikl ne stavljaj u prodaju.
 
 ## Postavljanje na Vercel
 

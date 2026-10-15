@@ -1,36 +1,31 @@
-import { Button, Link, Section, Text } from '@react-email/components'
-import type { Locale } from '../routes'
-import { SELLER, SITE_URL } from '../config'
+import { Section, Text } from '@react-email/components'
 import { t } from '../dict'
-import { href } from '../routes'
 import type { Order } from '../types'
-import { EmailLayout, btn, heading, muted } from './layout'
+import { EmailLayout, heading, muted } from './layout'
 import { OrderItemsTable } from './order-items'
 
 export function OrderReceivedEmail({
   order,
   deliveryEstimate,
-  invoicePending,
 }: {
   order: Order
   deliveryEstimate?: string
-  invoicePending?: boolean
 }) {
   const l = order.locale
   const d = t(l)
-  const orderUrl = `${SITE_URL}${href(l, 'order', order.publicId)}`
-  const termsUrl = `${SITE_URL}${href(l, 'terms')}`
-  const withdrawalUrl = `${SITE_URL}${href(l, 'withdrawal')}`
+  const subject = d.mailOrderReceivedSubject(order.id)
 
   return (
-    <EmailLayout preview={d.mailOrderReceivedSubject}>
-      <Text style={heading}>{d.mailOrderReceivedSubject}</Text>
-      <Text style={{ ...muted, marginTop: 0 }}>{d.mailOrderNo(order.id)}</Text>
-      <Text style={{ color: '#e8e4df', margin: '16px 0' }}>
-        {invoicePending ? d.mailOrderReceivedLeadPending : d.mailOrderReceivedLead}
-      </Text>
-      {deliveryEstimate ? <Text style={muted}>{d.mailDeliveryEstimate(deliveryEstimate)}</Text> : null}
-      <OrderItemsTable items={order.items} shippingCents={order.shippingCents} totalCents={order.totalCents} locale={l} />
+    <EmailLayout preview={subject} lang={l === 'en' ? 'en' : 'hr'}>
+      <Text style={heading}>{subject}</Text>
+      <Text style={{ color: '#e8e4df', margin: '16px 0' }}>{d.mailOrderThanks}</Text>
+      <OrderItemsTable
+        items={order.items}
+        shippingCents={order.shippingCents}
+        discountCents={order.discountCents || 0}
+        totalCents={order.totalCents}
+        locale={l}
+      />
       <Section style={{ marginTop: 22 }}>
         <Text style={{ margin: '0 0 8px', fontWeight: 600, color: '#d6d3d1' }}>{d.mailDeliveryAddress}</Text>
         <Text style={{ margin: 0, color: '#e8e4df', lineHeight: 1.55 }}>
@@ -41,24 +36,8 @@ export function OrderReceivedEmail({
           {order.postal} {order.city}, {order.country}
         </Text>
       </Section>
-      <Text style={{ ...muted, marginTop: 20, fontSize: 13 }}>
-        {d.mailWithdrawalNote}{' '}
-        <Link href={withdrawalUrl} style={{ color: '#fb923c' }}>
-          {d.withdrawal}
-        </Link>
-        {' · '}
-        <Link href={termsUrl} style={{ color: '#fb923c' }}>
-          {d.terms}
-        </Link>
-      </Text>
-      <Text style={{ ...muted, marginTop: 12, fontSize: 13 }}>
-        {d.mailReturnGoodsAddress}: {SELLER.returnAddress}
-      </Text>
-      <Section style={{ marginTop: 24, textAlign: 'center' }}>
-        <Button href={orderUrl} style={btn}>
-          {d.mailViewOrder}
-        </Button>
-      </Section>
+      {deliveryEstimate ? <Text style={{ ...muted, marginTop: 16 }}>{d.mailDeliveryEstimate(deliveryEstimate)}</Text> : null}
+      <Text style={{ color: '#e8e4df', margin: '20px 0 0' }}>{d.mailOrderThanks}</Text>
     </EmailLayout>
   )
 }

@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export default async function Dashboard() {
   await requireAdmin()
   const s = await getSettingsFresh()
-  let st = { todo: 0, ordered: 0, month: 0, monthCount: 0, fiscalPending: 0 }
+  let st = { todo: 0, ordered: 0, month: 0, monthCount: 0, fiscalPending: 0, reviewsPending: 0 }
   let recent: Order[] = []
   let monthOrders: Order[] = []
   let dbError: unknown = null
@@ -22,7 +22,8 @@ export default async function Dashboard() {
       (select count(*)::int from orders where status = 'paid' and supplier_order <> '') as ordered,
       (select coalesce(sum(total_cents), 0)::int from orders where status in ('paid','shipped','delivered') and paid_at >= date_trunc('month', now())) as month,
       (select count(*)::int from orders where status in ('paid','shipped','delivered') and paid_at >= date_trunc('month', now())) as month_count,
-      (select count(*)::int from invoices where fiscal_status = 'pending') as fiscal_pending`
+      (select count(*)::int from invoices where fiscal_status = 'pending') as fiscal_pending,
+      (select count(*)::int from reviews where status = 'pending') as reviews_pending`
     st = r
     recent = [...(await sql<Order[]>`select * from orders where status <> 'pending' order by id desc limit 8`)]
     monthOrders = [...(await sql<Order[]>`select * from orders where status in ('paid','shipped','delivered') and paid_at >= date_trunc('month', now())`)]
@@ -56,10 +57,13 @@ export default async function Dashboard() {
       {st.fiscalPending > 0 && (
         <Link href="/admin/invoices" className="block border border-amber-900/60 bg-amber-950/30 px-4 py-3 text-sm text-amber-200">{st.fiscalPending} račun(a) čeka izdavanje u Soloa →</Link>
       )}
+      {st.reviewsPending > 0 && (
+        <Link href="/admin/reviews" className="block border border-flame/40 bg-flame/10 px-4 py-3 text-sm">Recenzije na čekanju: {st.reviewsPending} →</Link>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card href="/admin/orders?status=todo" n={st.todo} title="Za naručiti" sub="Plaćeno, još nije naručeno na AliExpressu" hot />
-        <Card href="/admin/orders?status=ordered" n={st.ordered} title="Čeka slanje" sub="Naručeno, upiši broj za praćenje" hot />
+        <Card href="/admin/orders?status=todo" n={st.todo} title="Za naručiti" sub="Plaćeno" hot />
+        <Card href="/admin/orders?status=ordered" n={st.ordered} title="Čeka slanje" sub="Naručeno" hot />
         <div className="card p-5">
           <p className="h-display text-3xl">{money(st.month)}</p>
           <p className="mt-3 font-medium">Promet ovaj mjesec</p>

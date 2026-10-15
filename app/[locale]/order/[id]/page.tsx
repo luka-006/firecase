@@ -2,13 +2,12 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ClearCart } from '@/components/Ui'
+import { ProductMarquee } from '@/components/ProductMarquee'
 import { CheckIcon } from '@/components/icons'
 import { fulfillCheckoutSession, getOrderByPublicId } from '@/lib/orders'
-import { getUser } from '@/lib/auth'
-import { getInvoicesForOrder } from '@/lib/invoice'
+import { getActiveProducts } from '@/lib/products'
 import { scheduleKickInvoiceForOrder } from '@/lib/invoice/schedule'
 import { stripe } from '@/lib/stripe'
-import { money, formatDateTime } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 
@@ -25,7 +24,6 @@ export default async function OrderPage({ params, searchParams }: Props) {
   let order = await getOrderByPublicId(id)
   if (!order) notFound()
 
-  // Ako webhook još nije stigao, provjeri sesiju izravno (idempotentno)
   if (order.status === 'pending' && session_id && session_id === order.stripeSessionId) {
     const s = stripe()
     if (s) {
@@ -40,50 +38,29 @@ export default async function OrderPage({ params, searchParams }: Props) {
   }
   const paid = !['pending', 'cancelled'].includes(order.status)
   if (paid) scheduleKickInvoiceForOrder(order.id)
-  const invoices = paid ? await getInvoicesForOrder(order.id) : []
-  const user = await getUser()
-  const guestOfferAccount = paid && !order.userId && !user
+  const products = paid ? await getActiveProducts() : []
+
+  if (paid) {
+    return (
+      <div className="container-x max-w-3xl pt-16 pb-8">
+        <ClearCart />
+        <div className="text-center">
+          <span className="mx-auto mb-6 grid size-14 place-items-center rounded-full border border-flame/50 text-flame"><CheckIcon className="size-6" /></span>
+          <h1 className="h-display text-3xl">{d.thanks}</h1>
+          <p className="mt-4">{d.orderNo} #{order.id}</p>
+          <p className="mt-2 text-mute">{d.orderPaidText}</p>
+          <div className="mt-10"><Link href={href(locale, 'shop')} className="btn">{d.continueShopping}</Link></div>
+        </div>
+        <ProductMarquee products={products} locale={locale} />
+      </div>
+    )
+  }
 
   return (
-    <div className="container-x max-w-2xl pt-16">
-      {paid && <ClearCart />}
-      <div className="text-center">
-        {paid && <span className="mx-auto mb-6 grid size-14 place-items-center rounded-full border border-flame/50 text-flame"><CheckIcon className="size-6" /></span>}
-        <h1 className="h-display text-3xl">{paid ? d.thanks : `${d.orderNo} #${order.id}`}</h1>
-        <p className="mt-4 text-mute">{order.status === 'pending' ? d.orderPendingText : order.status === 'cancelled' ? d.orderCancelledText : d.orderPaidText}</p>
-      </div>
-      <div className="card mt-10 p-6">
-        <div className="flex flex-wrap justify-between gap-2 text-sm">
-          <span>{d.orderNo} <b>#{order.id}</b></span>
-          <span className="text-mute">{formatDateTime(order.createdAt, locale)} · {d.status[order.status]}</span>
-        </div>
-        <ul className="mt-5 divide-y divide-line border-y border-line">
-          {order.items.map((i, idx) => (
-            <li key={idx} className="flex justify-between gap-4 py-3 text-sm">
-              <span>{i.name}{i.variant && <span className="text-mute"> ({i.variant})</span>} × {i.qty}</span>
-              <span className="tabular-nums">{money(i.unitCents * i.qty, locale)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 space-y-1.5 text-sm">
-          <div className="flex justify-between text-mute"><span>{d.shipping}</span><span className="tabular-nums">{order.shippingCents ? money(order.shippingCents, locale) : d.free}</span></div>
-          <div className="flex justify-between font-medium"><span>{d.total}</span><span className="tabular-nums">{money(order.totalCents, locale)}</span></div>
-        </div>
-        {invoices.map((inv) =>
-          inv.soloPdfUrl ? (
-            <a key={inv.id} href={`/api/invoice/${inv.id}?t=${order.publicId}`} className="btn-ghost btn-sm mt-5 mr-2">{d.downloadInvoice} · {inv.number}</a>
-          ) : (
-            <p key={inv.id} className="mt-5 text-sm text-mute">{d.mailOrderReceivedLeadPending}</p>
-          ),
-        )}
-      </div>
-      {guestOfferAccount && (
-        <div className="card mt-6 p-5 text-center text-sm">
-          <p className="text-mute">{d.orderGuestCreateAccountHint}</p>
-          <Link href={`${href(locale, 'register')}?email=${encodeURIComponent(order.email)}`} className="btn btn-sm mt-4">{d.orderGuestCreateAccount}</Link>
-        </div>
-      )}
-      <div className="mt-10 text-center"><Link href={href(locale, 'shop')} className="btn">{d.continueShopping}</Link></div>
+    <div className="container-x max-w-2xl pt-16 text-center">
+      <h1 className="h-display text-3xl">{d.orderNo} #{order.id}</h1>
+      <p className="mt-4 text-mute">{order.status === 'cancelled' ? d.orderCancelledText : d.orderPendingText}</p>
+      <div className="mt-10"><Link href={href(locale, 'shop')} className="btn">{d.continueShopping}</Link></div>
     </div>
   )
 }

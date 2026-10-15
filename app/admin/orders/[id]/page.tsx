@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, signReviewToken } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { getInvoicesForOrder } from '@/lib/invoice'
 import { money, formatDateTime } from '@/lib/money'
@@ -8,14 +8,15 @@ import { Status, orderStage } from '@/components/admin/Status'
 import { CopyField } from '@/components/admin/AdminUi'
 import { ActionForm } from '@/components/Ui'
 import { DbError } from '@/components/admin/DbError'
-import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryIssueInvoiceAction, setSupplierOrder, updateShipmentDetails } from '../../actions'
+import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryIssueInvoiceAction, sendReviewRequestAction, setSupplierOrder } from '../../actions'
 import { ConfirmShipForm } from '@/components/admin/ConfirmShipForm'
+import { SupplierLink } from '@/components/SupplierLink'
+import { href } from '@/lib/routes'
 import type { Invoice, Order, Product } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
 const COUNTRY: Record<string, string> = { HR: 'Croatia', SI: 'Slovenia', AT: 'Austria', DE: 'Germany', IT: 'Italy', HU: 'Hungary' }
-// Županija iz poštanskog broja (procjena za AliExpressov izbornik "Province")
 const COUNTY: Record<string, string> = {
   '20': 'Dubrovačko-neretvanska', '21': 'Splitsko-dalmatinska', '22': 'Šibensko-kninska', '23': 'Zadarska', '31': 'Osječko-baranjska',
   '32': 'Vukovarsko-srijemska', '33': 'Virovitičko-podravska', '34': 'Požeško-slavonska', '35': 'Brodsko-posavska', '40': 'Međimurska',
@@ -46,6 +47,9 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
     return <DbError error={e} />
   }
   if (!o) notFound()
+  const reviewPath = o.status === 'shipped' || o.status === 'delivered'
+    ? href(o.locale === 'en' ? 'en' : 'hr', 'review', undefined, `t=${encodeURIComponent(await signReviewToken(o.id))}`)
+    : null
 
   // Podaci za dobavljača: iz narudžbe, a za starije narudžbe iz trenutnog proizvoda
   const lines = o.items.map((i) => {
@@ -72,18 +76,18 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
         <div className="space-y-6">
           {paid && (
             <section className="card space-y-5 p-5">
-              {stepTitle(1, 'Naruči na AliExpressu', !!o.supplierOrder)}
+              {stepTitle(1, 'Dobavljač', !!o.supplierOrder)}
               <ul className="divide-y divide-line border-y border-line">
                 {lines.map((l, idx) => (
                   <li key={idx} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
                     <span>
                       <span className="font-mono text-flame">{l.qty} ×</span> {l.name}{l.variant && <span className="text-mute"> ({l.variant})</span>}
-                      {l.option && <span className="mt-1 block text-xs text-bone/70">Na AliExpressu odaberi: <b>{l.option}</b></span>}
+                      {l.option && <span className="mt-1 block text-xs text-bone/70">{l.option}</span>}
                     </span>
                     {l.url ? (
-                      <a href={l.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm">Otvori na AliExpressu ↗</a>
+                      <SupplierLink url={l.url} className="btn btn-sm" />
                     ) : (
-                      <Link href={`/admin/products/${l.productId}`} className="text-xs text-amber-300 underline">Dodaj AliExpress link u proizvod</Link>
+                      <Link href={`/admin/products/${l.productId}`} className="text-xs text-amber-300 underline">Dodaj link dobavljača</Link>
                     )}
                   </li>
                 ))}
@@ -102,31 +106,24 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
               <form action={setSupplierOrder} className="flex flex-wrap items-end gap-3">
                 <input type="hidden" name="id" value={o.id} />
                 <label className="block flex-1">
-                  <span className="label">Broj narudžbe na AliExpressu</span>
-                  <input name="supplierOrder" defaultValue={o.supplierOrder} placeholder="npr. 8195…" className="input" />
+                  <span className="label">Broj narudžbe kod dobavljača</span>
+                  <input name="supplierOrder" defaultValue={o.supplierOrder} className="input" />
                 </label>
                 <button className="btn-ghost btn-sm">Spremi</button>
               </form>
-              {o.supplierOrder && (
-                <a href={`https://www.aliexpress.com/p/order/detail.html?orderId=${encodeURIComponent(o.supplierOrder)}`} target="_blank" rel="noopener noreferrer" className="link text-xs">Otvori narudžbu na AliExpressu ↗</a>
-              )}
             </section>
           )}
 
           {(o.status === 'paid' || o.status === 'shipped') && (
             <section className="card space-y-4 p-5">
-              {stepTitle(2, o.status === 'paid' ? 'Potvrdi slanje i obavijesti kupca' : 'Poslano', o.status === 'shipped')}
+              {stepTitle(2, o.status === 'paid' ? 'Potvrdi slanje' : 'Poslano', o.status === 'shipped')}
               <ConfirmShipForm
                 orderId={o.id}
                 status={o.status}
-                tracking={o.tracking}
-                carrier={o.carrier ?? ''}
-                trackingUrl={o.trackingUrl ?? ''}
                 shippedEmailSentAt={o.shippedEmailSentAt?.toISOString() ?? null}
                 shippedEmailError={o.shippedEmailError ?? null}
                 confirmAction={confirmShipment}
                 resendAction={resendShippedEmail}
-                updateOnlyAction={updateShipmentDetails}
               />
               {o.status === 'shipped' && (
                 <form action={markDelivered}><input type="hidden" name="id" value={o.id} /><button className="btn-ghost btn-sm">Označi kao dostavljeno</button></form>
@@ -149,7 +146,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
             {paid && (
               <div className="mt-4 space-y-1 border-t border-line pt-4 text-sm">
                 <div className="flex justify-between text-mute"><span>Stripe naknada (procjena 1,5% + 0,25 €)</span><span className="font-mono">−{money(fee)}</span></div>
-                <div className="flex justify-between text-mute"><span>Nabava (AliExpress)</span><span className="font-mono">{costKnown ? `−${money(cost)}` : 'nepoznato'}</span></div>
+                <div className="flex justify-between text-mute"><span>Nabava</span><span className="font-mono">{costKnown ? `−${money(cost)}` : 'nepoznato'}</span></div>
                 <div className="flex justify-between font-medium"><span>Zarada (procjena)</span><span className="font-mono text-flame-2">{costKnown ? money(o.totalCents - fee - cost) : '—'}</span></div>
                 {!costKnown && <p className="text-xs text-mute">Upiši nabavnu cijenu u proizvod da bi se zarada izračunala.</p>}
               </div>
@@ -191,6 +188,19 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
               ) : o.confirmationEmailSentAt ? (
                 <p className="text-mute">Poslan: {formatDateTime(o.confirmationEmailSentAt)}</p>
               ) : null}
+            </section>
+          )}
+
+          {reviewPath && (
+            <section className="card space-y-3 p-5 text-sm">
+              <h2 className="font-medium">Recenzija</h2>
+              <p className="text-xs text-mute">E-mail ide automatski 14 dana nakon slanja, samo jednom. Gumb šalje odmah, za test.</p>
+              {o.reviewRequestError && <p className="text-red-300">{o.reviewRequestError}</p>}
+              {o.reviewRequestSentAt && <p className="text-xs text-mute">Poslan: {formatDateTime(o.reviewRequestSentAt)}</p>}
+              <a href={reviewPath} target="_blank" rel="noopener noreferrer" className="link text-xs">Otvori stranicu recenzije ↗</a>
+              <ActionForm action={sendReviewRequestAction} submit={o.reviewRequestSentAt ? 'Pošalji zahtjev ponovno' : 'Pošalji zahtjev za recenziju'}>
+                <input type="hidden" name="id" value={o.id} />
+              </ActionForm>
             </section>
           )}
 

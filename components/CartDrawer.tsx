@@ -9,7 +9,7 @@ import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 
 export function CartDrawer({ locale }: { locale: Locale }) {
-  const { open, setOpen, items, subtotal } = useCart()
+  const { open, setOpen, items, subtotal, discount } = useCart()
   const d = t(locale)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
@@ -35,6 +35,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
             <div className="flex-1 overflow-y-auto px-6"><CartLines locale={locale} compact /></div>
             <div className="space-y-3 border-t border-line p-6">
               <div className="flex justify-between text-sm"><span className="text-mute">{d.subtotal}</span><span className="tabular-nums">{money(subtotal, locale)}</span></div>
+              {discount > 0 && <div className="flex justify-between text-sm"><span className="text-mute">{d.discount}</span><span className="tabular-nums">{money(-discount, locale)}</span></div>}
               <Link href={href(locale, 'checkout')} onClick={() => setOpen(false)} className="btn w-full">{d.goToCheckout}</Link>
               <Link href={href(locale, 'cart')} onClick={() => setOpen(false)} className="btn-ghost w-full">{d.viewCart}</Link>
             </div>

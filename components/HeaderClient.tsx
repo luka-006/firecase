@@ -47,8 +47,14 @@ export function NavLinks({ links }: { links: { href: string; label: string }[] }
 export function LangSwitch({ locale }: { locale: Locale }) {
   const pathname = usePathname()
   const other: Locale = locale === 'hr' ? 'en' : 'hr'
+  const base = switchLocale(pathname, other)
+  // Keep ?t= and other query params (review links). Avoid useSearchParams so static pages stay static.
+  const [href, setHref] = useState(base)
+  useEffect(() => {
+    setHref(base + window.location.search)
+  }, [base])
   return (
-    <Link href={switchLocale(pathname, other)} hrefLang={other} className="px-2 py-2 text-xs font-medium tracking-widest text-mute transition hover:text-bone">
+    <Link href={href} hrefLang={other} className="px-2 py-2 text-xs font-medium tracking-widest text-mute transition hover:text-bone">
       {other.toUpperCase()}
     </Link>
   )

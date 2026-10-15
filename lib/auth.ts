@@ -62,6 +62,18 @@ export async function clearAdminSession() {
   ;(await cookies()).delete(ADMIN_COOKIE)
 }
 
+/** Potpisana poveznica za recenziju jedne narudžbe. Vrijedi 120 dana; predaja je jednokratna u bazi. */
+export async function signReviewToken(orderId: number) {
+  return sign({ purpose: 'review', oid: orderId }, '120d')
+}
+
+export async function readReviewToken(token: string) {
+  const p = await verify(token)
+  if (!p || p.purpose !== 'review') return null
+  const id = typeof p.oid === 'number' ? p.oid : Number(p.oid)
+  return Number.isInteger(id) && id > 0 ? id : null
+}
+
 export async function isStaff() {
   const p = await verify((await cookies()).get(STAFF_COOKIE)?.value)
   return p?.role === 'staff'

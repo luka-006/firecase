@@ -2,6 +2,7 @@
 import Image from 'next/image'
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
 import { saveProduct, translateToEn } from '@/app/admin/actions'
+import { SupplierLink } from '@/components/SupplierLink'
 import type { Product } from '@/lib/types'
 
 // Smanji fotografiju u pregledniku (najviše 2000 px) da upload ostane ispod Vercelovog limita
@@ -24,6 +25,16 @@ async function shrink(file: File): Promise<File> {
 
 const eur = (c?: number | null) => (c ? (c / 100).toFixed(2).replace('.', ',') : '')
 
+function SupplierField({ defaultValue }: { defaultValue?: string }) {
+  const [url, setUrl] = useState(defaultValue ?? '')
+  return (
+    <label className="block">
+      <span className="label">Link dobavljača</span>
+      <input name="supplierUrl" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" className="input" />
+      {url.trim() ? <span className="mt-2 block text-sm"><SupplierLink url={url} /></span> : null}
+    </label>
+  )
+}
 function In({ label, name, defaultValue, hint, ...rest }: { label: string; name: string; defaultValue?: string | number | null; hint?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="block">
@@ -153,7 +164,7 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
         <In label="Cijena (€) *" name="price" defaultValue={base?.priceCents ? eur(base.priceCents) : ''} inputMode="decimal" required={!!(base?.active ?? false)} placeholder="14,99" hint={!base?.priceCents ? 'Obavezno prije objave (Vidljiv na stranici).' : undefined} />
         <In label="Stara cijena (€)" name="compare" defaultValue={eur(base?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
         <div className="md:col-span-2">
-          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(base?.variants ?? []).map((v) => [v.hr, v.en, v.sup].filter(Boolean).join(' | ')).join('\n')} hint="Jedna po retku: HR naziv | EN naziv | opcija na AliExpressu (neobavezno). Npr. BIC J6 (standardni) | BIC J6 (regular) | Black J6. Prazno = bez izbora." />
+          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(base?.variants ?? []).map((v) => [v.hr, v.en, v.sup].filter(Boolean).join(' | ')).join('\n')} hint="Jedna po retku: HR naziv | EN naziv | opcija dobavljača (neobavezno). Npr. BIC J6 (standardni) | BIC J6 (regular) | Black J6. Prazno = bez izbora." />
         </div>
         <div className="flex flex-wrap gap-6 text-sm md:col-span-2">
           <label className="flex items-center gap-3"><input type="checkbox" name="active" defaultChecked={base?.active ?? false} className="size-4 accent-[#d08a2e]" /> Vidljiv na stranici</label>
@@ -190,11 +201,11 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
         <Pair label="Materijal" base="material" hr={base?.materialHr} en={base?.materialEn} placeholder="Aluminij" />
       </Section>
 
-      <Section title="Dobavljač (AliExpress)" open>
+      <Section title="Dobavljač" open>
         <div className="md:col-span-2">
-          <In label="Link proizvoda na AliExpressu" name="supplierUrl" type="url" defaultValue={base?.supplierUrl} placeholder="https://www.aliexpress.com/item/…" hint="Vidi se samo u adminu. Kod narudžbe dobivaš gumb koji otvara ovaj link." />
+          <SupplierField defaultValue={base?.supplierUrl} />
         </div>
-        <In label="Nabavna cijena po komadu (€)" name="cost" defaultValue={eur(base?.costCents)} inputMode="decimal" placeholder="4,20" hint="Što plaćaš na AliExpressu, s dostavom. Koristi se za izračun zarade." />
+        <In label="Nabavna cijena po komadu (€)" name="cost" defaultValue={eur(base?.costCents)} inputMode="decimal" placeholder="4,20" />
       </Section>
 
       <Section title="Napredno" grid>

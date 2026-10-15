@@ -1,13 +1,16 @@
 'use client'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { useCart } from './CartProvider'
+import { UpsellPopup, type UpsellProduct } from './UpsellPopup'
 import { Field } from './Ui'
 import { startCheckout } from '@/app/actions'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
+
+const UPSELL_SEEN = 'fc_upsell_shown'
 
 type Props = {
   locale: Locale
@@ -16,15 +19,35 @@ type Props = {
   countries: { code: string; name: string }[]
   ship: { shippingCents: number; freeThresholdCents: number; euShippingCents: number }
   delivery: string
+  upsellProducts: UpsellProduct[]
 }
 
-export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, delivery }: Props) {
+export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, delivery, upsellProducts }: Props) {
   const d = t(locale)
-  const { items, subtotal } = useCart()
+  const { items, subtotal, discount, add } = useCart()
   const [country, setCountry] = useState(defaults.country || 'HR')
   const [state, action, pending] = useActionState(startCheckout, null)
+  const [popup, setPopup] = useState(false)
+  const seen = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
   const shipping = country === 'HR' ? (subtotal >= ship.freeThresholdCents ? 0 : ship.shippingCents) : ship.euShippingCents
   const cart = JSON.stringify(items.map((i) => ({ id: i.id, vi: i.vi, qty: i.qty })))
+  const offers = (() => {
+    const others = upsellProducts.filter((p) => !items.some((i) => i.id === p.id))
+    const same = upsellProducts.filter((p) => items.some((i) => i.id === p.id))
+    return [...others, ...same].slice(0, 4)
+  })()
+
+  function onPay(e: React.FormEvent<HTMLFormElement>) {
+    const single = items.length === 1 && items[0].qty === 1
+    if (typeof window !== 'undefined' && sessionStorage.getItem(UPSELL_SEEN) === '1') seen.current = true
+    if (single && !seen.current && offers.length) {
+      e.preventDefault()
+      seen.current = true
+      sessionStorage.setItem(UPSELL_SEEN, '1')
+      setPopup(true)
+    }
+  }
 
   if (!items.length) {
     return (
@@ -36,9 +59,10 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
   }
 
   return (
-    <form action={action} className="mt-10 grid gap-10 lg:grid-cols-[1fr_400px]">
+    <form ref={formRef} action={action} onSubmit={onPay} className="mt-10 grid gap-10 lg:grid-cols-[1fr_400px]">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="cart" value={cart} />
+      <input type="hidden" name="upsell" value={discount > 0 ? '1' : '0'} />
       <div className="space-y-10">
         <fieldset className="space-y-4">
           <legend className="h-display mb-6 text-xl"><span className="idx mr-3 align-top">01</span>{d.contactDetails}</legend>
@@ -88,10 +112,11 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
         </ul>
         <div className="space-y-2 border-t border-line pt-4 text-sm">
           <div className="flex justify-between"><span className="text-mute">{d.subtotal}</span><span className="tabular-nums">{money(subtotal, locale)}</span></div>
+          {discount > 0 && <div className="flex justify-between"><span className="text-mute">{d.discount}</span><span className="tabular-nums">{money(-discount, locale)}</span></div>}
           <div className="flex justify-between"><span className="text-mute">{d.shipping}</span><span className="tabular-nums">{shipping ? money(shipping, locale) : d.free}</span></div>
           <p className="text-xs text-mute">{d.deliveryTime}: {delivery}</p>
         </div>
-        <div className="flex justify-between border-t border-line pt-4 text-base font-medium"><span>{d.total}</span><span className="tabular-nums">{money(subtotal + shipping, locale)}</span></div>
+        <div className="flex justify-between border-t border-line pt-4 text-base font-medium"><span>{d.total}</span><span className="tabular-nums">{money(subtotal - discount + shipping, locale)}</span></div>
         <label className="flex gap-3 text-xs leading-relaxed text-bone/75">
           <input type="checkbox" name="terms" required className="mt-0.5 size-4 shrink-0 accent-[#d08a2e]" />
           <span>
@@ -101,9 +126,25 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
         </label>
         {state?.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
         <button className="btn w-full py-4" disabled={pending}>{pending ? '…' : d.orderButton}</button>
-        <p className="text-[11px] leading-relaxed text-mute">{d.payNote}</p>
         <p className="text-center text-[11px] text-mute">{d.payments}</p>
       </aside>
+      {popup && (
+        <UpsellPopup
+          locale={locale}
+          products={offers}
+          onAdd={(p) => {
+            add({
+              id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.image, priceCents: p.priceCents,
+              vi: p.vi, variantHr: p.variantHr, variantEn: p.variantEn,
+            }, 1, { silent: true, upsell: true })
+            setPopup(false)
+          }}
+          onSkip={() => {
+            setPopup(false)
+            formRef.current?.requestSubmit()
+          }}
+        />
+      )}
     </form>
   )
 }

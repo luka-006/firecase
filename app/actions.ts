@@ -7,6 +7,7 @@ import { sql } from '@/lib/db'
 import { clearUserSession, getUser, setUserSession } from '@/lib/auth'
 import { t } from '@/lib/dict'
 import { href, isLocale, type Locale } from '@/lib/routes'
+import { discountCentsFor } from '@/lib/discount'
 import { getProductsByIds } from '@/lib/products'
 import { getSettingsFresh, shippingFor } from '@/lib/settings'
 import { stripe } from '@/lib/stripe'
@@ -66,8 +67,10 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
     })
   }
   const subtotal = items.reduce((a, i) => a + i.unitCents * i.qty, 0)
+  const qty = items.reduce((a, i) => a + i.qty, 0)
+  const discount = discountCentsFor(subtotal, qty, f.get('upsell') === '1')
   const shipping = shippingFor(subtotal, c.country, s)
-  const total = subtotal + shipping
+  const total = subtotal - discount + shipping
 
   const st = stripe()
   if (!st) return { error: d.errors.payments }
@@ -81,7 +84,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   const publicId = newPublicId()
   const [order] = await sql<{ id: number }[]>`insert into orders ${sql({
     publicId, userId: user?.id ?? null, ...c, items: sql.json(items as never),
-    subtotalCents: subtotal, shippingCents: shipping, totalCents: total, locale,
+    subtotalCents: subtotal, discountCents: discount, shippingCents: shipping, totalCents: total, locale,
   })} returning id`
 
   let url: string | null = null
@@ -97,15 +100,36 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
         description: `Firecase narudžba #${order.id}`,
         statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR,
       },
-      line_items: [
-        ...items.map((i) => ({
-          quantity: i.qty,
-          price_data: { currency: 'eur', unit_amount: i.unitCents, product_data: { name: i.variant ? `${i.name} (${i.variant})` : i.name } },
-        })),
-        ...(shipping > 0
-          ? [{ quantity: 1, price_data: { currency: 'eur', unit_amount: shipping, product_data: { name: d.shipping } } }]
-          : []),
-      ],
+      line_items: items.map((i) => ({
+        quantity: i.qty,
+        price_data: { currency: 'eur', unit_amount: i.unitCents, product_data: { name: i.variant ? `${i.name} (${i.variant})` : i.name } },
+      })),
+      ...(discount > 0
+        ? {
+            discounts: [{
+              coupon: (
+                await st.coupons.create({
+                  amount_off: discount,
+                  currency: 'eur',
+                  duration: 'once',
+                  max_redemptions: 1,
+                  name: d.discount,
+                })
+              ).id,
+            }],
+          }
+        : {}),
+      ...(shipping > 0
+        ? {
+            shipping_options: [{
+              shipping_rate_data: {
+                type: 'fixed_amount' as const,
+                fixed_amount: { amount: shipping, currency: 'eur' },
+                display_name: d.shipping,
+              },
+            }],
+          }
+        : {}),
       success_url: `${SITE_URL}${href(locale, 'order', publicId)}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${SITE_URL}${href(locale, 'checkout')}`,
     })

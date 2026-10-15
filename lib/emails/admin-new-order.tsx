@@ -13,6 +13,7 @@ export function AdminNewOrderEmail({ order }: { order: Order }) {
       <OrderItemsTable
         items={order.items}
         shippingCents={order.shippingCents}
+        discountCents={order.discountCents || 0}
         totalCents={order.totalCents}
         locale="hr"
       />

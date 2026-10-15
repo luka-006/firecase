@@ -11,7 +11,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const [inv] = await sql<(Invoice & { publicId: string })[]>`
     select i.*, o.public_id from invoices i join orders o on o.id = i.order_id where i.id = ${Number(id) || 0}`
   if (!inv || !(token === inv.publicId || (await isAdmin()))) return new Response('Not found', { status: 404 })
-  if (!inv.soloPdfUrl) return new Response('Račun još nije spreman.', { status: 503 })
+  if (!inv.soloPdfUrl) return new Response('Nije dostupno.', { status: 503 })
   try {
     const pdf = await getInvoicePdfBytes(inv)
     return new Response(Buffer.from(pdf), {
