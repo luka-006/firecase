@@ -1,4 +1,5 @@
 import { requireAdmin } from '@/lib/auth'
+import { SITE_URL } from '@/lib/config'
 import { getSettingsFresh } from '@/lib/settings'
 import { ActionForm, Field } from '@/components/Ui'
 import { saveSettingsAction } from '../actions'
@@ -38,6 +39,26 @@ export default async function SettingsPage() {
           <div className="grid gap-4 border-t border-line p-5 sm:grid-cols-2">
           <Field label="Tekst (HR)" name="announcementHr" defaultValue={s.announcementHr} hint="Prazno = poruka o besplatnoj dostavi." />
           <Field label="Tekst (EN)" name="announcementEn" defaultValue={s.announcementEn} />
+          </div>
+        </details>
+        <details open className="card group/s">
+          <summary className="flex items-center justify-between px-5 py-4 font-medium">Dobavljač<span className="font-mono text-mute transition group-open/s:rotate-45">+</span></summary>
+          <div className="grid gap-4 border-t border-line p-5 sm:grid-cols-2">
+            <label className="block">
+              <span className="label">Dostava</span>
+              <select name="supplierLogisticMode" defaultValue={s.supplierLogisticMode} className="input">
+                <option value="auto">Najjeftinija u roku</option>
+                <option value="name">Naziv</option>
+              </select>
+            </label>
+            <Field label="Naziv" name="supplierLogisticName" defaultValue={s.supplierLogisticName} />
+            <Field label="Najdulje (dana)" name="supplierLogisticMaxDays" defaultValue={String(s.supplierLogisticMaxDays)} inputMode="numeric" />
+            <Field label="Polazak" name="supplierFromCountry" defaultValue={s.supplierFromCountry} />
+            <label className="flex items-center gap-3 text-sm sm:col-span-2">
+              <input type="checkbox" name="supplierPayEnabled" defaultChecked={s.supplierPayEnabled} className="size-4 accent-[#d08a2e]" />
+              Plaćanje iz admina
+            </label>
+            <p className="text-xs text-mute sm:col-span-2">{SITE_URL}/api/supplier/webhook</p>
           </div>
         </details>
         <details className="card group/s">

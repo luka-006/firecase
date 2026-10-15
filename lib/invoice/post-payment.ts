@@ -4,6 +4,8 @@ import { getSettingsFresh } from '../settings'
 import { sendAdminInvoiceFailed, sendInvoiceEmail, sendOrderConfirmation } from '../mail'
 import { logConfirmationEmail, logInvoiceEmail } from '../mail/order-email-log'
 import type { Invoice, Order } from '../types'
+import { placeSupplierOrderSafely } from '../supplier/fulfill'
+import { safeSupplierMessage } from '../supplier/ids'
 import { ensureOrderInvoice, getInvoicePdfBytes, retryIssueInvoice } from './index'
 
 async function freshOrder(orderId: number) {
@@ -68,16 +70,24 @@ async function deliverInvoiceOutcome(order: Order, inv: Invoice | null) {
 export async function completePaidOrderDelivery(order: Order) {
   const current = (await freshOrder(order.id)) ?? order
   if (['pending', 'cancelled'].includes(current.status)) return
-  await sendOrderConfirmationIfNeeded(current)
-  let inv: Invoice | null = null
   try {
-    inv = await ensureOrderInvoice(current)
-  } catch (e) {
-    console.error('[invoice] izdavanje', current.id, (e as Error).message)
-    await notifyAdminInvoiceFailure(current, (e as Error).message)
-    return
+    await sendOrderConfirmationIfNeeded(current)
+    let inv: Invoice | null = null
+    try {
+      inv = await ensureOrderInvoice(current)
+    } catch (e) {
+      console.error('[invoice] izdavanje', current.id, (e as Error).message)
+      await notifyAdminInvoiceFailure(current, (e as Error).message)
+      return
+    }
+    await deliverInvoiceOutcome(current, inv)
+  } finally {
+    try {
+      await placeSupplierOrderSafely(current.id)
+    } catch (e) {
+      console.error('[supplier]', current.id, safeSupplierMessage((e as Error).message))
+    }
   }
-  await deliverInvoiceOutcome(current, inv)
 }
 
 /** Jedan pending račun (Solo red min. 10 s između API poziva). */
@@ -102,12 +112,20 @@ export async function drainPendingInvoices(limit = 5) {
 export async function kickInvoiceForOrder(orderId: number) {
   const order = await freshOrder(orderId)
   if (!order || ['pending', 'cancelled'].includes(order.status)) return
-  await sendOrderConfirmationIfNeeded(order)
   try {
-    const inv = await ensureOrderInvoice(order)
-    await deliverInvoiceOutcome(order, inv)
-  } catch (e) {
-    console.error('[invoice] kick narudžba', orderId, (e as Error).message)
-    await notifyAdminInvoiceFailure(order, (e as Error).message)
+    await sendOrderConfirmationIfNeeded(order)
+    try {
+      const inv = await ensureOrderInvoice(order)
+      await deliverInvoiceOutcome(order, inv)
+    } catch (e) {
+      console.error('[invoice] kick narudžba', orderId, (e as Error).message)
+      await notifyAdminInvoiceFailure(order, (e as Error).message)
+    }
+  } finally {
+    try {
+      await placeSupplierOrderSafely(order.id)
+    } catch (e) {
+      console.error('[supplier]', order.id, safeSupplierMessage((e as Error).message))
+    }
   }
 }

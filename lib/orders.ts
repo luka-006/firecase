@@ -51,7 +51,8 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
   let order: Order | null = null
   const [freshPaid] = await sql<Order[]>`
     update orders set status = 'paid', paid_at = now(), stripe_payment_intent = ${pi?.id ?? null},
-      payment_method = ${paymentLabel(pi)}
+      payment_method = ${paymentLabel(pi)},
+      cj_status = case when cj_status = '' then 'pending' else cj_status end
     where id = ${orderId} and status = 'pending' returning *`
 
   if (freshPaid) {
