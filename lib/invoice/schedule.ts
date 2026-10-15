@@ -1,6 +1,7 @@
 import 'server-only'
 import { after } from 'next/server'
 import type { Order } from '../types'
+import { drainSupplierWork } from '../supplier/fulfill'
 import { completePaidOrderDelivery, drainPendingInvoices, kickInvoiceForOrder } from './post-payment'
 
 export function schedulePostPaymentForOrder(order: Order) {
@@ -19,6 +20,11 @@ export function schedulePendingInvoiceDrain(limit = 5) {
       await drainPendingInvoices(limit)
     } catch (e) {
       console.error('[invoice] drain pending', (e as Error).message)
+    }
+    try {
+      await drainSupplierWork(limit)
+    } catch (e) {
+      console.error('[supplier] drain', (e as Error).message)
     }
   })
 }

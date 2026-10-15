@@ -1,7 +1,7 @@
 import type { Locale } from './routes'
 
 // sup = opcija koju treba odabrati kod dobavljača
-export type Variant = { hr: string; en: string; sup?: string }
+export type Variant = { hr: string; en: string; sup?: string; cjPid?: string; cjVid?: string; cjSku?: string }
 
 export type ProposalStatus = 'draft' | 'review' | 'rejected' | 'accepted'
 
@@ -66,6 +66,9 @@ export type Product = {
   safetyEn: string
   supplierUrl: string
   costCents: number | null
+  cjPid: string
+  cjVid: string
+  cjSku: string
   proposalId?: number | null
   lowest30?: number | null
 }
@@ -125,6 +128,17 @@ export type Order = {
   reviewRequestSentAt: Date | null
   reviewRequestError: string | null
   supplierOrder: string
+  cjOrderId: string
+  cjShipmentId: string
+  cjOrderNumber: string
+  cjStatus: string
+  cjError: string | null
+  cjNote: string
+  cjLogistic: string
+  cjAttempts: number
+  cjUpdatedAt: Date | null
+  cjSyncedAt: Date | null
+  cjNextRetryAt: Date | null
   paidAt: Date | null
   shippedAt: Date | null
   createdAt: Date

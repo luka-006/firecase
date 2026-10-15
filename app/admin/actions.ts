@@ -11,6 +11,9 @@ import { deliverReviewRequest } from '@/lib/review-mail'
 import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
+import { SupplierError, lookupVariant } from '@/lib/supplier/client'
+import { paySupplierOrder, placeSupplierOrder } from '@/lib/supplier/fulfill'
+import { supplierId } from '@/lib/supplier/ids'
 import type { Invoice, Order, Variant } from '@/lib/types'
 
 type State = { error?: string; ok?: string } | null
@@ -90,8 +93,22 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   if (compare !== null && compare <= price) return { error: 'Stara cijena mora biti veća od nove (ili ostavi prazno).' }
   let images: string[] = []
   try { images = JSON.parse(str(f, 'images') || '[]') } catch {}
+  let cjRows: { pid?: string; vid?: string; sku?: string }[] = []
+  try { cjRows = JSON.parse(str(f, 'cjVariants', 20000) || '[]') } catch { cjRows = [] }
   const variants: Variant[] = str(f, 'variants').split('\n').map((l) => l.trim()).filter(Boolean)
-    .map((l) => { const [hr, en, sup] = l.split('|').map((x) => x.trim()); return sup ? { hr, en: en || hr, sup } : { hr, en: en || hr } })
+    .map((l, i) => {
+      const [hr, en, sup] = l.split('|').map((x) => x.trim())
+      const extra = cjRows[i] || {}
+      const row: Variant = { hr, en: en || hr }
+      if (sup) row.sup = sup
+      const cjPid = supplierId(extra.pid)
+      const cjVid = supplierId(extra.vid)
+      const cjSku = supplierId(extra.sku)
+      if (cjPid) row.cjPid = cjPid
+      if (cjVid) row.cjVid = cjVid
+      if (cjSku) row.cjSku = cjSku
+      return row
+    })
   const stockRaw = str(f, 'stock')
   const proposalId = Number(f.get('proposalId')) || null
   const data = {
@@ -106,6 +123,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
     sku: str(f, 'sku'), materialHr: str(f, 'materialHr'), materialEn: str(f, 'materialEn'),
     manufacturer: str(f, 'manufacturer'), euResponsible: str(f, 'euResponsible'),
     supplierUrl: str(f, 'supplierUrl'), costCents: str(f, 'cost') ? cents(str(f, 'cost')) : null,
+    cjPid: supplierId(str(f, 'cjPid')), cjVid: supplierId(str(f, 'cjVid')), cjSku: supplierId(str(f, 'cjSku')),
     safetyHr: str(f, 'safetyHr'), safetyEn: str(f, 'safetyEn'),
     ...(proposalId ? { proposalId } : {}),
   }
@@ -131,6 +149,16 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   }
   refresh()
   return { ok: 'Spremljeno.' }
+}
+
+export async function lookupSupplierVariant(vid: string, sku: string): Promise<{ ok: true; priceUsd: string; stock: number } | { ok: false; error: string }> {
+  if (!(await isAdmin())) return { ok: false, error: 'Niste prijavljeni.' }
+  try {
+    const row = await lookupVariant(vid, sku)
+    return { ok: true, priceUsd: row.priceUsd, stock: row.stock }
+  } catch (e) {
+    return { ok: false, error: e instanceof SupplierError ? e.message : 'Provjera nije uspjela.' }
+  }
 }
 
 export async function deleteProduct(f: FormData) {
@@ -223,6 +251,30 @@ export async function resendShippedEmail(f: FormData) {
   revalidatePath(`/admin/orders/${o.id}`)
 }
 
+export async function retrySupplierOrder(_: State, f: FormData): Promise<State> {
+  const o = await orderOf(f)
+  const result = await placeSupplierOrder(o.id, { force: true })
+  revalidatePath(`/admin/orders/${o.id}`)
+  revalidatePath('/admin/orders')
+  if (result.state === 'failed') return { error: result.error || 'Nije spremljeno.' }
+  if (result.state === 'skipped') return { error: 'Nema mapiranja.' }
+  if (result.state === 'busy') return { error: 'Već je u tijeku.' }
+  return { ok: result.state === 'created' ? 'Spremljeno.' : 'Već postoji.' }
+}
+
+export async function paySupplierOrderAction(_: State, f: FormData): Promise<State> {
+  const o = await orderOf(f)
+  try {
+    await paySupplierOrder(o.id)
+  } catch (e) {
+    revalidatePath(`/admin/orders/${o.id}`)
+    return { error: e instanceof SupplierError ? e.message : 'Plaćanje nije uspjelo.' }
+  }
+  revalidatePath(`/admin/orders/${o.id}`)
+  revalidatePath('/admin/orders')
+  return { ok: 'Plaćeno.' }
+}
+
 export async function setSupplierOrder(f: FormData) {
   const o = await orderOf(f)
   await sql`update orders set supplier_order = ${str(f, 'supplierOrder').slice(0, 80)} where id = ${o.id}`
@@ -292,7 +344,13 @@ export async function saveSettingsAction(_: State, f: FormData): Promise<State> 
     deliveryHr: str(f, 'deliveryHr'), deliveryEn: str(f, 'deliveryEn'),
     announcementHr: str(f, 'announcementHr'), announcementEn: str(f, 'announcementEn'),
     autoAcceptProposals: f.get('autoAcceptProposals') === 'on',
+    supplierLogisticMode: str(f, 'supplierLogisticMode') === 'name' ? 'name' : 'auto',
+    supplierLogisticName: str(f, 'supplierLogisticName', 50),
+    supplierLogisticMaxDays: Math.min(90, Math.max(1, parseInt(str(f, 'supplierLogisticMaxDays'), 10) || 20)),
+    supplierFromCountry: str(f, 'supplierFromCountry', 2).replace(/[^A-Za-z]/g, '').toUpperCase() || 'CN',
+    supplierPayEnabled: f.get('supplierPayEnabled') === 'on',
   }
+  if (s.supplierLogisticMode === 'name' && !s.supplierLogisticName) return { error: 'Upišite naziv dostave.' }
   try {
     await saveSettings(s)
   } catch (e) {

@@ -2,13 +2,14 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireAdmin, signReviewToken } from '@/lib/auth'
 import { sql } from '@/lib/db'
+import { getSettingsFresh } from '@/lib/settings'
 import { getInvoicesForOrder } from '@/lib/invoice'
 import { money, formatDateTime } from '@/lib/money'
 import { Status, orderStage } from '@/components/admin/Status'
 import { CopyField } from '@/components/admin/AdminUi'
 import { ActionForm } from '@/components/Ui'
 import { DbError } from '@/components/admin/DbError'
-import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryIssueInvoiceAction, sendReviewRequestAction, setSupplierOrder } from '../../actions'
+import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, paySupplierOrderAction, refundOrder, resendShippedEmail, retryIssueInvoiceAction, retrySupplierOrder, sendReviewRequestAction, setSupplierOrder } from '../../actions'
 import { ConfirmShipForm } from '@/components/admin/ConfirmShipForm'
 import { SupplierLink } from '@/components/SupplierLink'
 import { href } from '@/lib/routes'
@@ -47,6 +48,8 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
     return <DbError error={e} />
   }
   if (!o) notFound()
+  const settings = await getSettingsFresh()
+  const payStates = new Set(['', 'CREATED', 'IN_CART', 'UNPAID'])
   const reviewPath = o.status === 'shipped' || o.status === 'delivered'
     ? href(o.locale === 'en' ? 'en' : 'hr', 'review', undefined, `t=${encodeURIComponent(await signReviewToken(o.id))}`)
     : null
@@ -111,6 +114,24 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                 </label>
                 <button className="btn-ghost btn-sm">Spremi</button>
               </form>
+              {(o.cjOrderId || o.cjStatus || o.cjError || o.cjNote) && (
+                <div className="space-y-2 border-t border-line pt-4 text-sm">
+                  {o.cjOrderId ? <p>ID <span className="font-mono">{o.cjOrderId}</span>{o.cjStatus ? <span className="text-mute"> · {o.cjStatus}</span> : null}</p> : null}
+                  {o.cjLogistic ? <p className="text-mute">{o.cjLogistic}</p> : null}
+                  {o.cjNote ? <p className="text-mute">{o.cjNote}</p> : null}
+                  {o.cjError ? <p className="text-red-300">{o.cjError}</p> : null}
+                </div>
+              )}
+              {!o.cjOrderId && (
+                <ActionForm action={retrySupplierOrder} submit="Ponovi" className="flex flex-wrap items-center gap-3">
+                  <input type="hidden" name="id" value={o.id} />
+                </ActionForm>
+              )}
+              {settings.supplierPayEnabled && o.cjOrderId && payStates.has(o.cjStatus) && (
+                <ActionForm action={paySupplierOrderAction} submit="Plati u CJ" className="flex flex-wrap items-center gap-3">
+                  <input type="hidden" name="id" value={o.id} />
+                </ActionForm>
+              )}
             </section>
           )}
 

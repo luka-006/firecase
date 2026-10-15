@@ -1,7 +1,7 @@
 'use client'
 import Image from 'next/image'
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
-import { saveProduct, translateToEn } from '@/app/admin/actions'
+import { lookupSupplierVariant, saveProduct, translateToEn } from '@/app/admin/actions'
 import { SupplierLink } from '@/components/SupplierLink'
 import type { Product } from '@/lib/types'
 
@@ -121,10 +121,38 @@ function Section({ title, open, children, grid = true }: { title: string; open?:
   )
 }
 
+function SupplierProbe({ vid, sku }: { vid: string; sku: string }) {
+  const [pending, setPending] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState(false)
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <button type="button" className="btn-ghost btn-sm" disabled={pending || (!vid.trim() && !sku.trim())} onClick={async () => {
+        setPending(true)
+        setErr(false)
+        const result = await lookupSupplierVariant(vid, sku)
+        setPending(false)
+        if (!result.ok) { setErr(true); setMsg(result.error); return }
+        setMsg(`${result.priceUsd} · zaliha ${result.stock}`)
+      }}>{pending ? '…' : 'Provjeri u CJ'}</button>
+      {msg ? <span className={`text-sm ${err ? 'text-red-300' : 'text-mute'}`}>{msg}</span> : null}
+    </div>
+  )
+}
+
 export function ProductForm({ p, proposalId, initial }: { p: Product | null; proposalId?: number | null; initial?: Partial<Product> }) {
   const base = p ?? (initial ? ({ ...initial, id: 0 } as Product) : null)
   const [state, action, pending] = useActionState(saveProduct, null)
   const [images, setImages] = useState<string[]>(base?.images ?? [])
+  const [variantText, setVariantText] = useState((base?.variants ?? []).map((v) => [v.hr, v.en, v.sup].filter(Boolean).join(' | ')).join('\n'))
+  const [cjPid, setCjPid] = useState(base?.cjPid ?? '')
+  const [cjVid, setCjVid] = useState(base?.cjVid ?? '')
+  const [cjSku, setCjSku] = useState(base?.cjSku ?? '')
+  const [cjRows, setCjRows] = useState(() => (base?.variants ?? []).map((v) => ({ pid: v.cjPid ?? '', vid: v.cjVid ?? '', sku: v.cjSku ?? '' })))
+  const variantLines = variantText.split('\n').map((line) => line.trim()).filter(Boolean)
+  useEffect(() => {
+    setCjRows((prev) => variantLines.map((_, i) => prev[i] ?? { pid: '', vid: '', sku: '' }))
+  }, [variantText]) // eslint-disable-line react-hooks/exhaustive-deps -- rows follow the variant line count
   const [uploading, setUploading] = useState(false)
   const [upErr, setUpErr] = useState('')
 
@@ -158,14 +186,20 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
       <input type="hidden" name="id" value={p?.id ? String(p.id) : ''} />
       {proposalId ? <input type="hidden" name="proposalId" value={proposalId} /> : null}
       <input type="hidden" name="images" value={JSON.stringify(images)} />
+      <input type="hidden" name="cjPid" value={cjPid} />
+      <input type="hidden" name="cjVid" value={cjVid} />
+      <input type="hidden" name="cjSku" value={cjSku} />
+      <input type="hidden" name="cjVariants" value={JSON.stringify(variantLines.map((_, i) => cjRows[i] ?? { pid: '', vid: '', sku: '' }))} />
 
       <Section title="Osnovno" open>
         <Pair label="Naziv" base="name" hr={base?.nameHr} en={base?.nameEn} required />
         <In label="Cijena (€) *" name="price" defaultValue={base?.priceCents ? eur(base.priceCents) : ''} inputMode="decimal" required={!!(base?.active ?? false)} placeholder="14,99" hint={!base?.priceCents ? 'Obavezno prije objave (Vidljiv na stranici).' : undefined} />
         <In label="Stara cijena (€)" name="compare" defaultValue={eur(base?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
-        <div className="md:col-span-2">
-          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(base?.variants ?? []).map((v) => [v.hr, v.en, v.sup].filter(Boolean).join(' | ')).join('\n')} hint="Jedna po retku: HR naziv | EN naziv | opcija dobavljača (neobavezno). Npr. BIC J6 (standardni) | BIC J6 (regular) | Black J6. Prazno = bez izbora." />
-        </div>
+        <label className="block md:col-span-2">
+          <span className="label">Dostupne veličine</span>
+          <textarea name="variants" rows={3} value={variantText} onChange={(e) => setVariantText(e.target.value)} className="input" />
+          <span className="mt-1 block text-xs text-mute">Jedna po retku: HR naziv | EN naziv | opcija dobavljača (neobavezno). Npr. BIC J6 (standardni) | BIC J6 (regular) | Black J6. Prazno = bez izbora.</span>
+        </label>
         <div className="flex flex-wrap gap-6 text-sm md:col-span-2">
           <label className="flex items-center gap-3"><input type="checkbox" name="active" defaultChecked={base?.active ?? false} className="size-4 accent-[#d08a2e]" /> Vidljiv na stranici</label>
           <label className="flex items-center gap-3"><input type="checkbox" name="featured" defaultChecked={base?.featured ?? false} className="size-4 accent-[#d08a2e]" /> Istaknut na naslovnici</label>
@@ -206,6 +240,41 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
           <SupplierField defaultValue={base?.supplierUrl} />
         </div>
         <In label="Nabavna cijena po komadu (€)" name="cost" defaultValue={eur(base?.costCents)} inputMode="decimal" placeholder="4,20" />
+        <label className="block md:col-span-2">
+          <span className="label">PID</span>
+          <input value={cjPid} onChange={(e) => setCjPid(e.target.value)} className="input" autoComplete="off" />
+        </label>
+        {variantLines.length === 0 ? (
+          <div className="space-y-3 md:col-span-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block"><span className="label">VID</span><input value={cjVid} onChange={(e) => setCjVid(e.target.value)} className="input" autoComplete="off" /></label>
+              <label className="block"><span className="label">SKU</span><input value={cjSku} onChange={(e) => setCjSku(e.target.value)} className="input" autoComplete="off" /></label>
+            </div>
+            <SupplierProbe vid={cjVid} sku={cjSku} />
+          </div>
+        ) : (
+          <div className="space-y-4 md:col-span-2">
+            {variantLines.map((line, i) => {
+              const row = cjRows[i] ?? { pid: '', vid: '', sku: '' }
+              const set = (key: 'pid' | 'vid' | 'sku', value: string) => setCjRows((prev) => {
+                const next = variantLines.map((_, idx) => prev[idx] ?? { pid: '', vid: '', sku: '' })
+                next[i] = { ...next[i], [key]: value }
+                return next
+              })
+              return (
+                <div key={i} className="space-y-2 border border-line p-3">
+                  <p className="text-sm">{line.split('|')[0]?.trim()}</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <label className="block"><span className="label">PID</span><input value={row.pid} onChange={(e) => set('pid', e.target.value)} className="input" autoComplete="off" /></label>
+                    <label className="block"><span className="label">VID</span><input value={row.vid} onChange={(e) => set('vid', e.target.value)} className="input" autoComplete="off" /></label>
+                    <label className="block"><span className="label">SKU</span><input value={row.sku} onChange={(e) => set('sku', e.target.value)} className="input" autoComplete="off" /></label>
+                  </div>
+                  <SupplierProbe vid={row.vid} sku={row.sku} />
+                </div>
+              )
+            })}
+          </div>
+        )}
       </Section>
 
       <Section title="Napredno" grid>
