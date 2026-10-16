@@ -19,11 +19,13 @@ export type UpsellProduct = {
 export function UpsellPopup({
   locale,
   products,
+  title,
   onAdd,
   onSkip,
 }: {
   locale: Locale
   products: UpsellProduct[]
+  title: string
   onAdd: (p: UpsellProduct) => void
   onSkip: () => void
 }) {
@@ -31,7 +33,7 @@ export function UpsellPopup({
   return (
     <div className="fixed inset-0 z-[60] grid place-items-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="upsell-title">
       <div className="card max-h-[90vh] w-full max-w-3xl overflow-y-auto p-6 sm:p-8">
-        <h2 id="upsell-title" className="h-display text-2xl leading-tight sm:text-3xl">{d.upsellTitle}</h2>
+        <h2 id="upsell-title" className="h-display text-2xl leading-tight sm:text-3xl">{title}</h2>
         <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {products.map((p) => {
             const name = locale === 'en' && p.nameEn ? p.nameEn : p.nameHr

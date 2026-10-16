@@ -43,7 +43,7 @@ export default async function Account({ params }: { params: Promise<{ locale: st
             <ul className="divide-y divide-line border-y border-line">
               {orders.map((o) => (
                 <li key={o.id} className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm">
-                  <Link href={href(locale, 'order', o.publicId)} className="hover:text-flame-2">#{o.id} · {formatDateTime(o.createdAt, locale)}</Link>
+                  <Link href={href(locale, 'order', o.publicId)} className="hover:text-flame-2">#{o.orderNumber} · {formatDateTime(o.createdAt, locale)}</Link>
                   <span className="text-mute">{d.status[o.status]}</span>
                   <span className="tabular-nums">{money(o.totalCents, locale)}</span>
                   {o.invoiceId && <a href={`/api/invoice/${o.invoiceId}?t=${o.publicId}`} className="link text-xs">PDF</a>}

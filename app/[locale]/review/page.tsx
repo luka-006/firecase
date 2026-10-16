@@ -68,7 +68,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
     return <PageHead title={d.reviewPageTitle} intro={d.errors.generic} />
   }
 
-  const eyebrow = `${d.orderNo} #${order.id}`
+  const eyebrow = `${d.orderNo} #${order.orderNumber}`
 
   if (existing.length) {
     const justSent = sp.sent === '1'

@@ -1,6 +1,6 @@
 'use client'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { discountCentsFor } from '@/lib/discount'
+import { CART_STORAGE_KEY, UPSELL_SEEN_KEY, discountCentsFor } from '@/lib/commerce'
 
 export type CartItem = {
   key: string
@@ -33,7 +33,20 @@ type Ctx = {
 }
 
 const CartCtx = createContext<Ctx | null>(null)
-const KEY = 'fc_cart'
+
+let blockHydrate = false
+
+export function wipeCartStorage() {
+  blockHydrate = true
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items: [], upsell: false }))
+    sessionStorage.removeItem(UPSELL_SEEN_KEY)
+  } catch {}
+}
+
+export function releaseCartHydrate() {
+  blockHydrate = false
+}
 
 export function CartProvider({ children, shipping }: { children: React.ReactNode; shipping: Ctx['shipping'] }) {
   const [items, setItems] = useState<CartItem[]>([])
@@ -42,8 +55,15 @@ export function CartProvider({ children, shipping }: { children: React.ReactNode
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    if (blockHydrate) {
+      blockHydrate = false
+      setItems([])
+      setUpsell(false)
+      setReady(true)
+      return
+    }
     try {
-      const raw = localStorage.getItem(KEY)
+      const raw = localStorage.getItem(CART_STORAGE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw)
         if (Array.isArray(parsed)) setItems(parsed)
@@ -61,7 +81,7 @@ export function CartProvider({ children, shipping }: { children: React.ReactNode
     try {
       const keep = items.length > 0 && upsell
       if (!items.length && upsell) setUpsell(false)
-      localStorage.setItem(KEY, JSON.stringify({ items, upsell: keep }))
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ items, upsell: keep }))
     } catch {}
   }, [items, upsell, ready])
 
@@ -83,6 +103,7 @@ export function CartProvider({ children, shipping }: { children: React.ReactNode
   const clear = useCallback(() => {
     setItems([])
     setUpsell(false)
+    wipeCartStorage()
   }, [])
 
   const value = useMemo(() => {

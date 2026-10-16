@@ -7,6 +7,17 @@ const fmt = {
 
 export const money = (cents: number, locale: Locale = 'hr') => fmt[locale].format(cents / 100)
 
+const whole = {
+  hr: new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+  en: new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+}
+
+/** Round euro amounts, for thresholds such as 40 €. */
+export function euros(cents: number, locale: Locale = 'hr') {
+  if (cents % 100 === 0) return whole[locale].format(cents / 100)
+  return money(cents, locale)
+}
+
 // "12.34" format za fiskalizaciju
 export const amountDot = (cents: number) => (cents / 100).toFixed(2)
 

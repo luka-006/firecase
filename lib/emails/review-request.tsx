@@ -13,7 +13,7 @@ export function ReviewRequestEmail({ order, url }: { order: Order; url: string }
     <EmailLayout preview={d.mailReviewLead} lang={l}>
       <Text style={heading}>{d.mailReviewHeading}</Text>
       {first ? <Text style={{ color: '#e8e4df', margin: '0 0 8px' }}>{d.mailReviewGreeting(first)}</Text> : null}
-      <Text style={{ ...muted, marginTop: 0 }}>{d.mailOrderNo(order.id)}</Text>
+      <Text style={{ ...muted, marginTop: 0 }}>{d.mailOrderNo(order.orderNumber)}</Text>
       <Text style={{ color: '#e8e4df', margin: '16px 0' }}>{d.mailReviewLead}</Text>
       <Section style={{ marginTop: 8, padding: '4px 16px', backgroundColor: '#1a1a1a', borderRadius: 12, border: '1px solid #2a2a2a' }}>
         {order.items.map((item, idx) => {
@@ -41,6 +41,7 @@ export function ReviewRequestEmail({ order, url }: { order: Order; url: string }
           {d.mailReviewCta}
         </Button>
       </Section>
+      <Text style={{ color: '#e8e4df', margin: '20px 0 0' }}>{d.mailOrderThanks}</Text>
     </EmailLayout>
   )
 }

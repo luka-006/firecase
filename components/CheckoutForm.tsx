@@ -6,11 +6,10 @@ import { useCart } from './CartProvider'
 import { UpsellPopup, type UpsellProduct } from './UpsellPopup'
 import { Field } from './Ui'
 import { startCheckout } from '@/app/actions'
+import { UPSELL_SEEN_KEY, UPSELL_SUBTOTAL_LIMIT_CENTS } from '@/lib/commerce'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
-
-const UPSELL_SEEN = 'fc_upsell_shown'
 
 type Props = {
   locale: Locale
@@ -24,10 +23,11 @@ type Props = {
 
 export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, delivery, upsellProducts }: Props) {
   const d = t(locale)
-  const { items, subtotal, discount, add } = useCart()
+  const { items, subtotal, discount, add, upsell } = useCart()
   const [country, setCountry] = useState(defaults.country || 'HR')
   const [state, action, pending] = useActionState(startCheckout, null)
   const [popup, setPopup] = useState(false)
+  const [offerDiscount, setOfferDiscount] = useState(false)
   const seen = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
   const shipping = country === 'HR' ? (subtotal >= ship.freeThresholdCents ? 0 : ship.shippingCents) : ship.euShippingCents
@@ -40,11 +40,12 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
 
   function onPay(e: React.FormEvent<HTMLFormElement>) {
     const single = items.length === 1 && items[0].qty === 1
-    if (typeof window !== 'undefined' && sessionStorage.getItem(UPSELL_SEEN) === '1') seen.current = true
+    if (typeof window !== 'undefined' && sessionStorage.getItem(UPSELL_SEEN_KEY) === '1') seen.current = true
     if (single && !seen.current && offers.length) {
       e.preventDefault()
       seen.current = true
-      sessionStorage.setItem(UPSELL_SEEN, '1')
+      sessionStorage.setItem(UPSELL_SEEN_KEY, '1')
+      setOfferDiscount(subtotal < UPSELL_SUBTOTAL_LIMIT_CENTS)
       setPopup(true)
     }
   }
@@ -62,7 +63,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
     <form ref={formRef} action={action} onSubmit={onPay} className="mt-10 grid gap-10 lg:grid-cols-[1fr_400px]">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="cart" value={cart} />
-      <input type="hidden" name="upsell" value={discount > 0 ? '1' : '0'} />
+      <input type="hidden" name="upsell" value={upsell ? '1' : '0'} />
       <div className="space-y-10">
         <fieldset className="space-y-4">
           <legend className="h-display mb-6 text-xl"><span className="idx mr-3 align-top">01</span>{d.contactDetails}</legend>
@@ -132,11 +133,12 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
         <UpsellPopup
           locale={locale}
           products={offers}
+          title={offerDiscount ? d.upsellTitle : d.upsellSuggest}
           onAdd={(p) => {
             add({
               id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.image, priceCents: p.priceCents,
               vi: p.vi, variantHr: p.variantHr, variantEn: p.variantEn,
-            }, 1, { silent: true, upsell: true })
+            }, 1, { silent: true, upsell: offerDiscount })
             setPopup(false)
           }}
           onSkip={() => {

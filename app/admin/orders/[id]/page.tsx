@@ -67,7 +67,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
     <div className="space-y-8">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/admin/orders" className="text-sm text-mute hover:text-bone">← Narudžbe</Link>
-        <h1 className="h-display text-2xl">Narudžba #{o.id}</h1>
+        <h1 className="h-display text-2xl">Narudžba #{o.orderNumber}</h1>
         <Status s={stage} />
         <span className="text-xs text-mute">{formatDateTime(o.createdAt)} · {o.paymentMethod ?? 'nije plaćeno'}</span>
       </div>

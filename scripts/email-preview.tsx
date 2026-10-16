@@ -16,6 +16,7 @@ fs.mkdirSync(outDir, { recursive: true })
 
 const sampleOrder: Order = {
   id: 1042,
+  orderNumber: 482913,
   publicId: 'preview-public-id',
   userId: null,
   status: 'paid',
