@@ -35,6 +35,7 @@ function invoiceDataFromOrder(order: Order, storno?: Invoice): InvoiceData {
     paymentLabel: order.paymentMethod || 'Kartica',
     orderPublicId: order.publicId,
     orderId: order.id,
+    orderNumber: order.orderNumber,
     operatorOib: SELLER.oib,
     premises: 'WEB1',
     device: '1',

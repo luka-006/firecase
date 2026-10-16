@@ -15,6 +15,7 @@ export function PasswordResetEmail({ link, locale }: { link: string; locale: 'hr
       </Section>
       <Text style={{ ...muted, marginTop: 20, fontSize: 13, wordBreak: 'break-all' }}>{link}</Text>
       <Text style={{ ...muted, fontSize: 13 }}>{d.mailResetIgnore}</Text>
+      <Text style={{ color: '#e8e4df', margin: '20px 0 0' }}>{d.mailSignoff}</Text>
     </EmailLayout>
   )
 }

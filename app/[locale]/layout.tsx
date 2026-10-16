@@ -10,7 +10,7 @@ import { CookieNotice, Reveal } from '@/components/Ui'
 import { isLocale, LOCALES, type Locale } from '@/lib/routes'
 import { getSettings } from '@/lib/settings'
 import { SITE_URL } from '@/lib/config'
-import { money } from '@/lib/money'
+import { euros } from '@/lib/money'
 import { t } from '@/lib/dict'
 
 export const viewport: Viewport = { themeColor: '#0a0a0a', colorScheme: 'dark' }
@@ -22,12 +22,14 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
   const en = locale === 'en'
+  const s = await getSettings()
+  const amount = euros(s.freeThresholdCents, en ? 'en' : 'hr')
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: en ? 'Firecase – Lighter cases' : 'Firecase – Futrole za upaljače', template: '%s | Firecase' },
     description: en
-      ? 'Lighter cases with delivery across Croatia. Free shipping on orders over €30 and 14 days to return.'
-      : 'Futrole za upaljače s dostavom po cijeloj Hrvatskoj. Besplatna dostava za narudžbe iznad 30 € i 14 dana za povrat.',
+      ? `Lighter cases with delivery across Croatia. Free shipping from ${amount} and 14 days to return.`
+      : `Futrole za upaljače s dostavom po cijeloj Hrvatskoj. Besplatna dostava od ${amount} i 14 dana za povrat.`,
     keywords: en ? ['lighter case', 'lighter cover', 'BIC lighter case', 'Firecase'] : ['futrola za upaljač', 'futrole za upaljače', 'navlaka za upaljač', 'futrola za BIC upaljač', 'Firecase'],
     openGraph: { type: 'website', siteName: 'Firecase', locale: en ? 'en_US' : 'hr_HR', alternateLocale: en ? 'hr_HR' : 'en_US', images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Firecase' }] },
     verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } : undefined,
@@ -41,7 +43,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   if (!isLocale(l)) notFound()
   const locale: Locale = l
   const s = await getSettings()
-  const announcement = (locale === 'en' ? s.announcementEn : s.announcementHr) || t(locale).freeOver(money(s.freeThresholdCents, locale))
+  const announcement = (locale === 'en' ? s.announcementEn : s.announcementHr) || t(locale).freeOver(euros(s.freeThresholdCents, locale))
   return (
     <html lang={locale}>
       <head>

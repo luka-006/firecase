@@ -19,7 +19,7 @@ const FILTERS = [
 
 type Filter = (typeof FILTERS)[number][0]
 
-type Row = Review & { buyerEmail: string }
+type Row = Review & { buyerEmail: string; orderNumber: number }
 
 export default async function AdminReviews({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   await requireAdmin()
@@ -32,11 +32,11 @@ export default async function AdminReviews({ searchParams }: { searchParams: Pro
     const total = counts.reduce((a, c) => a + c.n, 0)
     const rows = status === 'all'
       ? await sql<Row[]>`
-          select r.*, o.email as buyer_email from reviews r
+          select r.*, o.email as buyer_email, o.order_number from reviews r
           join orders o on o.id = r.order_id
           order by r.created_at desc limit 300`
       : await sql<Row[]>`
-          select r.*, o.email as buyer_email from reviews r
+          select r.*, o.email as buyer_email, o.order_number from reviews r
           join orders o on o.id = r.order_id
           where r.status = ${status}
           order by r.created_at desc limit 300`
@@ -70,7 +70,7 @@ export default async function AdminReviews({ searchParams }: { searchParams: Pro
                     <span className="font-medium">{r.productName || 'Proizvod'}</span>
                   )}
                   {r.variant ? <span className="text-mute"> ({r.variant})</span> : null}
-                  <Link href={`/admin/orders/${r.orderId}`} className="ml-3 text-xs link">Narudžba #{r.orderId}</Link>
+                  <Link href={`/admin/orders/${r.orderId}`} className="ml-3 text-xs link">Narudžba #{r.orderNumber}</Link>
                 </div>
                 <span className="text-xs text-mute">{formatDateTime(r.createdAt)}</span>
               </div>

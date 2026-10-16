@@ -8,10 +8,11 @@ export function RefundEmail({ order }: { order: Order }) {
   const d = t(order.locale)
   const amount = money(order.totalCents, order.locale)
   return (
-    <EmailLayout preview={d.mailRefundSubject(order.id)}>
+    <EmailLayout preview={d.mailRefundSubject(order.orderNumber)}>
       <Text style={heading}>{order.locale === 'en' ? 'Refund issued' : 'Povrat novca'}</Text>
-      <Text style={{ color: '#e8e4df' }}>{d.mailRefundLead(amount, order.id)}</Text>
-      <Text style={{ ...muted, marginTop: 16, fontSize: 13 }}>{d.mailOrderNo(order.id)}</Text>
+      <Text style={{ color: '#e8e4df' }}>{d.mailRefundLead(amount, order.orderNumber)}</Text>
+      <Text style={{ ...muted, marginTop: 16, fontSize: 13 }}>{d.mailOrderNo(order.orderNumber)}</Text>
+      <Text style={{ color: '#e8e4df', margin: '20px 0 0' }}>{d.mailSignoff}</Text>
     </EmailLayout>
   )
 }

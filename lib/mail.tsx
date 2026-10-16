@@ -31,7 +31,7 @@ export async function sendOrderConfirmation(o: Order, delivery?: string): Promis
   const d = t(o.locale)
   return sendRendered(
     o.email,
-    d.mailOrderReceivedSubject(o.id),
+    d.mailOrderReceivedSubject(o.orderNumber),
     <OrderReceivedEmail order={o} deliveryEstimate={delivery} />,
   )
 }
@@ -43,7 +43,7 @@ export async function sendInvoiceEmail(
   const d = t(o.locale)
   return sendRendered(
     o.email,
-    d.mailInvoiceSubject(o.id),
+    d.mailInvoiceSubject(o.orderNumber),
     <InvoiceEmail order={o} />,
     [{ filename: `racun-${invoicePdf.number.replace(/\//g, '-')}.pdf`, content: Buffer.from(invoicePdf.pdf) }],
   )
@@ -83,7 +83,7 @@ export async function sendRefunded(
   const attachments = pdf
     ? [{ filename: `storno-${pdf.number.replace(/\//g, '-')}.pdf`, content: Buffer.from(pdf.pdf) }]
     : undefined
-  return sendRendered(o.email, d.mailRefundSubject(o.id), <RefundEmail order={o} />, attachments)
+  return sendRendered(o.email, d.mailRefundSubject(o.orderNumber), <RefundEmail order={o} />, attachments)
 }
 
 export async function sendOtpCode(email: string, code: string, locale: 'hr' | 'en'): Promise<SendMailResult> {

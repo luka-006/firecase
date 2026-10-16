@@ -1,5 +1,6 @@
 import 'server-only'
 import { unstable_cache } from 'next/cache'
+import { FREE_SHIPPING_THRESHOLD_CENTS, hrShippingCents } from './commerce'
 import { sql } from './db'
 
 export type Settings = {
@@ -16,7 +17,7 @@ export type Settings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   shippingCents: 499,
-  freeThresholdCents: 3000,
+  freeThresholdCents: FREE_SHIPPING_THRESHOLD_CENTS,
   shipEu: false,
   euShippingCents: 999,
   deliveryHr: '8–16 dana',
@@ -44,7 +45,7 @@ export async function saveSettings(s: Settings) {
 }
 
 export function shippingFor(subtotalCents: number, country: string, s: Settings) {
-  if (country === 'HR') return subtotalCents >= s.freeThresholdCents ? 0 : s.shippingCents
+  if (country === 'HR') return hrShippingCents(subtotalCents, s.shippingCents, s.freeThresholdCents)
   return s.euShippingCents
 }
 

@@ -1,7 +1,7 @@
 'use client'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState, useActionState } from 'react'
-import { useCart } from './CartProvider'
+import { useEffect, useRef, useState, useActionState } from 'react'
+import { releaseCartHydrate, useCart, wipeCartStorage } from './CartProvider'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import Link from 'next/link'
@@ -93,7 +93,16 @@ export function CookieSettingsButton({ label }: { label: string }) {
 
 export function ClearCart() {
   const { clear } = useCart()
-  useEffect(() => clear(), [clear])
+  const wiped = useRef(false)
+  if (typeof window !== 'undefined' && !wiped.current) {
+    wiped.current = true
+    wipeCartStorage()
+  }
+  useEffect(() => {
+    wipeCartStorage()
+    clear()
+    releaseCartHydrate()
+  }, [clear])
   return null
 }
 

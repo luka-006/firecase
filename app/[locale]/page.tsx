@@ -9,7 +9,7 @@ import { getHomepageReviews } from '@/lib/reviews'
 import { ReviewsStrip } from '@/components/ProductReviews'
 import { getSettings } from '@/lib/settings'
 import { SELLER, SITE_URL } from '@/lib/config'
-import { money } from '@/lib/money'
+import { euros, money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { loc } from '@/lib/types'
 import { t } from '@/lib/dict'
@@ -38,18 +38,20 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     image: p.images[0] ?? '',
     sizes: p.variants.length ? d.sizes(p.variants.length) : '',
   }))
+  const freeLabel = euros(s.freeThresholdCents, locale)
+  const faq: [string, string][] = [...d.faq.slice(0, 2), d.freeShipFaq(freeLabel), ...d.faq.slice(2)]
   const ld = [
     { '@context': 'https://schema.org', '@type': 'Organization', name: 'Firecase', url: SITE_URL, logo: `${SITE_URL}/icon-512.png`, email: SELLER.email },
     { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Firecase', url: SITE_URL, inLanguage: locale === 'en' ? 'en' : 'hr' },
     {
       '@context': 'https://schema.org', '@type': 'FAQPage',
-      mainEntity: d.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+      mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
     },
   ]
   const idx = 'idx mr-3 align-top sm:mr-4'
   const words: [string, boolean][] = [...d.storyA.split(' ').map((w): [string, boolean] => [w, false]), ...d.storyB.split(' ').map((w): [string, boolean] => [w, true])]
   const facts: [string, string][] = [
-    [d.delivery, d.freeOver(money(s.freeThresholdCents, locale))],
+    [d.delivery, d.freeOver(freeLabel)],
     [d.deliveryTime, locale === 'en' ? s.deliveryEn : s.deliveryHr],
     [d.returnLabel, d.returnValue],
   ]
@@ -121,7 +123,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <span className={idx}>02</span>{d.faqT}
           </h2>
           <div className="divide-y divide-line border-y border-line md:col-span-8">
-            {d.faq.map(([q, a], i) => (
+            {faq.map(([q, a], i) => (
               <details key={q} className="group py-6" data-reveal>
                 <summary className="flex items-center gap-5 text-base sm:text-lg">
                   <span className="font-mono text-xs text-mute">{String(i + 1).padStart(2, '0')}</span>

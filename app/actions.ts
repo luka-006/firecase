@@ -7,9 +7,10 @@ import { sql } from '@/lib/db'
 import { clearUserSession, getUser, setUserSession } from '@/lib/auth'
 import { t } from '@/lib/dict'
 import { href, isLocale, type Locale } from '@/lib/routes'
-import { discountCentsFor } from '@/lib/discount'
+import { priceOrder } from '@/lib/commerce'
+import { isOrderNumberConflict, randomOrderNumber } from '@/lib/order-number.mjs'
 import { getProductsByIds } from '@/lib/products'
-import { getSettingsFresh, shippingFor } from '@/lib/settings'
+import { getSettingsFresh } from '@/lib/settings'
 import { stripe } from '@/lib/stripe'
 import { newPublicId } from '@/lib/orders'
 import { sendPasswordReset } from '@/lib/mail'
@@ -68,9 +69,10 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   }
   const subtotal = items.reduce((a, i) => a + i.unitCents * i.qty, 0)
   const qty = items.reduce((a, i) => a + i.qty, 0)
-  const discount = discountCentsFor(subtotal, qty, f.get('upsell') === '1')
-  const shipping = shippingFor(subtotal, c.country, s)
-  const total = subtotal - discount + shipping
+  const priced = priceOrder(subtotal, qty, f.get('upsell') === '1', c.country, s)
+  const discount = priced.discountCents
+  const shipping = priced.shippingCents
+  const total = priced.totalCents
 
   const st = stripe()
   if (!st) return { error: d.errors.payments }
@@ -82,10 +84,21 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   }
 
   const publicId = newPublicId()
-  const [order] = await sql<{ id: number }[]>`insert into orders ${sql({
-    publicId, userId: user?.id ?? null, ...c, items: sql.json(items as never),
-    subtotalCents: subtotal, discountCents: discount, shippingCents: shipping, totalCents: total, locale,
-  })} returning id`
+  let order: { id: number; orderNumber: number } | undefined
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const orderNumber = randomOrderNumber()
+    try {
+      const [row] = await sql<{ id: number; orderNumber: number }[]>`insert into orders ${sql({
+        publicId, orderNumber, userId: user?.id ?? null, ...c, items: sql.json(items as never),
+        subtotalCents: subtotal, discountCents: discount, shippingCents: shipping, totalCents: total, locale,
+      })} returning id, order_number`
+      order = row
+      break
+    } catch (e) {
+      if (!isOrderNumberConflict(e) || attempt === 7) throw e
+    }
+  }
+  if (!order?.orderNumber) return { error: d.errors.generic }
 
   let url: string | null = null
   try {
@@ -97,7 +110,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       metadata: { orderId: String(order.id), shop: 'firecase' },
       payment_intent_data: {
         metadata: { orderId: String(order.id), shop: 'firecase' },
-        description: `Firecase narudžba #${order.id}`,
+        description: `Firecase narudžba #${order.orderNumber}`,
         statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR,
       },
       line_items: items.map((i) => ({

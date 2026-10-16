@@ -8,8 +8,8 @@ import { OrderItemsTable } from './order-items'
 export function AdminNewOrderEmail({ order }: { order: Order }) {
   const adminUrl = `${SITE_URL}/admin/orders/${order.id}`
   return (
-    <EmailLayout preview={`Nova narudžba #${order.id}`}>
-      <Text style={heading}>Nova narudžba #{order.id}</Text>
+    <EmailLayout preview={`Nova narudžba #${order.orderNumber}`}>
+      <Text style={heading}>Nova narudžba #{order.orderNumber}</Text>
       <OrderItemsTable
         items={order.items}
         shippingCents={order.shippingCents}
@@ -41,5 +41,5 @@ export function AdminNewOrderEmail({ order }: { order: Order }) {
 }
 
 export function adminNewOrderSubject(order: Order) {
-  return `Nova narudžba #${order.id} – ${money(order.totalCents)}`
+  return `Nova narudžba #${order.orderNumber} – ${money(order.totalCents)}`
 }

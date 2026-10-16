@@ -92,6 +92,8 @@ export type OrderItem = {
 
 export type Order = {
   id: number
+  /** Customer-facing 6-digit number. Internal `id` stays sequential. */
+  orderNumber: number
   publicId: string
   userId: number | null
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
@@ -158,6 +160,7 @@ export type InvoiceData = {
   paymentLabel: string
   orderPublicId: string
   orderId: number
+  orderNumber?: number
   operatorOib: string
   premises: string
   device: string

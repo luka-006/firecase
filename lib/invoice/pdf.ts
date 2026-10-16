@@ -85,7 +85,7 @@ export async function renderInvoicePdf(inv: Invoice): Promise<Uint8Array> {
     [L('Mjesto izdavanja', 'Place of issue'), SELLER.city],
     [L('Način plaćanja', 'Payment method'), d.paymentLabel],
     [L('Oznaka operatera', 'Operator'), d.operatorOib],
-    [L('Narudžba', 'Order'), `#${d.orderId}`],
+    [L('Narudžba', 'Order'), `#${d.orderNumber || d.orderId}`],
   ]
   for (const [k, v] of meta) {
     right(v, width - M, ry)

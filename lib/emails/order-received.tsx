@@ -1,5 +1,7 @@
 import { Section, Text } from '@react-email/components'
+import { FREE_SHIPPING_THRESHOLD_CENTS } from '../commerce'
 import { t } from '../dict'
+import { euros } from '../money'
 import type { Order } from '../types'
 import { EmailLayout, heading, muted } from './layout'
 import { OrderItemsTable } from './order-items'
@@ -13,7 +15,7 @@ export function OrderReceivedEmail({
 }) {
   const l = order.locale
   const d = t(l)
-  const subject = d.mailOrderReceivedSubject(order.id)
+  const subject = d.mailOrderReceivedSubject(order.orderNumber)
 
   return (
     <EmailLayout preview={subject} lang={l === 'en' ? 'en' : 'hr'}>
@@ -37,6 +39,7 @@ export function OrderReceivedEmail({
         </Text>
       </Section>
       {deliveryEstimate ? <Text style={{ ...muted, marginTop: 16 }}>{d.mailDeliveryEstimate(deliveryEstimate)}</Text> : null}
+      <Text style={{ ...muted, marginTop: 8 }}>{d.freeOver(euros(FREE_SHIPPING_THRESHOLD_CENTS, l))}</Text>
       <Text style={{ color: '#e8e4df', margin: '20px 0 0' }}>{d.mailOrderThanks}</Text>
     </EmailLayout>
   )

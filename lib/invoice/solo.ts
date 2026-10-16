@@ -113,7 +113,7 @@ export function buildSoloInvoiceBody(order: Order, data: InvoiceData) {
   push('ukupan_broj_usluga', String(n))
   push('nacin_placanja', paymentMethodCode(order.paymentMethod))
   const note = [
-    `Firecase narudžba ${order.publicId}`,
+    `Firecase narudžba #${order.orderNumber}`,
     `E-mail: ${order.email}`,
     /paypal/i.test(order.paymentMethod || '') ? 'PayPal' : '',
   ]

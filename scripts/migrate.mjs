@@ -1,5 +1,6 @@
 // Kreira/ažurira tablice u bazi. Pokreće se automatski prije svakog builda na Vercelu.
 import postgres from 'postgres'
+import { takeOrderNumber } from '../lib/order-number.mjs'
 import { SCHEMA as schema, databaseUrl } from '../lib/schema.mjs'
 
 const url = databaseUrl()
@@ -134,6 +135,25 @@ try {
   // Stari zadani rok (ako nije ručno mijenjan u adminu) -> 8–16 dana
   await sql`update settings set value = value || '{"deliveryHr":"8–16 dana","deliveryEn":"8–16 days"}'::jsonb
     where key = 'main' and value->>'deliveryHr' in ('3–7 radnih dana', '4–8 dana')`
+  // Stari prag besplatne dostave (30 €) -> 40 €, samo ako admin nije upisao drugi iznos.
+  await sql`update settings set value = jsonb_set(value, '{freeThresholdCents}', '4000'::jsonb)
+    where key = 'main' and coalesce((value->>'freeThresholdCents')::int, 3000) = 3000`
+  await sql`update settings set value = jsonb_set(
+      jsonb_set(value, '{announcementHr}', to_jsonb(replace(replace(coalesce(value->>'announcementHr', ''), 'iznad 30', 'od 40'), '30 €', '40 €'))),
+      '{announcementEn}', to_jsonb(replace(replace(replace(coalesce(value->>'announcementEn', ''), 'over €30', 'from €40'), '€30', '€40'), 'over 30', 'from 40'))
+    )
+    where key = 'main' and (coalesce(value->>'announcementHr', '') ~ '30' or coalesce(value->>'announcementEn', '') ~ '30')`
+  const pending = await sql`select id from orders where order_number is null order by id`
+  const taken = await sql`select order_number from orders where order_number is not null`
+  const used = new Set(taken.map((r) => r.order_number))
+  for (const row of pending) {
+    const n = takeOrderNumber(used)
+    await sql`update orders set order_number = ${n} where id = ${row.id}`
+  }
+  await sql`alter table orders alter column order_number set not null`
+  await sql`update invoices i set data = jsonb_set(coalesce(i.data, '{}'::jsonb), '{orderNumber}', to_jsonb(o.order_number))
+    from orders o
+    where o.id = i.order_id and o.order_number is not null and (i.data->>'orderNumber') is null`
   const [{ count }] = await sql`select count(*)::int as count from products`
   if (count === 0) {
     for (const p of samples) {
