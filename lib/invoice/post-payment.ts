@@ -47,7 +47,7 @@ export async function sendInvoiceEmailIfNeeded(order: Order, inv: Invoice) {
     await notifyAdminInvoiceFailure(order, (e as Error).message)
     return
   }
-  const result = await sendInvoiceEmail(order, { number: inv.number, pdf })
+  const result = await sendInvoiceEmail(order, { number: inv.soloNumber || inv.number, pdf })
   if (!result.ok) {
     await logInvoiceEmail(order.id, { ok: false, error: result.error })
     await sql`update orders set invoice_email_sent_at = null where id = ${order.id}`
@@ -80,23 +80,62 @@ export async function completePaidOrderDelivery(order: Order) {
   await deliverInvoiceOutcome(current, inv)
 }
 
-/** Jedan pending račun (Solo red min. 10 s između API poziva). */
-export async function drainPendingInvoices(limit = 5) {
-  const pending = await sql<Invoice[]>`select * from invoices where fiscal_status = 'pending' and storno_of is null order by id limit ${limit}`
+async function deliverIssued(order: Order, row: Invoice) {
+  if (row.fiscalStatus === 'ok') {
+    await sendOrderConfirmationIfNeeded(order)
+    await sendInvoiceEmailIfNeeded(order, row)
+    return true
+  }
+  if (row.fiscalError) await notifyAdminInvoiceFailure(order, row.fiscalError)
+  return false
+}
+
+/** Plaćene narudžbe bez ijednog računa (npr. #369609, insert pao na invoices_year_seq_key). */
+export async function ensureMissingInvoices(limit = 5) {
+  const orders = await sql<Order[]>`
+    select * from orders o
+    where o.status not in ('pending', 'cancelled')
+      and not exists (
+        select 1 from invoices i where i.order_id = o.id and i.storno_of is null
+      )
+    order by o.paid_at nulls last, o.id
+    limit ${limit}`
+  const tried = new Set<number>()
   let ok = 0
+  for (const order of orders) {
+    try {
+      const inv = await ensureOrderInvoice(order)
+      tried.add(inv.id)
+      if (await deliverIssued(order, inv)) ok++
+    } catch (e) {
+      const msg = (e as Error).message
+      console.error('[invoice] nedostaje', order.orderNumber, msg)
+      await notifyAdminInvoiceFailure(order, msg)
+    }
+  }
+  return { missing: orders.length, ok, tried }
+}
+
+/** Pending računi i narudžbe kojima račun uopće nije upisan. Solo red: min. 10 s. */
+export async function drainPendingInvoices(limit = 5) {
+  const created = await ensureMissingInvoices(limit)
+  const skip = [...created.tried]
+  const pending = skip.length
+    ? await sql<Invoice[]>`
+        select * from invoices
+        where fiscal_status = 'pending' and storno_of is null and id not in ${sql(skip)}
+        order by id limit ${limit}`
+    : await sql<Invoice[]>`
+        select * from invoices where fiscal_status = 'pending' and storno_of is null
+        order by id limit ${limit}`
+  let ok = created.ok
   for (const inv of pending) {
     const row = await retryIssueInvoice(inv.id)
     const order = row ? await freshOrder(row.orderId) : null
     if (!row || !order) continue
-    if (row.fiscalStatus === 'ok') {
-      ok++
-      await sendOrderConfirmationIfNeeded(order)
-      await sendInvoiceEmailIfNeeded(order, row)
-    } else if (row.fiscalError) {
-      await notifyAdminInvoiceFailure(order, row.fiscalError)
-    }
+    if (await deliverIssued(order, row)) ok++
   }
-  return { pending: pending.length, ok }
+  return { pending: pending.length, missing: created.missing, ok }
 }
 
 export async function kickInvoiceForOrder(orderId: number) {

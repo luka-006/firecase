@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { CookieSettingsButton } from './Ui'
+import { SELLER } from '@/lib/config'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 
@@ -37,7 +38,13 @@ export function Footer({ locale }: { locale: Locale }) {
         <Image src="/logo-word.svg" alt="" width={6067} height={501} className="wm-rise h-auto w-full" />
       </div>
       <div className="mt-10 border-t border-line">
-        <p className="container-x py-6 font-mono text-[10px] uppercase tracking-[0.2em] text-mute">© {new Date().getFullYear()} Firecase</p>
+        <p className="container-x py-6 font-mono text-[10px] uppercase tracking-[0.2em] text-mute">
+          © {new Date().getFullYear()} Firecase
+          {' · '}
+          <Link href={href(locale, 'terms')} className="hover:text-bone">{SELLER.shortName}, obrt, vl. {SELLER.owner}</Link>
+          {' · '}OIB {SELLER.oib}
+          {' · '}{SELLER.postal} {SELLER.city}
+        </p>
       </div>
     </footer>
   )
