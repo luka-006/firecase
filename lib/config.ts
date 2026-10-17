@@ -9,7 +9,9 @@ export const SELLER = {
   country: 'Hrvatska',
   countryEn: 'Croatia',
   oib: '05372595966',
-  email: 'luka.kasalo.web@gmail.com',
+  email: 'info@firecase.net',
+  /** Predugovorne obavijesti u Uvjetima. Nije na Kontakt stranici, u mailovima ni u podnožju. */
+  phone: '+385 92 364 1016',
   registry: 'Obrtni registar',
   // Matični broj obrta (MBO) - upiši kad ga imaš, prikazuje se samo ako nije prazan
   registryNumber: '',

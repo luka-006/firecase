@@ -4,24 +4,25 @@ import { euros, money } from './money'
 import { href, type Locale } from './routes'
 import type { Settings } from './settings'
 
-export const LEGAL_DATE = { hr: '4. listopada 2026.', en: '4 October 2026' }
+export const LEGAL_DATE = { hr: '16. listopada 2026.', en: '16 October 2026' }
 export const LEGAL_DOCS = ['terms', 'privacy', 'cookies', 'shipping', 'returns', 'withdrawal', 'contact'] as const
 export type LegalDoc = (typeof LEGAL_DOCS)[number]
 
 type Ctx = { s: Settings; locale: Locale }
 type Doc = { title: string; body: (c: Ctx) => React.ReactNode }
 
-const Seller = ({ en }: { en?: boolean }) => (
+const Seller = ({ en, phone }: { en?: boolean; phone?: boolean }) => (
   <p>
     <b>{SELLER.legalName}</b><br />
     {SELLER.address}, {SELLER.postal} {SELLER.city}, {en ? SELLER.countryEn : SELLER.country}<br />
     OIB: {SELLER.oib}<br />
     {en ? 'Registered in the Croatian Register of Crafts (Obrtni registar)' : 'Upisan u Obrtni registar'}{SELLER.registryNumber ? `, MBO: ${SELLER.registryNumber}` : ''}<br />
+    {en ? 'Flat-rate craft. Not in the VAT system.' : 'Paušalni obrt. Nije u sustavu PDV-a.'}<br />
+    {phone ? <>{en ? 'Phone' : 'Telefon'}: <a href={`tel:${SELLER.phone.replace(/\s/g, '')}`}>{SELLER.phone}</a><br /></> : null}
     E-mail: <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
   </p>
 )
 const Mail = () => <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
-const ReturnAddr = () => <p>{SELLER.returnAddress}</p>
 
 const hr: Record<LegalDoc, Doc> = {
   terms: {
@@ -30,7 +31,7 @@ const hr: Record<LegalDoc, Doc> = {
       <>
         <h2>1. Opće odredbe</h2>
         <p>Ovi Uvjeti poslovanja uređuju prodaju proizvoda putem internetske trgovine Firecase (dalje: Trgovina). Prodavatelj je:</p>
-        <Seller />
+        <Seller phone />
         <p>Kupac je svaka osoba koja putem Trgovine naruči proizvod. Potrošač je kupac – fizička osoba koja sklapa ugovor za svrhe izvan svoje poslovne djelatnosti. Slanjem narudžbe kupac potvrđuje da je upoznat s ovim Uvjetima i da ih prihvaća. Ugovor se sklapa na hrvatskom jeziku. Engleska verzija Uvjeta služi informiranju, a u slučaju razlike mjerodavna je hrvatska verzija.</p>
 
         <h2>2. Proizvodi i cijene</h2>
@@ -59,19 +60,20 @@ const hr: Record<LegalDoc, Doc> = {
         <h2>6. Pravo na jednostrani raskid ugovora</h2>
         <p>Potrošač ima pravo jednostrano raskinuti ugovor u roku od 14 dana bez navođenja razloga. Rok počinje teći od dana kad potrošač ili treća osoba koju je odredio (osim prijevoznika) preuzme robu. Ako je više proizvoda iz jedne narudžbe isporučeno odvojeno, rok teče od preuzimanja posljednjeg proizvoda.</p>
         <p>Za ostvarivanje prava potrošač nas mora obavijestiti nedvosmislenom izjavom poslanom e-mailom na <Mail /> ili poštom na adresu sjedišta. Može se koristiti <Link href={href('hr', 'withdrawal')}>obrazac za jednostrani raskid ugovora</Link>, ali to nije obavezno. Rok je poštovan ako je obavijest poslana prije isteka roka.</p>
-        <p>Robu je potrebno vratiti bez odgađanja, a najkasnije u roku od 14 dana od dana slanja obavijesti o raskidu.</p>
+        <p>Robu je potrebno vratiti bez odgađanja, a najkasnije u roku od 14 dana od dana slanja obavijesti o raskidu, na adresu: {SELLER.returnAddress}.</p>
         <p><b>Izravne troškove povrata robe snosi potrošač.</b></p>
         <p>Prodavatelj će bez odgađanja, a najkasnije u roku od 14 dana od dana zaprimanja obavijesti o raskidu, vratiti sve primljene uplate, uključujući troškove dostave. Povrat se izvršava istim sredstvom plaćanja kojim je plaćena narudžba. Prodavatelj može zadržati povrat dok ne primi robu ili dok potrošač ne dostavi dokaz da je robu poslao, ovisno o tome što nastupi prije.</p>
         <p>Potrošač odgovara za umanjenu vrijednost robe koja je posljedica rukovanja robom na način koji nije nužan za utvrđivanje prirode, obilježja i funkcionalnosti robe.</p>
 
         <h2>7. Odgovornost za materijalne nedostatke</h2>
-        <p>Prodavatelj odgovara za materijalne nedostatke robe sukladno Zakonu o obveznim odnosima, za nedostatke koji se pokažu u roku od dvije godine od prijelaza rizika. Kupac je dužan obavijestiti prodavatelja o nedostatku u roku od dva mjeseca od dana kada ga je otkrio, a preporučujemo da to učini odmah. Kupac ima pravo zahtijevati uklanjanje nedostatka, zamjenu, sniženje cijene ili raskid ugovora, sukladno zakonu. Uz proizvode se ne daje komercijalno jamstvo, osim ako je izričito navedeno uz proizvod. Zakonska prava potrošača ne mogu se isključiti ni ograničiti.</p>
+        <p>Prodavatelj odgovara za materijalne nedostatke robe prema Zakonu o obveznim odnosima, za nedostatke koji se pokažu u roku od dvije godine od prijelaza rizika. Kupac je dužan obavijestiti prodavatelja o nedostatku u roku od dva mjeseca od dana kada ga je otkrio. Kupac može tražiti popravak, zamjenu, sniženje cijene ili raskid ugovora, onim redom koji zakon predviđa. Ako se nedostatak pokaže u roku od godine dana od preuzimanja, a prodavatelj smatra da tada nije postojao, trošak vještačenja predujmljuje prodavatelj. Uz proizvode se ne daje komercijalno jamstvo, osim ako je uz proizvod izričito navedeno. Zakonska prava potrošača time se ne umanjuju.</p>
 
         <h2>8. Prigovori potrošača</h2>
         <p>Potrošač može podnijeti pisani prigovor e-mailom na <Mail /> ili poštom na adresu {SELLER.address}, {SELLER.postal} {SELLER.city}. Primitak prigovora potvrdit ćemo bez odgađanja, a pisani odgovor dostaviti najkasnije u roku od 15 dana od dana primitka prigovora.</p>
 
         <h2>9. Izvansudsko rješavanje sporova</h2>
-        <p>Sve sporove nastojat ćemo riješiti sporazumno. Potrošač se može obratiti tijelima za alternativno rješavanje potrošačkih sporova čiji popis vodi ministarstvo nadležno za zaštitu potrošača. Prodavatelj nije preuzeo obvezu sudjelovanja u takvim postupcima, ali je spreman razmotriti sudjelovanje u svakom pojedinom slučaju. Potrošač se može obratiti i Državnom inspektoratu.</p>
+        <p>Spor prvo pokušajte riješiti pisanim prigovorom na <Mail />. Europska platforma za internetsko rješavanje sporova (ODR) prestala je s radom 20. srpnja 2025. i na nju se više ne može podnijeti prigovor.</p>
+        <p>Potrošač se može obratiti tijelu za alternativno rješavanje potrošačkih sporova. Popis vodi Ministarstvo gospodarstva. Za spor s obrtnikom nadležni su Sud časti Hrvatske obrtničke komore (<a href="https://www.hok.hr" target="_blank" rel="noopener noreferrer">hok.hr</a>) i Centar za mirenje Hrvatske obrtničke komore (Ilica 49/II, Zagreb), te Centar za mirenje pri Hrvatskoj gospodarskoj komori (Rooseveltov trg 2, Zagreb). Prodavatelj nije preuzeo obvezu sudjelovanja u mirenju; svaki zahtjev razmotrit će posebno. Ako je potrošač pokrenuo postupak pred Sudom časti Hrvatske obrtničke komore, obrtnik u tom postupku sudjeluje. Potrošač se može obratiti i Državnom inspektoratu, tržišnoj inspekciji.</p>
 
         <h2>10. Zaštita osobnih podataka</h2>
         <p>Osobni podaci obrađuju se sukladno <Link href={href('hr', 'privacy')}>Politici privatnosti</Link>.</p>
@@ -79,10 +81,13 @@ const hr: Record<LegalDoc, Doc> = {
         <h2>11. Mjerodavno pravo</h2>
         <p>Na ugovor se primjenjuje pravo Republike Hrvatske. Potrošači s uobičajenim boravištem u drugoj državi članici EU zadržavaju zaštitu koju im pružaju prisilni propisi te države. Za sporove je nadležan stvarno i mjesno nadležan sud sukladno propisima Republike Hrvatske.</p>
 
-        <h2>12. Recenzije</h2>
+        <h2>12. Sigurnost proizvoda</h2>
+        <p>Futrole su namijenjene odraslima. Podaci o proizvođaču i, kad je proizvođač izvan Europske unije, o osobi odgovornoj za proizvod u EU navedeni su uz pojedini proizvod. Ako smatrate da proizvod nije siguran, pišite na <Mail />. Futrolu ne izlažite vatri ni izvoru topline i ne ostavljajte je djeci.</p>
+
+        <h2>13. Recenzije</h2>
         <p>Recenzije mogu ostaviti samo kupci koji su naručili proizvod.</p>
 
-        <h2>13. Završne odredbe</h2>
+        <h2>14. Završne odredbe</h2>
         <p>Prodavatelj može izmijeniti ove Uvjete. Na pojedinu narudžbu primjenjuju se Uvjeti važeći u trenutku slanja narudžbe. Ovi Uvjeti vrijede od {LEGAL_DATE.hr}</p>
       </>
     ),
@@ -118,7 +123,8 @@ const hr: Record<LegalDoc, Doc> = {
           <li>Stripe Payments Europe Ltd., Irska – obrada plaćanja; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luksemburg – ako plaćate PayPalom.</li>
           <li>Resend Inc. (SAD) – slanje transakcijskih e-mailova (potvrde narudžbi, obavijesti o slanju, računi u privitku).</li>
           <li>Google Ireland Ltd. – uz privolu, Google Analytics.</li>
-          <li>Dobavljači i dostavne službe – ime, adresa i broj mobitela, isključivo radi dostave.</li>
+          <li>Dostavna služba – ime, adresa i broj mobitela, samo da bi paket stigao na vašu adresu.</li>
+          <li>Solo – izdavanje računa i fiskalizacija.</li>
           <li>Porezna uprava – podaci o računu radi fiskalizacije; knjigovodstveni servis – računi, ako ga koristimo.</li>
         </ul>
         <p>Kod prijenosa podataka izvan Europskog gospodarskog prostora (npr. SAD) primjenjuju se odgovarajuće zaštitne mjere, poput Okvira za privatnost podataka EU–SAD ili standardnih ugovornih klauzula Europske komisije.</p>
@@ -151,6 +157,7 @@ const hr: Record<LegalDoc, Doc> = {
           <tbody>
             <tr><td>fc_session</td><td>Prijava u korisnički račun</td><td>30 dana</td></tr>
             <tr><td>fc_admin</td><td>Prijava administratora</td><td>12 sati</td></tr>
+            <tr><td>fc_staff</td><td>Prijava suradnika</td><td>12 sati</td></tr>
             <tr><td>fc_cart (lokalna pohrana)</td><td>Sadržaj košarice</td><td>Do brisanja</td></tr>
             <tr><td>fc_consent (lokalna pohrana)</td><td>Pamti vaš izbor u obavijesti o kolačićima</td><td>Do brisanja</td></tr>
           </tbody>
@@ -192,7 +199,7 @@ const hr: Record<LegalDoc, Doc> = {
         <h2>Reklamacije (materijalni nedostaci)</h2>
         <p>Ako proizvod ima nedostatak, javite nam se na <Mail /> s brojem narudžbe, opisom i fotografijom nedostatka. Za materijalne nedostatke odgovaramo dvije godine od preuzimanja robe.</p>
         <h2>Pisani prigovor</h2>
-        <p>Prigovor možete poslati e-mailom ili poštom na {SELLER.address}, {SELLER.postal} {SELLER.city}. Odgovaramo u roku od 15 dana.</p>
+        <p>Prigovor pošaljite na <Mail />. Odgovaramo u roku od 15 dana i jasno ćemo reći prihvaćamo li ga. Adresa za povrat robe navedena je u <Link href={href('hr', 'terms')}>Uvjetima poslovanja</Link>, u odjeljku o jednostranom raskidu.</p>
       </>
     ),
   },
@@ -220,14 +227,9 @@ const hr: Record<LegalDoc, Doc> = {
   contact: {
     title: 'Kontakt',
     body: () => (
-      <>
-        <p>Najbrže nas možete kontaktirati e-mailom: <Mail />. Odgovaramo u najkraćem mogućem roku, a najkasnije u roku od 15 dana za pisane prigovore.</p>
-        <h2>Podaci o prodavatelju</h2>
-        <Seller />
-        <h2>Adresa za povrat robe</h2>
-        <p>Ako raskinete ugovor, robu pošaljite na ovu adresu u roku od 14 dana. Trošak povrata snosite vi.</p>
-        <ReturnAddr />
-      </>
+      <p>
+        <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
+      </p>
     ),
   },
 }
@@ -240,7 +242,7 @@ const en: Record<LegalDoc, Doc> = {
         <p><i>This is an English translation for information purposes. In case of any discrepancy, the Croatian version prevails.</i></p>
         <h2>1. General</h2>
         <p>These Terms govern the sale of products through the Firecase online shop (the “Shop”). The seller is:</p>
-        <Seller en />
+        <Seller en phone />
         <p>A buyer is any person who places an order in the Shop. A consumer is a buyer who is a natural person acting for purposes outside their trade or profession. By placing an order, the buyer confirms having read and accepted these Terms. Contracts are concluded in Croatian.</p>
 
         <h2>2. Products and prices</h2>
@@ -268,18 +270,19 @@ const en: Record<LegalDoc, Doc> = {
         <h2>6. Right of withdrawal</h2>
         <p>Consumers may withdraw from the contract within 14 days without giving any reason. The period starts on the day the consumer, or a third party designated by them (other than the carrier), takes possession of the goods; for multiple goods delivered separately, from the day the last item is received.</p>
         <p>To withdraw, inform us by an unequivocal statement sent by email to <Mail /> or by post to our registered address. You may use the <Link href={href('en', 'withdrawal')}>withdrawal form</Link>, but it is not mandatory. The deadline is met if you send the notice before the period expires.</p>
-        <p>Return the goods without undue delay and no later than 14 days after sending the withdrawal notice.</p>
+        <p>Return the goods without undue delay and no later than 14 days after sending the withdrawal notice, to: {SELLER.returnAddress}.</p>
         <p><b>The consumer bears the direct cost of returning the goods.</b></p>
         <p>We will refund all payments received, including delivery costs, without undue delay and no later than 14 days from receiving the withdrawal notice, using the same payment method. We may withhold the refund until we have received the goods or proof that they have been sent back, whichever is earlier. The consumer is liable for any diminished value of the goods resulting from handling beyond what is necessary to establish their nature, characteristics and functioning.</p>
 
         <h2>7. Liability for defects</h2>
-        <p>The seller is liable for material defects under the Croatian Civil Obligations Act for defects that appear within two years of the passing of risk. The buyer must notify the seller of a defect within two months of discovering it. The buyer may request repair, replacement, a price reduction or termination of the contract as provided by law. No commercial guarantee is given unless stated for a product. Statutory consumer rights cannot be excluded or limited.</p>
+        <p>The seller is liable for material defects under the Croatian Civil Obligations Act for defects that appear within two years of the passing of risk. The buyer must notify the seller within two months of discovering a defect. The buyer may request repair, replacement, a price reduction or termination of the contract, in the order the law provides. If a defect appears within one year of delivery and the seller considers that it was not present then, the seller advances the cost of an expert assessment. No commercial guarantee is given unless a product says so. This does not reduce statutory consumer rights.</p>
 
         <h2>8. Complaints</h2>
         <p>Consumers may file a written complaint by email to <Mail /> or by post to {SELLER.address}, {SELLER.postal} {SELLER.city}, Croatia. We will confirm receipt without delay and respond in writing within 15 days.</p>
 
         <h2>9. Out-of-court dispute resolution</h2>
-        <p>We aim to resolve all disputes amicably. Consumers may contact the alternative dispute resolution bodies listed by the Croatian ministry responsible for consumer protection. The seller has not committed to participating in such proceedings but is willing to consider it case by case. Consumers may also contact the State Inspectorate.</p>
+        <p>Please try to settle a dispute first by a written complaint to <Mail />. The European Online Dispute Resolution (ODR) platform was discontinued on 20 July 2025 and no longer accepts complaints.</p>
+        <p>Consumers may contact an alternative dispute resolution body. The Croatian Ministry of Economy keeps the list. For a dispute with a craft, the Court of Honour of the Croatian Chamber of Trades and Crafts (<a href="https://www.hok.hr" target="_blank" rel="noopener noreferrer">hok.hr</a>) and the HOK Mediation Centre (Ilica 49/II, Zagreb) are competent, as is the Mediation Centre at the Croatian Chamber of Economy (Rooseveltov trg 2, Zagreb). The seller has not undertaken to take part in mediation and will consider each request on its own. If a consumer starts proceedings before the HOK Court of Honour, the craft takes part. Consumers may also contact the State Inspectorate (market inspection).</p>
 
         <h2>10. Personal data</h2>
         <p>Personal data is processed in accordance with our <Link href={href('en', 'privacy')}>Privacy Policy</Link>.</p>
@@ -287,10 +290,13 @@ const en: Record<LegalDoc, Doc> = {
         <h2>11. Governing law</h2>
         <p>Croatian law applies. Consumers habitually resident in another EU member state keep the protection of the mandatory provisions of that state’s law. Disputes are subject to the competent court under Croatian law.</p>
 
-        <h2>12. Reviews</h2>
+        <h2>12. Product safety</h2>
+        <p>The cases are for adults. The manufacturer and, where the manufacturer is outside the European Union, the person responsible for the product in the EU are named on the product page. If you think a product is unsafe, email <Mail />. Do not expose a case to fire or heat, and keep it away from children.</p>
+
+        <h2>13. Reviews</h2>
         <p>Only customers who ordered the product can leave a review.</p>
 
-        <h2>13. Final provisions</h2>
+        <h2>14. Final provisions</h2>
         <p>The seller may amend these Terms. Each order is governed by the Terms valid when it was placed. These Terms are valid from {LEGAL_DATE.en}.</p>
       </>
     ),
@@ -326,7 +332,8 @@ const en: Record<LegalDoc, Doc> = {
           <li>Stripe Payments Europe Ltd., Ireland – payment processing; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luxembourg – if you pay with PayPal.</li>
           <li>Resend Inc. (USA) – transactional email (order confirmations, shipping notices, invoices as attachments).</li>
           <li>Google Ireland Ltd. – with consent, Google Analytics.</li>
-          <li>Suppliers and couriers – name, address and mobile number, for delivery only.</li>
+          <li>The carrier – name, address and mobile number, only so the parcel can be delivered.</li>
+          <li>Solo – issuing invoices and fiscalisation.</li>
           <li>Croatian Tax Administration – invoice data for fiscalisation; our accountant – invoices, if used.</li>
         </ul>
         <p>Transfers outside the European Economic Area (e.g. USA) are protected by appropriate safeguards such as the EU–US Data Privacy Framework or the European Commission’s standard contractual clauses.</p>
@@ -359,6 +366,7 @@ const en: Record<LegalDoc, Doc> = {
           <tbody>
             <tr><td>fc_session</td><td>Customer login</td><td>30 days</td></tr>
             <tr><td>fc_admin</td><td>Administrator login</td><td>12 hours</td></tr>
+            <tr><td>fc_staff</td><td>Staff login</td><td>12 hours</td></tr>
             <tr><td>fc_cart (local storage)</td><td>Cart contents</td><td>Until deleted</td></tr>
             <tr><td>fc_consent (local storage)</td><td>Remembers your cookie choice</td><td>Until deleted</td></tr>
           </tbody>
@@ -400,7 +408,7 @@ const en: Record<LegalDoc, Doc> = {
         <h2>Defects</h2>
         <p>If a product is defective, email <Mail /> with your order number, a description and a photo. We are liable for material defects for two years from delivery.</p>
         <h2>Written complaints</h2>
-        <p>Send complaints by email or by post to {SELLER.address}, {SELLER.postal} {SELLER.city}, Croatia. We respond within 15 days.</p>
+        <p>Email complaints to <Mail />. We reply within 15 days and say whether we accept the complaint. The address for returning goods is in the <Link href={href('en', 'terms')}>Terms and Conditions</Link>, in the withdrawal section.</p>
       </>
     ),
   },
@@ -428,14 +436,9 @@ const en: Record<LegalDoc, Doc> = {
   contact: {
     title: 'Contact',
     body: () => (
-      <>
-        <p>The fastest way to reach us is by email: <Mail />. We reply as soon as possible, and within 15 days for written complaints.</p>
-        <h2>Seller details</h2>
-        <Seller en />
-        <h2>Return address</h2>
-        <p>If you withdraw from the contract, send the goods to this address within 14 days. You pay the return postage.</p>
-        <ReturnAddr />
-      </>
+      <p>
+        <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
+      </p>
     ),
   },
 }

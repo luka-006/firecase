@@ -1,5 +1,5 @@
 import { Link, Section, Text } from '@react-email/components'
-import { SELLER, SITE_URL } from '../config'
+import { SITE_URL } from '../config'
 import { money } from '../money'
 import type { Order } from '../types'
 import { EmailLayout, heading, muted } from './layout'
@@ -35,7 +35,6 @@ export function AdminNewOrderEmail({ order }: { order: Order }) {
       <Text style={{ marginTop: 20 }}>
         <Link href={adminUrl} style={{ color: '#fb923c' }}>Otvori u admin panelu</Link>
       </Text>
-      <Text style={{ ...muted, fontSize: 12, marginTop: 16 }}>{SELLER.legalName}</Text>
     </EmailLayout>
   )
 }

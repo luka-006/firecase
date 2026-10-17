@@ -20,7 +20,6 @@ export function OrderReceivedEmail({
   return (
     <EmailLayout preview={subject} lang={l === 'en' ? 'en' : 'hr'}>
       <Text style={heading}>{subject}</Text>
-      <Text style={{ color: '#e8e4df', margin: '16px 0' }}>{d.mailOrderThanks}</Text>
       <OrderItemsTable
         items={order.items}
         shippingCents={order.shippingCents}

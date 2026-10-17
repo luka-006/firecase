@@ -1,5 +1,5 @@
-import { Body, Container, Head, Html, Img, Link, Preview, Section, Text } from '@react-email/components'
-import { SELLER, SITE_URL } from '../config'
+import { Body, Container, Head, Html, Img, Preview, Section } from '@react-email/components'
+import { SITE_URL } from '../config'
 
 const font =
   "'Montserrat', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
@@ -50,23 +50,6 @@ export function EmailLayout({
           >
             {children}
           </Section>
-          <Text
-            style={{
-              fontSize: 12,
-              color: '#8a8580',
-              textAlign: 'center',
-              marginTop: 20,
-              lineHeight: 1.5,
-            }}
-          >
-            {SELLER.legalName}
-            <br />
-            {SELLER.address}, {SELLER.postal} {SELLER.city} · OIB {SELLER.oib}
-            <br />
-            <Link href={`mailto:${SELLER.email}`} style={{ color: '#8a8580' }}>
-              {SELLER.email}
-            </Link>
-          </Text>
         </Container>
       </Body>
     </Html>
