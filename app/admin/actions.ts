@@ -275,7 +275,7 @@ export async function issueMissingInvoice(f: FormData) {
 export async function retryIssueInvoiceAction(f: FormData) {
   await requireAdmin()
   const id = Number(f.get('id'))
-  const inv = await retryIssueInvoice(id)
+  const inv = await retryIssueInvoice(id, { manual: true })
   revalidatePath('/admin/invoices')
   if (inv) revalidatePath(`/admin/orders/${inv.orderId}`)
 }

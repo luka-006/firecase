@@ -21,17 +21,17 @@ export function CollectionIndex({ items, note }: { items: IndexItem[]; note?: Re
               href={it.href}
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
-              className="row-wipe group relative isolate grid grid-cols-[72px_1fr_auto] items-center gap-5 py-5 lg:grid-cols-[3rem_1fr_auto_1.5rem] lg:gap-6 lg:px-2 lg:py-8"
+              className="row-wipe group relative isolate grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-4 py-5 sm:gap-5 lg:grid-cols-[3rem_minmax(0,1fr)_auto_1.5rem] lg:gap-6 lg:px-2 lg:py-8"
             >
               <span className="hidden font-mono text-xs text-mute lg:block">{pad(i + 1)}</span>
               <span className="frame relative block aspect-square lg:hidden" style={{ ['--c' as string]: '10px' }}>
                 <span className="frame-in">{it.image && <Image src={it.image} alt="" fill sizes="72px" className="object-cover" />}</span>
               </span>
               <span className="min-w-0">
-                <span className="h-display block text-lg leading-[1.05] transition-colors duration-300 group-hover:text-flame sm:text-2xl lg:text-[2.1rem]">{it.name}</span>
+                <span className="h-display block text-lg leading-[1.05] [overflow-wrap:anywhere] transition-colors duration-300 group-hover:text-flame sm:text-2xl lg:text-[2.1rem]">{it.name}</span>
                 {it.short && <span className="mt-2 block truncate text-sm text-mute">{it.short}</span>}
               </span>
-              <span className="text-right">
+              <span className="whitespace-nowrap text-right">
                 <span className="block font-mono text-sm tabular-nums lg:text-base">{it.price}</span>
                 {it.sizes && <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.14em] text-mute">{it.sizes}</span>}
               </span>

@@ -4,7 +4,8 @@ import { sql } from '../db'
 import { SELLER } from '../config'
 import { zagrebParts } from '../money'
 import { createSoloInvoice, fetchSoloPdf, stornoSoloInvoice, type SoloCreateResult } from './solo'
-import { sleep, withSoloApiSlot } from './solo-queue'
+import { sleep, soloHourlyRemaining, withSoloApiSlot } from './solo-queue'
+import { MAX_AUTO_ATTEMPTS, SoloHourlyLimit, autoRetryDecision } from './retry-policy'
 import { alreadyInSolo, isUniqueViolation, parseSoloFiscalSeq, placeholderSeq, resolveStoredSeq } from './seq'
 import type { Invoice, InvoiceData, Order } from '../types'
 
@@ -130,9 +131,21 @@ async function persistSoloResult(tx: postgres.TransactionSql, fresh: Invoice, so
   }
 }
 
-async function submitToSolo(order: Order, inv: Invoice): Promise<Invoice> {
+function retryDecision(inv: Invoice, manual?: boolean) {
+  return autoRetryDecision({
+    now: Date.now(),
+    attempts: inv.fiscalAttempts || 0,
+    lastAttemptAt: inv.lastAttemptAt ? new Date(inv.lastAttemptAt).getTime() : null,
+    fiscalError: inv.fiscalError,
+    manual,
+  })
+}
+
+async function submitToSolo(order: Order, inv: Invoice, opts?: { manual?: boolean }): Promise<Invoice> {
   if (alreadyInSolo(inv) && inv.fiscalStatus === 'ok') return inv
-  return withSoloApiSlot(async (tx) => {
+  if (!retryDecision(inv, opts?.manual).allow) return inv
+  if (!opts?.manual && (await soloHourlyRemaining()) <= 0) return inv
+  return withSoloApiSlot(async (tx, noteRequest) => {
     await lockOrder(tx, order.id)
     const [locked] = await tx<Invoice[]>`select * from invoices where id = ${inv.id} for update`
     if (!locked) throw new Error('Račun nije pronađen.')
@@ -147,6 +160,7 @@ async function submitToSolo(order: Order, inv: Invoice): Promise<Invoice> {
         if (!isUniqueViolation(e)) throw e
       }
     }
+    if (!retryDecision(fresh, opts?.manual).allow) return fresh
     if (alreadyInSolo(fresh)) {
       if (fresh.fiscalStatus === 'ok') return fresh
       const [row] = await tx<Invoice[]>`update invoices set fiscal_status = 'ok', fiscal_error = null where id = ${fresh.id} returning *`
@@ -154,12 +168,20 @@ async function submitToSolo(order: Order, inv: Invoice): Promise<Invoice> {
     }
     let solo: SoloCreateResult
     try {
-      solo = await createSoloInvoice(order, fresh.data)
+      solo = await createSoloInvoice(order, fresh.data, noteRequest)
     } catch (e) {
+      if (e instanceof SoloHourlyLimit) {
+        console.warn('[solo] satni limit', order.id)
+        return fresh
+      }
       const msg = (e as Error).message.slice(0, 500)
       console.error('[solo]', order.id, msg)
-      const [row] = await tx<Invoice[]>`update invoices set fiscal_status = 'pending', fiscal_error = ${msg},
-        fiscal_attempts = fiscal_attempts + 1 where id = ${fresh.id} returning *`
+      const [row] = await tx<Invoice[]>`update invoices set
+        fiscal_status = case when fiscal_attempts + 1 >= ${MAX_AUTO_ATTEMPTS} then 'error' else 'pending' end,
+        fiscal_error = ${msg},
+        fiscal_attempts = fiscal_attempts + 1,
+        last_attempt_at = now()
+        where id = ${fresh.id} returning *`
       return row
     }
     console.info('[solo] izdan', order.orderNumber, solo.id, solo.brojRacuna)
@@ -179,12 +201,12 @@ export async function ensureOrderInvoice(order: Order): Promise<Invoice> {
   return submitToSolo(order, inv)
 }
 
-export async function retryIssueInvoice(invoiceId: number): Promise<Invoice | null> {
+export async function retryIssueInvoice(invoiceId: number, opts?: { manual?: boolean }): Promise<Invoice | null> {
   const [inv] = await sql<Invoice[]>`select * from invoices where id = ${invoiceId}`
   if (!inv || inv.stornoOf) return null
   const [order] = await sql<Order[]>`select * from orders where id = ${inv.orderId}`
   if (!order) return null
-  return submitToSolo(order, inv)
+  return submitToSolo(order, inv, opts)
 }
 
 export async function issueInvoice(order: Order, storno?: Invoice): Promise<Invoice> {
@@ -199,7 +221,7 @@ export async function stornoOrderInvoice(order: Order): Promise<{ ok: boolean; e
   }
   if (original.soloStornoAt) return { ok: true }
   try {
-    await withSoloApiSlot(() => stornoSoloInvoice(original.soloId!))
+    await withSoloApiSlot((_tx, noteRequest) => stornoSoloInvoice(original.soloId!, noteRequest))
     await sql`update invoices set solo_storno_at = now(), fiscal_error = null where id = ${original.id}`
     return { ok: true }
   } catch (e) {

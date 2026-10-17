@@ -127,7 +127,6 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
         </label>
         {state?.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
         <button className="btn w-full py-4" disabled={pending}>{pending ? '…' : d.orderButton}</button>
-        <p className="text-center text-[11px] text-mute">{d.payments}</p>
       </aside>
       {popup && (
         <UpsellPopup

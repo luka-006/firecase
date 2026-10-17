@@ -21,8 +21,8 @@ export function ProductMarquee({ products, locale }: { products: Product[]; loca
               <Image src={p.images[0]} alt="" fill sizes="176px" className="object-cover" />
             )}
           </span>
-          <span className="mt-3 block h-display text-sm leading-tight">{name}</span>
-          <span className="mt-1 block font-mono text-sm tabular-nums">{money(p.priceCents, locale)}</span>
+          <span className="mt-3 block min-w-0 h-display text-sm leading-tight [overflow-wrap:anywhere]">{name}</span>
+          <span className="mt-1 block whitespace-nowrap font-mono text-sm tabular-nums">{money(p.priceCents, locale)}</span>
         </Link>
       )
     })
