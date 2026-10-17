@@ -11,13 +11,14 @@ export type LegalDoc = (typeof LEGAL_DOCS)[number]
 type Ctx = { s: Settings; locale: Locale }
 type Doc = { title: string; body: (c: Ctx) => React.ReactNode }
 
-const Seller = ({ en }: { en?: boolean }) => (
+const Seller = ({ en, phone }: { en?: boolean; phone?: boolean }) => (
   <p>
     <b>{SELLER.legalName}</b><br />
     {SELLER.address}, {SELLER.postal} {SELLER.city}, {en ? SELLER.countryEn : SELLER.country}<br />
     OIB: {SELLER.oib}<br />
     {en ? 'Registered in the Croatian Register of Crafts (Obrtni registar)' : 'Upisan u Obrtni registar'}{SELLER.registryNumber ? `, MBO: ${SELLER.registryNumber}` : ''}<br />
     {en ? 'Flat-rate craft. Not in the VAT system.' : 'Paušalni obrt. Nije u sustavu PDV-a.'}<br />
+    {phone ? <>{en ? 'Phone' : 'Telefon'}: <a href={`tel:${SELLER.phone.replace(/\s/g, '')}`}>{SELLER.phone}</a><br /></> : null}
     E-mail: <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
   </p>
 )
@@ -30,7 +31,7 @@ const hr: Record<LegalDoc, Doc> = {
       <>
         <h2>1. Opće odredbe</h2>
         <p>Ovi Uvjeti poslovanja uređuju prodaju proizvoda putem internetske trgovine Firecase (dalje: Trgovina). Prodavatelj je:</p>
-        <Seller />
+        <Seller phone />
         <p>Kupac je svaka osoba koja putem Trgovine naruči proizvod. Potrošač je kupac – fizička osoba koja sklapa ugovor za svrhe izvan svoje poslovne djelatnosti. Slanjem narudžbe kupac potvrđuje da je upoznat s ovim Uvjetima i da ih prihvaća. Ugovor se sklapa na hrvatskom jeziku. Engleska verzija Uvjeta služi informiranju, a u slučaju razlike mjerodavna je hrvatska verzija.</p>
 
         <h2>2. Proizvodi i cijene</h2>
@@ -241,7 +242,7 @@ const en: Record<LegalDoc, Doc> = {
         <p><i>This is an English translation for information purposes. In case of any discrepancy, the Croatian version prevails.</i></p>
         <h2>1. General</h2>
         <p>These Terms govern the sale of products through the Firecase online shop (the “Shop”). The seller is:</p>
-        <Seller en />
+        <Seller en phone />
         <p>A buyer is any person who places an order in the Shop. A consumer is a buyer who is a natural person acting for purposes outside their trade or profession. By placing an order, the buyer confirms having read and accepted these Terms. Contracts are concluded in Croatian.</p>
 
         <h2>2. Products and prices</h2>
