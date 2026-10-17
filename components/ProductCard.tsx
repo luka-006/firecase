@@ -10,7 +10,7 @@ export function ProductCard({ p, locale, priority, delay = 0 }: { p: Product; lo
   const soldOut = p.stock !== null && p.stock <= 0
   const name = loc(p, 'name', locale)
   return (
-    <Link href={href(locale, 'product', p.slug)} className="group block" data-reveal style={{ ['--d' as string]: `${delay}ms` }}>
+    <Link href={href(locale, 'product', p.slug)} className="group block min-w-0" data-reveal style={{ ['--d' as string]: `${delay}ms` }}>
       <div className="frame aspect-[4/5]">
         <div className="frame-in">
           <div className="curtain absolute inset-0">
@@ -25,11 +25,11 @@ export function ProductCard({ p, locale, priority, delay = 0 }: { p: Product; lo
           {soldOut && <span className="absolute left-3 top-3 bg-black/80 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.outOfStock}</span>}
         </div>
       </div>
-      <div className="mt-4 flex items-baseline justify-between gap-3">
-        <h3 className="h-display text-sm leading-tight transition-colors group-hover:text-flame sm:text-base">{name}</h3>
-        <div className="shrink-0 font-mono text-sm tabular-nums">
-          <span className={p.compareCents ? 'text-flame-2' : ''}>{money(p.priceCents, locale)}</span>
-          {p.compareCents && <span className="ml-2 text-xs text-mute line-through">{money(p.compareCents, locale)}</span>}
+      <div className="mt-4 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+        <h3 className="h-display min-w-0 text-sm leading-tight [overflow-wrap:anywhere] transition-colors group-hover:text-flame sm:text-base">{name}</h3>
+        <div className="flex shrink-0 flex-wrap items-baseline gap-x-2 self-start font-mono text-sm tabular-nums">
+          <span className={`whitespace-nowrap ${p.compareCents ? 'text-flame-2' : ''}`}>{money(p.priceCents, locale)}</span>
+          {p.compareCents && <span className="whitespace-nowrap text-xs text-mute line-through">{money(p.compareCents, locale)}</span>}
         </div>
       </div>
       {p.variants.length > 0 && <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.sizes(p.variants.length)}</p>}

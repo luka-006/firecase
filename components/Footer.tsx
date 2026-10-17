@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { CookieSettingsButton } from './Ui'
-import { SELLER } from '@/lib/config'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 
@@ -41,9 +40,7 @@ export function Footer({ locale }: { locale: Locale }) {
         <p className="container-x py-6 font-mono text-[10px] uppercase tracking-[0.2em] text-mute">
           © {new Date().getFullYear()} Firecase
           {' · '}
-          <Link href={href(locale, 'terms')} className="hover:text-bone">{SELLER.shortName}, obrt, vl. {SELLER.owner}</Link>
-          {' · '}OIB {SELLER.oib}
-          {' · '}{SELLER.postal} {SELLER.city}
+          <Link href={href(locale, 'terms')} className="hover:text-bone">{d.terms}</Link>
         </p>
       </div>
     </footer>

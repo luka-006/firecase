@@ -8,6 +8,7 @@ import { Status, orderStage } from '@/components/admin/Status'
 import { CopyField } from '@/components/admin/AdminUi'
 import { ActionForm } from '@/components/Ui'
 import { DbError } from '@/components/admin/DbError'
+import { MAX_AUTO_ATTEMPTS } from '@/lib/invoice/retry-policy'
 import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryIssueInvoiceAction, sendReviewRequestAction, setSupplierOrder } from '../../actions'
 import { ConfirmShipForm } from '@/components/admin/ConfirmShipForm'
 import { SupplierLink } from '@/components/SupplierLink'
@@ -167,10 +168,13 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                     <a href={`/api/invoice/${inv.id}`} target="_blank" className="link">{inv.stornoOf ? 'Storno ' : ''}{inv.number}</a>
                     <span className="font-mono tabular-nums">{money(inv.totalCents)}</span>
                     <Status s={inv.fiscalStatus} fiscal />
-                    {inv.fiscalStatus === 'pending' && (
-                      <form action={retryIssueInvoiceAction}><input type="hidden" name="id" value={inv.id} /><button className="btn-ghost btn-sm">Ponovi izdavanje</button></form>
+                    {!inv.stornoOf && inv.fiscalStatus !== 'ok' && (
+                      <form action={retryIssueInvoiceAction}><input type="hidden" name="id" value={inv.id} /><button className="btn-ghost btn-sm">Ponovno izdaj račun</button></form>
                     )}
                     {inv.soloStornoAt && <span className="text-xs text-mute">Stornirano u Soloa</span>}
+                    {!inv.stornoOf && (inv.fiscalStatus === 'error' || inv.fiscalAttempts >= MAX_AUTO_ATTEMPTS) && (
+                      <span className="w-full text-xs text-mute">Automatski pokušaji su stali. Gumb šalje ručni pokušaj.</span>
+                    )}
                     {inv.fiscalError && <span className="w-full text-xs text-red-300">{inv.fiscalError}</span>}
                   </li>
                 ))}
