@@ -5,6 +5,8 @@ import { sendAdminInvoiceFailed, sendInvoiceEmail, sendOrderConfirmation } from 
 import { logConfirmationEmail, logInvoiceEmail } from '../mail/order-email-log'
 import type { Invoice, Order } from '../types'
 import { ensureOrderInvoice, getInvoicePdfBytes, retryIssueInvoice } from './index'
+import { autoRetryDecision } from './retry-policy'
+import { soloHourlyRemaining } from './solo-queue'
 
 async function freshOrder(orderId: number) {
   const [row] = await sql<Order[]>`select * from orders where id = ${orderId}`
@@ -116,26 +118,41 @@ export async function ensureMissingInvoices(limit = 5) {
   return { missing: orders.length, ok, tried }
 }
 
-/** Pending računi i narudžbe kojima račun uopće nije upisan. Solo red: min. 10 s. */
+function autoRetryDue(inv: Invoice) {
+  return autoRetryDecision({
+    now: Date.now(),
+    attempts: inv.fiscalAttempts || 0,
+    lastAttemptAt: inv.lastAttemptAt ? new Date(inv.lastAttemptAt).getTime() : null,
+    fiscalError: inv.fiscalError,
+  }).allow
+}
+
+/** Pending računi i narudžbe kojima račun uopće nije upisan. Poštuje backoff i satni limit. */
 export async function drainPendingInvoices(limit = 5) {
-  const created = await ensureMissingInvoices(limit)
+  const budget = await soloHourlyRemaining()
+  if (budget <= 0) return { pending: 0, missing: 0, ok: 0 }
+  const created = await ensureMissingInvoices(Math.min(limit, budget))
   const skip = [...created.tried]
   const pending = skip.length
     ? await sql<Invoice[]>`
         select * from invoices
         where fiscal_status = 'pending' and storno_of is null and id not in ${sql(skip)}
-        order by id limit ${limit}`
+        order by last_attempt_at nulls first, id
+        limit 50`
     : await sql<Invoice[]>`
         select * from invoices where fiscal_status = 'pending' and storno_of is null
-        order by id limit ${limit}`
+        order by last_attempt_at nulls first, id
+        limit 50`
+  const due = pending.filter(autoRetryDue).slice(0, limit)
   let ok = created.ok
-  for (const inv of pending) {
+  for (const inv of due) {
+    if ((await soloHourlyRemaining()) <= 0) break
     const row = await retryIssueInvoice(inv.id)
     const order = row ? await freshOrder(row.orderId) : null
     if (!row || !order) continue
     if (await deliverIssued(order, row)) ok++
   }
-  return { pending: pending.length, missing: created.missing, ok }
+  return { pending: due.length, missing: created.missing, ok }
 }
 
 export async function kickInvoiceForOrder(orderId: number) {

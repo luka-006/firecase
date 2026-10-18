@@ -82,76 +82,73 @@
   .prose-legal th, .prose-legal td { @apply border-b border-line py-2 pr-3 text-left align-top; }
 }
 
-/* Animacije */
-.js [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo); transition-delay: var(--d, 0ms); }
-.js [data-reveal].in { opacity: 1; transform: none; }
-.page-in { animation: page-in 0.55s var(--ease-out-expo) both; }
-@keyframes page-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-.rise { opacity: 0; animation: rise 1s var(--ease-out-expo) forwards; animation-delay: var(--d, 0ms); }
-@keyframes rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
-.drawer { transition: transform 0.5s var(--ease-out-expo); }
+/* Ulazi su čisti transform/opacity. Završno stanje je vidljivo i bez animacije
+   (fill backwards, ne forwards), da mobitel koji preskoči keyframe ne ostavi
+   tekst ili sliku na opacity 0. Ne čekaju IntersectionObserver. */
+.js [data-reveal] { animation: reveal-in 0.9s var(--ease-out-expo) backwards; animation-delay: var(--d, 0ms); will-change: transform; }
+@keyframes reveal-in { from { opacity: 0; transform: translate3d(0, 16px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+.sheet-in { animation: sheet-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
+@keyframes sheet-in { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+.rise { animation: rise 1s var(--ease-out-expo) backwards; animation-delay: var(--d, 0ms); will-change: transform; }
+@keyframes rise { from { opacity: 0; transform: translate3d(0, 24px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+.drawer { transition: transform 0.5s var(--ease-out-expo); will-change: transform; }
 .fade { transition: opacity 0.4s ease; }
 
-@media (prefers-reduced-motion: reduce) {
-  .js [data-reveal] { opacity: 1; transform: none; transition: none; }
-  .page-in { animation: none; }
-  .rise { opacity: 1; animation: none; }
-  html { scroll-behavior: auto; }
-}
+/* Logotip u herou: obris se iscrta, plamen se pojavi pa lagano treperi.
+   Bez animacije obris i plamen su već nacrtani. */
+.mark-draw { stroke-dasharray: 1; stroke-dashoffset: 0; animation: mark-draw 2.6s var(--ease-out-expo) 0.15s backwards; }
+@keyframes mark-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.mark-flame { transform-origin: 51% 52%; will-change: transform; animation: flame-in 1.4s var(--ease-out-expo) 0.9s backwards, flame-flicker 5.5s ease-in-out 2.3s infinite; }
+@keyframes flame-in { from { opacity: 0; transform: translate3d(0, 3%, 0) scaleY(0.92); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes flame-flicker { 0%, 100% { transform: translate3d(0, 0, 0); } 35% { transform: translate3d(0, 0, 0) scale(1.008, 1.03) skewX(-0.7deg); } 65% { transform: translate3d(0, 0, 0) scale(0.996, 0.988) skewX(0.5deg); } }
 
-/* Logotip u herou: obris se iscrta, plamen se pojavi pa lagano treperi */
-.mark-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: mark-draw 2.6s var(--ease-out-expo) 0.15s forwards; }
-@keyframes mark-draw { to { stroke-dashoffset: 0; } }
-.mark-flame { opacity: 0; transform-origin: 51% 52%; animation: flame-in 1.4s var(--ease-out-expo) 0.9s forwards, flame-flicker 5.5s ease-in-out 2.3s infinite; }
-@keyframes flame-in { from { opacity: 0; transform: translateY(3%) scaleY(0.92); } to { opacity: 1; transform: none; } }
-@keyframes flame-flicker { 0%, 100% { transform: none; } 35% { transform: scale(1.008, 1.03) skewX(-0.7deg); } 65% { transform: scale(0.996, 0.988) skewX(0.5deg); } }
+/* Linija koja se iscrta slijeva. Bez animacije ostaje puna. */
+.rule-draw { transform-origin: left center; will-change: transform; animation: rule-draw 1.6s var(--ease-out-expo) 0.5s backwards; }
+@keyframes rule-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-/* Linija koja se iscrta slijeva */
-.rule-draw { transform-origin: left; animation: rule-draw 1.6s var(--ease-out-expo) 0.5s both; }
-@keyframes rule-draw { from { transform: scaleX(0); } }
+/* Redak u popisu: pozadina klizi slijeva. Aktivni red je obojen i bez hovera. */
+.row-wipe::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-ink-2); transform: scaleX(0); transform-origin: left; transition: transform 0.7s var(--ease-out-expo); will-change: transform; }
+.row-wipe.is-on::before, .row-wipe:hover::before, .row-wipe:focus-visible::before { transform: scaleX(1); }
 
-/* Redak u popisu: pozadina klizi slijeva */
-.row-wipe::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-ink-2); transform: scaleX(0); transform-origin: left; transition: transform 0.7s var(--ease-out-expo); }
-.row-wipe:hover::before, .row-wipe:focus-visible::before { transform: scaleX(1); }
+/* Slika se diže iz okvira. clip-path je skup i pada na dijelu mobitela. */
+.curtain { animation: curtain-up 1.15s var(--ease-out-expo) backwards; will-change: transform; }
+@keyframes curtain-up { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
 
-/* Slika se otkriva odozdo kad uđe u kadar */
-.js [data-reveal] .curtain { clip-path: inset(100% 0 0 0); transition: clip-path 1.4s var(--ease-out-expo) var(--d, 0ms); }
-.js [data-reveal].in .curtain { clip-path: inset(0 0 0 0); }
+/* Logotip u podnožju izranja iza linije. */
+.wm-rise { animation: wm-rise 1.5s var(--ease-out-expo) backwards; will-change: transform; }
+@keyframes wm-rise { from { transform: translate3d(0, 105%, 0); } to { transform: translate3d(0, 0, 0); } }
 
-/* Logotip u podnožju izranja iza linije */
-.js [data-reveal] .wm-rise { transform: translateY(105%); transition: transform 1.6s var(--ease-out-expo); }
-.js [data-reveal].in .wm-rise { transform: none; }
-
-/* Rečenica na narančastoj podlozi: riječi se pale redom dok se skrola */
+/* Rečenica na narančastoj podlozi. Ulaz ide sam; skrol-timeline je samo dodatak
+   i ne drži riječi na 0.12 ako se timeline ne pokrene. */
+.sw { --sw: 1; display: inline-block; animation: sw-in 0.75s var(--ease-out-expo) backwards; animation-delay: calc(var(--i, 0) * 32ms); will-change: transform; }
+.sw.opacity-50 { --sw: 0.5; }
+@keyframes sw-in { from { opacity: 0.15; transform: translate3d(0, 0.28em, 0); } to { opacity: var(--sw, 1); transform: translate3d(0, 0, 0); } }
 @supports (animation-timeline: view()) {
   .sweep-host { view-timeline-name: --sweep; }
-  .sw { animation: sweep linear both; animation-timeline: --sweep; animation-range: cover calc(14% + var(--i) * 1.6%) cover calc(26% + var(--i) * 1.6%); }
-  @keyframes sweep { from { opacity: 0.12; } }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mark-draw { stroke-dashoffset: 0; animation: none; }
-  .mark-flame { opacity: 1; animation: none; }
-  .rule-draw { animation: none; }
-  .row-wipe::before { transition: none; }
-  .js [data-reveal] .curtain { clip-path: none; transition: none; }
-  .js [data-reveal] .wm-rise { transform: none; transition: none; }
-  .sw { animation: none; }
+  .sw {
+    animation-name: sw-in;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: --sweep;
+    animation-range: cover calc(10% + var(--i, 0) * 1.2%) cover calc(24% + var(--i, 0) * 1.2%);
+    animation-delay: 0s;
+  }
 }
 
 /* Male interakcije */
-.heart-pop { animation: heart-pop 0.6s var(--ease-out-expo); }
+.heart-pop { animation: heart-pop 0.6s var(--ease-out-expo); will-change: transform; }
 @keyframes heart-pop { 0% { transform: scale(1); } 30% { transform: scale(1.35); } 55% { transform: scale(0.9); } 75% { transform: scale(1.08); } 100% { transform: scale(1); } }
 .heart-ring { position: absolute; inset: -1px; border: 1px solid var(--color-flame); pointer-events: none; animation: heart-ring 0.7s var(--ease-out-expo) forwards; }
 @keyframes heart-ring { from { transform: scale(0.7); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
-.bump { animation: bump 0.5s var(--ease-out-expo); }
+.bump { animation: bump 0.5s var(--ease-out-expo); will-change: transform; }
 @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.5); } 100% { transform: scale(1); } }
-.tick { display: inline-block; animation: tick 0.35s var(--ease-out-expo); }
-@keyframes tick { from { transform: translateY(60%); opacity: 0; } to { transform: none; opacity: 1; } }
-.pop-in { animation: pop-in 0.45s var(--ease-out-expo); }
-@keyframes pop-in { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
-.lb-in { animation: lb-in 0.45s var(--ease-out-expo); }
-@keyframes lb-in { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: none; } }
+.tick { display: inline-block; animation: tick 0.35s var(--ease-out-expo) backwards; }
+@keyframes tick { from { transform: translate3d(0, 60%, 0); opacity: 0; } to { transform: translate3d(0, 0, 0); opacity: 1; } }
+.pop-in { animation: pop-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
+@keyframes pop-in { from { transform: translate3d(0, 10px, 0) scale(0.98); opacity: 0; } to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; } }
+.lb-in { animation: lb-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
+@keyframes lb-in { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 
 .marquee { overflow: hidden; }
 .marquee-track {
@@ -159,20 +156,32 @@
   width: max-content;
   animation: marquee-x 40s linear infinite;
   will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 .marquee-group { display: flex; gap: 1.25rem; padding-right: 1.25rem; }
-.marquee:hover .marquee-track,
-.marquee:focus-within .marquee-track,
-.marquee:active .marquee-track { animation-play-state: paused; }
+@media (hover: hover) and (pointer: fine) {
+  .marquee:hover .marquee-track { animation-play-state: paused; }
+}
 @keyframes marquee-x {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
 }
 
+/* Smanjeni pokret usporava i skraćuje, ne gasi sadržaj. */
 @media (prefers-reduced-motion: reduce) {
-  .heart-pop, .heart-ring, .bump, .tick, .pop-in, .lb-in { animation: none; }
-  .heart-ring { display: none; }
-  .marquee { overflow-x: auto; }
-  .marquee-track { animation: none; will-change: auto; }
-  .marquee-group[aria-hidden='true'] { display: none; }
+  html { scroll-behavior: auto; }
+  .js [data-reveal], .sheet-in, .rise, .rule-draw, .curtain, .wm-rise, .sw, .pop-in, .lb-in, .tick, .heart-pop, .bump {
+    animation: gentle-in 0.4s ease backwards;
+    animation-delay: 0ms;
+    animation-timeline: auto;
+    will-change: auto;
+  }
+  .mark-draw { stroke-dashoffset: 0; animation: none; }
+  .mark-flame { opacity: 1; animation: gentle-in 0.4s ease backwards; will-change: auto; }
+  .row-wipe::before { transition: none; }
+  .heart-ring { animation: none; opacity: 0; }
+  .marquee-track { animation-duration: 140s; animation-play-state: running; }
+  .drawer { transition-duration: 0.01ms; }
 }
+@keyframes gentle-in { from { opacity: 0; } to { opacity: 1; } }

@@ -6,7 +6,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { CartProvider } from '@/components/CartProvider'
 import { CartDrawer } from '@/components/CartDrawer'
-import { CookieNotice, Reveal } from '@/components/Ui'
+import { CookieNotice } from '@/components/Ui'
 import { isLocale, LOCALES, type Locale } from '@/lib/routes'
 import { getSettings } from '@/lib/settings'
 import { SITE_URL } from '@/lib/config'
@@ -59,7 +59,6 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           <CartDrawer locale={locale} />
           <CookieNotice locale={locale} />
         </CartProvider>
-        <Reveal />
         <Analytics />
       </body>
     </html>

@@ -1,5 +1,6 @@
 import 'server-only'
 import type { InvoiceData, Order } from '../types'
+import { SoloHourlyLimit, isSoloAuthError } from './retry-policy'
 
 export type SoloCreateResult = {
   id: string
@@ -124,29 +125,50 @@ export function buildSoloInvoiceBody(order: Order, data: InvoiceData) {
   return parts.join('&')
 }
 
-async function postSolo(path: string, body: string, retries = 4): Promise<SoloJson> {
+async function postSolo(path: string, body: string, noteRequest: () => Promise<void>): Promise<SoloJson> {
   let last: SoloJson = { status: -1, message: 'Nepoznata greška' }
-  for (let attempt = 0; attempt <= retries; attempt++) {
+  // One extra try only for Solo status 100 (the 10 s gap). 429 and auth are not retried here.
+  const maxCalls = 2
+  for (let attempt = 0; attempt < maxCalls; attempt++) {
+    try {
+      await noteRequest()
+    } catch (e) {
+      if (e instanceof SoloHourlyLimit && attempt > 0) {
+        throw new Error('Solo 429: satni limit')
+      }
+      throw e
+    }
     const res = await fetch(`https://api.solo.com.hr${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
       body,
     })
-    const json = (await res.json()) as SoloJson
+    if (res.status === 429) throw new Error('Solo 429: previše zahtjeva')
+    let json: SoloJson
+    try {
+      json = (await res.json()) as SoloJson
+    } catch {
+      throw new Error(res.status === 429 ? 'Solo 429: previše zahtjeva' : `Solo API nije vratio JSON (${res.status})`)
+    }
     last = json
     if (json.status === 0) return json
-    if (json.status === 100 && attempt < retries) {
+    const message = json.message || `Solo API greška (${json.status})`
+    if (isSoloAuthError(message, json.status)) {
+      throw new Error(/neispravan token/i.test(message) ? message : `Neispravan token: ${message}`)
+    }
+    if (json.status === 429 || res.status === 429) throw new Error(message.includes('429') ? message : `Solo 429: ${message}`)
+    if (json.status === 100 && attempt + 1 < maxCalls) {
       await new Promise((r) => setTimeout(r, 11_000))
       continue
     }
-    throw new Error(json.message || `Solo API greška (${json.status})`)
+    throw new Error(message)
   }
   throw new Error(last.message || 'Solo API nije odgovorio.')
 }
 
-export async function createSoloInvoice(order: Order, data: InvoiceData): Promise<SoloCreateResult> {
+export async function createSoloInvoice(order: Order, data: InvoiceData, noteRequest: () => Promise<void>): Promise<SoloCreateResult> {
   const body = buildSoloInvoiceBody(order, data)
-  const json = await postSolo('/racun', body)
+  const json = await postSolo('/racun', body, noteRequest)
   const r = json.racun
   if (!r?.id || !r.broj_racuna) throw new Error('Solo nije vratio ID računa.')
   return {
@@ -158,9 +180,9 @@ export async function createSoloInvoice(order: Order, data: InvoiceData): Promis
   }
 }
 
-export async function stornoSoloInvoice(soloId: string) {
+export async function stornoSoloInvoice(soloId: string, noteRequest: () => Promise<void>) {
   const body = `token=${encodeURIComponent(soloToken())}&id=${encodeURIComponent(soloId)}`
-  const json = await postSolo('/storno', body)
+  const json = await postSolo('/storno', body, noteRequest)
   if (json.status !== 0) throw new Error(json.message || 'Storno nije uspio.')
 }
 
