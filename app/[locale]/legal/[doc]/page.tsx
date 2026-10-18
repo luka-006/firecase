@@ -31,10 +31,11 @@ export default async function LegalPage({ params }: Props) {
   const s = await getSettings()
   return (
     <>
-      <PageHead eyebrow={t(locale).footerInfo} title={d.title} />
+      <PageHead eyebrow={t(locale).footerInfo} title={d.title} intro={d.intro} />
       <div className="container-x grid gap-16 pt-12 lg:grid-cols-[1fr_15rem]">
         <div>
           <div className="prose-legal">{d.body({ s, locale })}</div>
+          {d.close && <p className="mt-14 max-w-xl text-[15px] leading-relaxed text-bone/80">{d.close}</p>}
           {doc === 'withdrawal' && <PrintButton label={locale === 'en' ? 'Print / save as PDF' : 'Ispiši / spremi kao PDF'} />}
         </div>
         <LegalToc label={t(locale).contents} />

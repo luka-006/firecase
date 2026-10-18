@@ -9,7 +9,7 @@ export const LEGAL_DOCS = ['terms', 'privacy', 'cookies', 'shipping', 'returns',
 export type LegalDoc = (typeof LEGAL_DOCS)[number]
 
 type Ctx = { s: Settings; locale: Locale }
-type Doc = { title: string; body: (c: Ctx) => React.ReactNode }
+type Doc = { title: string; intro?: string; close?: string; body: (c: Ctx) => React.ReactNode }
 
 const Seller = ({ en, phone }: { en?: boolean; phone?: boolean }) => (
   <p>
@@ -226,10 +226,18 @@ const hr: Record<LegalDoc, Doc> = {
 
   contact: {
     title: 'Kontakt',
+    intro: 'Imate pitanje o narudžbi, proizvodu ili dostavi? Pišite nam, rado ćemo pomoći.',
+    close: 'Hvala vam što ste odabrali Firecase.',
     body: () => (
-      <p>
-        <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
-      </p>
+      <>
+        <h2>E-mail</h2>
+        <p><a href={`mailto:${SELLER.email}`}>{SELLER.email}</a></p>
+        <p>Na poruke odgovaramo u roku od 24 sata, radnim danom.</p>
+        <h2>Narudžbe i dostava</h2>
+        <p>Dostava traje 8–16 dana. Za pitanja o narudžbi u poruci navedite broj narudžbe, pa ćemo vam brže odgovoriti.</p>
+        <h2>Povrat i reklamacije</h2>
+        <p>Proizvod možete vratiti u roku od 14 dana od primitka. Javite nam se na e-mail i poslat ćemo vam sve potrebne upute.</p>
+      </>
     ),
   },
 }
@@ -435,10 +443,18 @@ const en: Record<LegalDoc, Doc> = {
 
   contact: {
     title: 'Contact',
+    intro: 'Have a question about an order, a product or delivery? Write to us, we are happy to help.',
+    close: 'Thank you for choosing Firecase.',
     body: () => (
-      <p>
-        <a href={`mailto:${SELLER.email}`}>{SELLER.email}</a>
-      </p>
+      <>
+        <h2>E-mail</h2>
+        <p><a href={`mailto:${SELLER.email}`}>{SELLER.email}</a></p>
+        <p>We reply within 24 hours on business days.</p>
+        <h2>Orders and delivery</h2>
+        <p>Delivery takes 8–16 days. If you are asking about an order, include the order number in your message so we can reply sooner.</p>
+        <h2>Returns and complaints</h2>
+        <p>You may return a product within 14 days of receiving it. Email us and we will send you the instructions you need.</p>
+      </>
     ),
   },
 }
