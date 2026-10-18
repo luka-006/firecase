@@ -82,23 +82,24 @@
   .prose-legal th, .prose-legal td { @apply border-b border-line py-2 pr-3 text-left align-top; }
 }
 
-/* Ulazi su čisti transform/opacity. Završno stanje je vidljivo i bez animacije
-   (fill backwards, ne forwards), da mobitel koji preskoči keyframe ne ostavi
-   tekst ili sliku na opacity 0. Ne čekaju IntersectionObserver. */
-.js [data-reveal] { animation: reveal-in 0.9s var(--ease-out-expo) backwards; animation-delay: var(--d, 0ms); will-change: transform; }
+/* Ulazi su transform/opacity. Mirovano stanje je uvijek vidljivo (opacity 1,
+   obris nacrtan, slika u okviru). Fill je backwards, ne both: both + duration
+   auto drži from-frame ako se scroll-timeline ne pokrene. Ne čekaju
+   IntersectionObserver ni hover. */
+.js [data-reveal] { opacity: 1; animation: reveal-in 0.9s var(--ease-out-expo) backwards; animation-delay: var(--d, 0ms); will-change: transform; }
 @keyframes reveal-in { from { opacity: 0; transform: translate3d(0, 16px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-.sheet-in { animation: sheet-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
+.sheet-in { opacity: 1; animation: sheet-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
 @keyframes sheet-in { from { opacity: 0; transform: translate3d(0, 12px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-.rise { animation: rise 1s var(--ease-out-expo) backwards; animation-delay: var(--d, 0ms); will-change: transform; }
+.rise { opacity: 1; animation: rise 1s var(--ease-out-expo) backwards; animation-delay: var(--d, 0ms); will-change: transform; }
 @keyframes rise { from { opacity: 0; transform: translate3d(0, 24px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
-.drawer { transition: transform 0.5s var(--ease-out-expo); will-change: transform; }
+.drawer { transition: translate 0.5s var(--ease-out-expo), transform 0.5s var(--ease-out-expo); will-change: translate; }
 .fade { transition: opacity 0.4s ease; }
 
 /* Logotip u herou: obris se iscrta, plamen se pojavi pa lagano treperi.
    Bez animacije obris i plamen su već nacrtani. */
 .mark-draw { stroke-dasharray: 1; stroke-dashoffset: 0; animation: mark-draw 2.6s var(--ease-out-expo) 0.15s backwards; }
 @keyframes mark-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-.mark-flame { transform-origin: 51% 52%; will-change: transform; animation: flame-in 1.4s var(--ease-out-expo) 0.9s backwards, flame-flicker 5.5s ease-in-out 2.3s infinite; }
+.mark-flame { opacity: 1; transform-origin: 51% 52%; will-change: transform; animation: flame-in 1.4s var(--ease-out-expo) 0.9s backwards, flame-flicker 5.5s ease-in-out 2.3s infinite; }
 @keyframes flame-in { from { opacity: 0; transform: translate3d(0, 3%, 0) scaleY(0.92); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 @keyframes flame-flicker { 0%, 100% { transform: translate3d(0, 0, 0); } 35% { transform: translate3d(0, 0, 0) scale(1.008, 1.03) skewX(-0.7deg); } 65% { transform: translate3d(0, 0, 0) scale(0.996, 0.988) skewX(0.5deg); } }
 
@@ -110,7 +111,8 @@
 .row-wipe::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--color-ink-2); transform: scaleX(0); transform-origin: left; transition: transform 0.7s var(--ease-out-expo); will-change: transform; }
 .row-wipe.is-on::before, .row-wipe:hover::before, .row-wipe:focus-visible::before { transform: scaleX(1); }
 
-/* Slika se diže iz okvira. clip-path je skup i pada na dijelu mobitela. */
+/* Slika se diže iz okvira. clip-path je skup i pada na dijelu mobitela.
+   Bez animacije slika stoji u okviru (nema transform). */
 .curtain { animation: curtain-up 1.15s var(--ease-out-expo) backwards; will-change: transform; }
 @keyframes curtain-up { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
 
@@ -118,21 +120,25 @@
 .wm-rise { animation: wm-rise 1.5s var(--ease-out-expo) backwards; will-change: transform; }
 @keyframes wm-rise { from { transform: translate3d(0, 105%, 0); } to { transform: translate3d(0, 0, 0); } }
 
-/* Rečenica na narančastoj podlozi. Ulaz ide sam; skrol-timeline je samo dodatak
-   i ne drži riječi na 0.12 ako se timeline ne pokrene. */
-.sw { --sw: 1; display: inline-block; animation: sw-in 0.75s var(--ease-out-expo) backwards; animation-delay: calc(var(--i, 0) * 32ms); will-change: transform; }
-.sw.opacity-50 { --sw: 0.5; }
+/* Rečenica na narančastoj podlozi. Vremenska animacija je osnovna i uvijek
+   završi na čitljivom opacityju. Scroll-timeline je dodatak samo gdje oba
+   uvjeta drže, i nikad u Firefoxu (animation-timeline nije uključen; lažni
+   @supports + duration auto + fill both ostavi riječ na 0.15). */
+.sw { --sw: 1; opacity: 1; display: inline-block; animation: sw-in 0.75s var(--ease-out-expo) backwards; animation-delay: calc(var(--i, 0) * 32ms); will-change: transform; }
+.sw.opacity-50 { --sw: 0.5; opacity: 0.5; }
 @keyframes sw-in { from { opacity: 0.15; transform: translate3d(0, 0.28em, 0); } to { opacity: var(--sw, 1); transform: translate3d(0, 0, 0); } }
-@supports (animation-timeline: view()) {
-  .sweep-host { view-timeline-name: --sweep; }
-  .sw {
-    animation-name: sw-in;
-    animation-duration: auto;
-    animation-timing-function: linear;
-    animation-fill-mode: both;
-    animation-timeline: --sweep;
-    animation-range: cover calc(10% + var(--i, 0) * 1.2%) cover calc(24% + var(--i, 0) * 1.2%);
-    animation-delay: 0s;
+@supports ((animation-timeline: view()) and (animation-duration: auto)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .sweep-host { view-timeline-name: --sweep; }
+    .sw {
+      animation-name: sw-in;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --sweep;
+      animation-range: cover calc(10% + var(--i, 0) * 1.2%) cover calc(24% + var(--i, 0) * 1.2%);
+      animation-delay: 0s;
+    }
   }
 }
 
@@ -143,11 +149,11 @@
 @keyframes heart-ring { from { transform: scale(0.7); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
 .bump { animation: bump 0.5s var(--ease-out-expo); will-change: transform; }
 @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.5); } 100% { transform: scale(1); } }
-.tick { display: inline-block; animation: tick 0.35s var(--ease-out-expo) backwards; }
+.tick { opacity: 1; display: inline-block; animation: tick 0.35s var(--ease-out-expo) backwards; }
 @keyframes tick { from { transform: translate3d(0, 60%, 0); opacity: 0; } to { transform: translate3d(0, 0, 0); opacity: 1; } }
-.pop-in { animation: pop-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
+.pop-in { opacity: 1; animation: pop-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
 @keyframes pop-in { from { transform: translate3d(0, 10px, 0) scale(0.98); opacity: 0; } to { transform: translate3d(0, 0, 0) scale(1); opacity: 1; } }
-.lb-in { animation: lb-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
+.lb-in { opacity: 1; animation: lb-in 0.45s var(--ease-out-expo) backwards; will-change: transform; }
 @keyframes lb-in { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
 
 .marquee { overflow: hidden; }
@@ -168,20 +174,73 @@
   to { transform: translate3d(-50%, 0, 0); }
 }
 
-/* Smanjeni pokret usporava i skraćuje, ne gasi sadržaj. */
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .js [data-reveal], .sheet-in, .rise, .rule-draw, .curtain, .wm-rise, .sw, .pop-in, .lb-in, .tick, .heart-pop, .bump {
-    animation: gentle-in 0.4s ease backwards;
-    animation-delay: 0ms;
-    animation-timeline: auto;
+/* Gecko: will-change i backface-visibility znaju zamrznuti sloj na Firefoxu
+   za Android, pa se beskonačna vrtnja i ulazi nikad ne nacrtaju. Vremenska
+   animacija riječi ostaje i kad @supports za timeline laže. */
+@supports (-moz-orient: inline) {
+  .js [data-reveal], .sheet-in, .rise, .drawer, .mark-flame, .rule-draw, .row-wipe::before,
+  .curtain, .wm-rise, .sw, .heart-pop, .bump, .pop-in, .lb-in, .marquee-track {
     will-change: auto;
   }
-  .mark-draw { stroke-dashoffset: 0; animation: none; }
-  .mark-flame { opacity: 1; animation: gentle-in 0.4s ease backwards; will-change: auto; }
-  .row-wipe::before { transition: none; }
-  .heart-ring { animation: none; opacity: 0; }
-  .marquee-track { animation-duration: 140s; animation-play-state: running; }
-  .drawer { transition-duration: 0.01ms; }
+  .marquee-track { transform: none; backface-visibility: visible; }
+  .sw {
+    opacity: 1;
+    animation: sw-in 0.75s var(--ease-out-expo) backwards;
+    animation-delay: calc(var(--i, 0) * 32ms);
+    animation-timeline: auto;
+    animation-range: normal;
+  }
+  .sw.opacity-50 { opacity: 0.5; }
 }
-@keyframes gentle-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Smanjeni pokret skraćuje iste keyframeove. Ne zamjenjuje ih fadeom i ne gasi
+   crtanje logotipa. Karusel ostaje dovoljno brz da se vidi. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .js [data-reveal] { animation: reveal-in 0.55s var(--ease-out-expo) backwards; animation-delay: 0ms; animation-timeline: auto; }
+  .sheet-in { animation: sheet-in 0.35s var(--ease-out-expo) backwards; animation-timeline: auto; }
+  .rise { animation: rise 0.6s var(--ease-out-expo) backwards; animation-delay: 0ms; animation-timeline: auto; }
+  .rule-draw { animation: rule-draw 0.7s var(--ease-out-expo) backwards; animation-timeline: auto; }
+  .curtain { animation: curtain-up 0.6s var(--ease-out-expo) backwards; animation-timeline: auto; }
+  .wm-rise { animation: wm-rise 0.7s var(--ease-out-expo) backwards; animation-timeline: auto; }
+  .sw { animation: sw-in 0.45s var(--ease-out-expo) backwards; animation-delay: 0ms; animation-timeline: auto; animation-range: normal; }
+  .pop-in { animation: pop-in 0.35s var(--ease-out-expo) backwards; animation-timeline: auto; }
+  .lb-in { animation: lb-in 0.35s var(--ease-out-expo) backwards; animation-timeline: auto; }
+  .tick { animation: tick 0.3s var(--ease-out-expo) backwards; animation-timeline: auto; }
+  .heart-pop { animation: heart-pop 0.4s var(--ease-out-expo); animation-timeline: auto; }
+  .bump { animation: bump 0.35s var(--ease-out-expo); animation-timeline: auto; }
+  .mark-draw { stroke-dashoffset: 0; animation: mark-draw 1.1s var(--ease-out-expo) backwards; }
+  .mark-flame { opacity: 1; animation: flame-in 0.6s var(--ease-out-expo) backwards; will-change: auto; }
+  .row-wipe::before { transition-duration: 0.2s; }
+  .heart-ring { animation: none; opacity: 0; }
+  .marquee-track { animation-duration: 64s; animation-play-state: running; }
+  .drawer { transition-duration: 0.2s; }
+  .js [data-reveal], .sheet-in, .rise, .rule-draw, .curtain, .wm-rise, .sw, .pop-in, .lb-in, .tick, .heart-pop, .bump, .mark-draw, .marquee-track, .drawer {
+    will-change: auto;
+  }
+}
+
+/* Firefox za Android javi prefers-reduced-motion i kad su sistemske animacije
+   uključene. U Gecku zato ostaju pune animacije; Chromium i dalje skraćuje. */
+@supports (-moz-orient: inline) {
+  @media (prefers-reduced-motion: reduce) {
+    .js [data-reveal] { animation: reveal-in 0.9s var(--ease-out-expo) backwards; animation-delay: var(--d, 0ms); animation-timeline: auto; }
+    .sheet-in { animation: sheet-in 0.45s var(--ease-out-expo) backwards; animation-timeline: auto; }
+    .rise { animation: rise 1s var(--ease-out-expo) backwards; animation-delay: var(--d, 0ms); animation-timeline: auto; }
+    .rule-draw { animation: rule-draw 1.6s var(--ease-out-expo) 0.5s backwards; animation-timeline: auto; }
+    .curtain { animation: curtain-up 1.15s var(--ease-out-expo) backwards; animation-timeline: auto; }
+    .wm-rise { animation: wm-rise 1.5s var(--ease-out-expo) backwards; animation-timeline: auto; }
+    .sw { opacity: 1; animation: sw-in 0.75s var(--ease-out-expo) backwards; animation-delay: calc(var(--i, 0) * 32ms); animation-timeline: auto; animation-range: normal; }
+    .sw.opacity-50 { opacity: 0.5; }
+    .pop-in { animation: pop-in 0.45s var(--ease-out-expo) backwards; animation-timeline: auto; }
+    .lb-in { animation: lb-in 0.45s var(--ease-out-expo) backwards; animation-timeline: auto; }
+    .tick { animation: tick 0.35s var(--ease-out-expo) backwards; animation-timeline: auto; }
+    .heart-pop { animation: heart-pop 0.6s var(--ease-out-expo); animation-timeline: auto; }
+    .bump { animation: bump 0.5s var(--ease-out-expo); animation-timeline: auto; }
+    .mark-draw { stroke-dashoffset: 0; animation: mark-draw 2.6s var(--ease-out-expo) 0.15s backwards; }
+    .mark-flame { opacity: 1; animation: flame-in 1.4s var(--ease-out-expo) 0.9s backwards, flame-flicker 5.5s ease-in-out 2.3s infinite; }
+    .row-wipe::before { transition-duration: 0.7s; }
+    .marquee-track { animation-name: marquee-x; animation-duration: 40s; animation-play-state: running; animation-timing-function: linear; animation-iteration-count: infinite; }
+    .drawer { transition-duration: 0.5s; }
+  }
+}
