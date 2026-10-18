@@ -122,12 +122,23 @@
 .js [data-reveal] .wm-rise { transform: translateY(105%); transition: transform 1.6s var(--ease-out-expo); }
 .js [data-reveal].in .wm-rise { transform: none; }
 
-/* Rečenica na narančastoj podlozi: riječi se pale redom dok se skrola */
-@supports (animation-timeline: view()) {
-  .sweep-host { view-timeline-name: --sweep; }
-  .sw { animation: sweep linear both; animation-timeline: --sweep; animation-range: cover calc(14% + var(--i) * 1.6%) cover calc(26% + var(--i) * 1.6%); }
-  @keyframes sweep { from { opacity: 0.12; } }
+/* Narančasta rečenica: riječi ulaze jedna za drugom */
+.js .sweep-host[data-reveal] { opacity: 1; transform: none; transition: none; }
+.sw { display: inline-block; }
+.js .sweep-host .sw { opacity: 0; transform: translateY(0.45em); }
+.js .sweep-host.in .sw {
+  animation: sweep-word 0.85s var(--ease-out-expo) both;
+  animation-delay: calc(var(--i) * 75ms);
 }
+@keyframes sweep-word {
+  from { opacity: 0; transform: translateY(0.45em); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sweep-word-dim {
+  from { opacity: 0; transform: translateY(0.45em); }
+  to { opacity: 0.55; transform: none; }
+}
+.js .sweep-host.in .sw-dim { animation-name: sweep-word-dim; }
 
 @media (prefers-reduced-motion: reduce) {
   .mark-draw { stroke-dashoffset: 0; animation: none; }
@@ -136,7 +147,8 @@
   .row-wipe::before { transition: none; }
   .js [data-reveal] .curtain { clip-path: none; transition: none; }
   .js [data-reveal] .wm-rise { transform: none; transition: none; }
-  .sw { animation: none; }
+  .js .sweep-host .sw { opacity: 1; transform: none; animation: none; }
+  .js .sweep-host .sw-dim { opacity: 0.55; }
 }
 
 /* Male interakcije */
@@ -169,8 +181,83 @@
   to { transform: translateX(-50%); }
 }
 
+/* Brisanje računa: crveno uđe na hover, gumbi se pojave na klik */
+.delete-account { position: relative; overflow: hidden; transition: border-color 0.45s var(--ease-out-expo); }
+.delete-account::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #3a1212;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.55s var(--ease-out-expo);
+  pointer-events: none;
+}
+.delete-account:hover::before,
+.delete-account.is-open::before { transform: scaleX(1); }
+.delete-account:hover,
+.delete-account.is-open { border-color: #9f2d2d; }
+.delete-account-hit {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--color-mute);
+  cursor: pointer;
+  transition: color 0.4s var(--ease-out-expo);
+}
+.delete-account:hover .delete-account-hit,
+.delete-account.is-open .delete-account-hit { color: #fecaca; }
+.delete-account-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s var(--ease-out-expo);
+}
+.delete-account.is-open .delete-account-panel { grid-template-rows: 1fr; }
+.delete-account-panel > div { overflow: hidden; min-height: 0; }
+.delete-account-warn {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  color: rgb(254 202 202 / 0.8);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease, transform 0.45s var(--ease-out-expo);
+}
+.delete-account-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+.delete-go, .delete-stop {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.5s var(--ease-out-expo), background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+.delete-account.is-open .delete-account-warn,
+.delete-account.is-open .delete-go,
+.delete-account.is-open .delete-stop { opacity: 1; transform: none; }
+.delete-account.is-open .delete-go { transition-delay: 80ms; }
+.delete-account.is-open .delete-stop { transition-delay: 160ms; }
+.delete-go { background: #b42323; color: #fff; }
+.delete-go:hover { background: #d12e2e; }
+.delete-stop { border: 1px solid rgb(236 232 225 / 0.28); color: var(--color-bone); background: transparent; }
+.delete-stop:hover { border-color: var(--color-bone); }
+
 @media (prefers-reduced-motion: reduce) {
   .heart-pop, .heart-ring, .bump, .tick, .pop-in, .lb-in { animation: none; }
+  .delete-account,
+  .delete-account::before,
+  .delete-account-hit,
+  .delete-account-panel,
+  .delete-account-warn,
+  .delete-go,
+  .delete-stop { transition: none; }
   .heart-ring { display: none; }
   .marquee { overflow-x: auto; }
   .marquee-track { animation: none; will-change: auto; }

@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { DeleteAccount } from '@/components/DeleteAccount'
 import { ActionForm, Field } from '@/components/Ui'
-import { deleteAccount, logout, saveProfile } from '@/app/actions'
+import { logout, saveProfile } from '@/app/actions'
 import { getUser } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { money, formatDateTime } from '@/lib/money'
@@ -66,11 +67,7 @@ export default async function Account({ params }: { params: Promise<{ locale: st
               <input type="hidden" name="country" value={u.country || 'HR'} />
             </ActionForm>
           </div>
-          <details className="card p-5">
-            <summary className="text-sm text-mute">{d.deleteAccount}</summary>
-            <p className="my-4 text-xs text-mute">{d.deleteWarn}</p>
-            <ActionForm action={deleteAccount} submit={d.deleteAccount} locale={locale} danger />
-          </details>
+          <DeleteAccount locale={locale} />
         </section>
       </div>
     </div>
