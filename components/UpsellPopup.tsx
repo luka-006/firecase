@@ -72,7 +72,7 @@ export function UpsellPopup({
         role="dialog"
         aria-modal="true"
         aria-labelledby="upsell-title"
-        className="card flex max-h-[85dvh] w-full min-w-0 max-w-3xl flex-col overflow-hidden"
+        className="card pop-in flex max-h-[85dvh] w-full min-w-0 max-w-3xl flex-col overflow-hidden"
       >
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-8">
           <h2 id="upsell-title" className="h-display text-xl leading-tight [overflow-wrap:anywhere] sm:text-3xl">{title}</h2>

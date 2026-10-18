@@ -45,7 +45,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
       <div className="container-x max-w-3xl pt-16 pb-8">
         <ClearCart />
         <div className="text-center">
-          <span className="mx-auto mb-6 grid size-14 place-items-center rounded-full border border-flame/50 text-flame"><CheckIcon className="size-6" /></span>
+          <span className="pop-in mx-auto mb-6 grid size-14 place-items-center rounded-full border border-flame/50 text-flame"><CheckIcon className="size-6" /></span>
           <h1 className="h-display text-3xl">{d.thanks}</h1>
           <p className="mt-4">{d.orderNo} #{order.orderNumber}</p>
           <p className="mt-2 text-mute">{d.orderPaidText}</p>

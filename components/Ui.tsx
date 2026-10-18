@@ -1,26 +1,9 @@
 'use client'
-import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState, useActionState } from 'react'
 import { releaseCartHydrate, useCart, wipeCartStorage } from './CartProvider'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import Link from 'next/link'
-
-// Pokreće "reveal" animacije za elemente s data-reveal
-export function Reveal() {
-  const pathname = usePathname()
-  useEffect(() => {
-    const els = document.querySelectorAll<HTMLElement>('[data-reveal]:not(.in)')
-    if (!('IntersectionObserver' in window)) return els.forEach((e) => e.classList.add('in'))
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }),
-      { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
-    )
-    els.forEach((e) => io.observe(e))
-    return () => io.disconnect()
-  }, [pathname])
-  return null
-}
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID
 const CONSENT_KEY = 'fc_consent'
@@ -69,7 +52,7 @@ export function CookieNotice({ locale }: { locale: Locale }) {
   }
   if (!show) return null
   return (
-    <div role="dialog" aria-label={d.cookieSettings} className="page-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink/95 px-5 py-4 backdrop-blur sm:inset-x-auto sm:bottom-6 sm:left-6 sm:max-w-sm sm:border sm:p-5">
+    <div role="dialog" aria-label={d.cookieSettings} className="sheet-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink px-5 py-4 sm:inset-x-auto sm:bottom-6 sm:left-6 sm:max-w-sm sm:border sm:p-5">
       <p className="text-xs leading-relaxed text-bone/70">
         {GA_ID ? d.cookieText : d.cookieTextBasic} <Link href={href(locale, 'cookies')} className="link">{d.more}</Link>
       </p>

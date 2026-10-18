@@ -18,7 +18,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
   }, [setOpen])
   return (
     <div className={`fixed inset-0 z-50 ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
-      <div onClick={() => setOpen(false)} className={`fade absolute inset-0 bg-black/60 backdrop-blur-sm ${open ? 'opacity-100' : 'opacity-0'}`} />
+      <div onClick={() => setOpen(false)} className={`fade absolute inset-0 bg-black/70 ${open ? 'opacity-100' : 'opacity-0'}`} />
       <aside role="dialog" aria-label={d.cart} className={`drawer absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-line bg-ink ${open ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex items-center justify-between border-b border-line px-6 py-5">
           <p className="h-display text-sm uppercase tracking-[0.2em]">{d.cart}</p>

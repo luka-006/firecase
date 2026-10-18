@@ -21,7 +21,7 @@ export function CollectionIndex({ items, note }: { items: IndexItem[]; note?: Re
               href={it.href}
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
-              className="row-wipe group relative isolate grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-4 py-5 sm:gap-5 lg:grid-cols-[3rem_minmax(0,1fr)_auto_1.5rem] lg:gap-6 lg:px-2 lg:py-8"
+              className={`row-wipe group relative isolate grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-4 py-5 sm:gap-5 lg:grid-cols-[3rem_minmax(0,1fr)_auto_1.5rem] lg:gap-6 lg:px-2 lg:py-8 ${i === active ? 'is-on' : ''}`}
             >
               <span className="hidden font-mono text-xs text-mute lg:block">{pad(i + 1)}</span>
               <span className="frame relative block aspect-square lg:hidden" style={{ ['--c' as string]: '10px' }}>
