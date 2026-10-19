@@ -9,7 +9,6 @@ import { favoriteState, toggleFavorite } from '@/app/actions'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import type { Variant } from '@/lib/types'
-import { variantsAreColours } from '@/lib/variants'
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
 
@@ -67,10 +66,10 @@ export function Gallery({ images, alt }: { images: string[]; alt: string }) {
   const n = images.length
   const go = useCallback((d: number) => setI((x) => (x + d + n) % n), [n])
   const swipe = useSwipe(go, n > 1)
-  if (!n) return <div className="frame aspect-square"><div className="frame-in" /></div>
+  if (!n) return <div className="frame aspect-square w-full min-w-0"><div className="frame-in" /></div>
   return (
-    <div className="space-y-3">
-      <div className="frame aspect-square" data-reveal>
+    <div className="min-w-0 max-w-full space-y-3">
+      <div className="frame aspect-square w-full min-w-0" data-reveal>
         <div className="frame-in">
           <div className="curtain absolute inset-0">
             <Track index={i} swipe={swipe} className="touch-pan-y">
@@ -94,7 +93,7 @@ export function Gallery({ images, alt }: { images: string[]; alt: string }) {
         </div>
       </div>
       {n > 1 && (
-        <div className="flex gap-3 overflow-x-auto pb-1">
+        <div className="flex w-full min-w-0 max-w-full gap-3 overflow-x-auto overscroll-x-contain pb-1">
           {images.map((src, idx) => (
             <button key={src} onClick={() => setI(idx)} aria-label={`${idx + 1}`}
               className={`relative size-20 shrink-0 overflow-hidden border transition ${idx === i ? 'border-flame' : 'border-line opacity-60 hover:opacity-100'}`}>
@@ -179,7 +178,7 @@ export function BuyBox({ locale, product }: BuyProps) {
     <div className="space-y-6">
       {product.variants.length > 0 && (
         <div>
-          <p className="label">{variantsAreColours(product.variants) ? d.colour : d.variant}</p>
+          <p className="label">{d.colour}</p>
           <div className="flex flex-wrap gap-2">
             {product.variants.map((v, idx) => (
               <button key={idx} onClick={() => setVi(idx)}

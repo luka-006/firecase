@@ -1,6 +1,7 @@
 'use server'
 import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { sql } from '@/lib/db'
@@ -8,7 +9,10 @@ import { clearUserSession, getUser, setUserSession } from '@/lib/auth'
 import { t } from '@/lib/dict'
 import { href, isLocale, type Locale } from '@/lib/routes'
 import { priceOrder, stripeCouponName } from '@/lib/commerce'
-import { findPromo } from '@/lib/discount-codes'
+import { clientIpFromHeaders } from '@/lib/client-ip'
+import { findPromo, releasePromoReservation, reservePromo } from '@/lib/discount-codes'
+import { checkRateLimit, hitRateLimit } from '@/lib/auth/rate-limit'
+import { promoHoldUntil } from '@/lib/promo'
 import { isOrderNumberConflict, randomOrderNumber } from '@/lib/order-number.mjs'
 import { getProductsByIds } from '@/lib/products'
 import { getSettingsFresh } from '@/lib/settings'
@@ -26,6 +30,24 @@ const localeOf = (f: FormData): Locale => {
 }
 const str = (f: FormData, k: string, max = 200) => String(f.get(k) ?? '').trim().slice(0, max)
 const sha = (s: string) => crypto.createHash('sha256').update(s).digest('hex')
+const PROMO_LIMIT = { maxHits: 10, windowSec: 60 }
+
+async function promoRateMessage(locale: Locale) {
+  const ip = clientIpFromHeaders(await headers())
+  const key = sha(ip || 'unknown')
+  const gate = await checkRateLimit('promo_code', key, PROMO_LIMIT)
+  if (!gate.ok) return t(locale).errors.promoRate
+  await hitRateLimit('promo_code', key, PROMO_LIMIT)
+  return ''
+}
+
+function promoError(locale: Locale, reason: 'invalid' | 'used' | 'expired' | 'reserved') {
+  const d = t(locale).errors
+  if (reason === 'used') return d.promoUsed
+  if (reason === 'expired') return d.promoExpired
+  if (reason === 'reserved') return d.promoReserved
+  return d.promo
+}
 
 // ---------- Blagajna ----------
 const cartSchema = z.array(z.object({ id: z.number().int(), vi: z.number().int(), qty: z.number().int().min(1).max(99) })).min(1).max(50)
@@ -71,10 +93,12 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   const subtotal = items.reduce((a, i) => a + i.unitCents * i.qty, 0)
   const qty = items.reduce((a, i) => a + i.qty, 0)
   const promoRaw = str(f, 'promo', 32)
-  const promo = promoRaw ? await findPromo(promoRaw) : null
-  if (promo && !promo.ok) {
-    return { error: promo.reason === 'used' ? d.errors.promoUsed : promo.reason === 'expired' ? d.errors.promoExpired : d.errors.promo }
+  if (promoRaw) {
+    const limited = await promoRateMessage(locale)
+    if (limited) return { error: limited }
   }
+  const promo = promoRaw ? await findPromo(promoRaw) : null
+  if (promo && !promo.ok) return { error: promoError(locale, promo.reason) }
   const priced = priceOrder(subtotal, qty, f.get('upsell') === '1', c.country, s, promo?.ok ? promo.percent : 0)
   const discount = priced.discountCents
   const shipping = priced.shippingCents
@@ -110,10 +134,20 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   }
   if (!order?.orderNumber) return { error: d.errors.generic }
 
+  const holdUntil = promo?.ok ? promoHoldUntil() : null
+  if (promo?.ok && holdUntil) {
+    const held = await reservePromo(promo.id, order.id, holdUntil)
+    if (!held) {
+      await sql`update orders set status = 'cancelled' where id = ${order.id} and status = 'pending'`
+      return { error: d.errors.promoReserved }
+    }
+  }
+
   let url: string | null = null
   try {
     const session = await st.checkout.sessions.create({
       mode: 'payment',
+      ...(holdUntil ? { expires_at: Math.floor(holdUntil.getTime() / 1000) } : {}),
       locale: locale === 'hr' ? 'hr' : 'en',
       customer_email: c.email,
       client_reference_id: String(order.id),
@@ -166,6 +200,8 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
     url = session.url
   } catch (e) {
     console.error('[checkout]', (e as Error).message)
+    await releasePromoReservation(order.id)
+    await sql`update orders set status = 'cancelled' where id = ${order.id} and status = 'pending'`
     return { error: d.errors.payments }
   }
   if (!url) return { error: d.errors.payments }
@@ -174,11 +210,10 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
 
 export async function lookupPromo(raw: string, localeRaw: string): Promise<{ ok: true; code: string; percent: number } | { ok: false; error: string }> {
   const locale = isLocale(localeRaw) ? localeRaw : 'hr'
-  const d = t(locale)
+  const limited = await promoRateMessage(locale)
+  if (limited) return { ok: false, error: limited }
   const promo = await findPromo(raw)
-  if (!promo.ok) {
-    return { ok: false, error: promo.reason === 'used' ? d.errors.promoUsed : promo.reason === 'expired' ? d.errors.promoExpired : d.errors.promo }
-  }
+  if (!promo.ok) return { ok: false, error: promoError(locale, promo.reason) }
   return { ok: true, code: promo.code, percent: promo.percent }
 }
 

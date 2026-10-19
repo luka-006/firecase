@@ -163,6 +163,18 @@ try {
     console.log('[migrate] Dodani primjeri proizvoda.')
   }
   await rewriteProductCopy()
+  const mjcm = 'MJCM SARL, 78 avenue des Champs-Elysees, Bureau 326, 75008 Paris, France, mjcm190928@gmail.com, tel 0767213611'
+  const mjcmProducts = await sql`
+    update products set eu_responsible = ${mjcm}
+    where eu_responsible ilike '%mjcm%' and eu_responsible not like '%75008%'
+    returning id, slug`
+  const mjcmProposals = await sql`
+    update product_proposals set eu_responsible = ${mjcm}
+    where eu_responsible ilike '%mjcm%' and eu_responsible not like '%75008%'
+    returning id`
+  if (mjcmProducts.length || mjcmProposals.length) {
+    console.log(`[migrate] EU odgovorna osoba (MJCM): proizvodi ${mjcmProducts.map((p) => p.slug).join(', ') || '—'}; prijedlozi ${mjcmProposals.length}.`)
+  }
   console.log('[migrate] Baza je spremna.')
 } catch (e) {
   // Ne rušimo build: stranica se objavi, a tablice se mogu kreirati gumbom u /admin

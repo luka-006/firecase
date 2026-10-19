@@ -14,6 +14,7 @@ import { href, type Locale } from '@/lib/routes'
 import { loc } from '@/lib/types'
 import { t } from '@/lib/dict'
 import { SITE_URL } from '@/lib/config'
+import { productMetaDescription } from '@/lib/seo'
 
 export const revalidate = 300
 export function generateStaticParams() {
@@ -24,12 +25,19 @@ type Props = { params: Promise<{ locale: string; slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params
-  const p = await getProductBySlug(slug)
+  const [p, s] = await Promise.all([getProductBySlug(slug), getSettings()])
   if (!p) return {}
   const l = locale as Locale
   return {
     title: `${loc(p, 'name', l)} – ${l === 'en' ? 'lighter case' : 'futrola za upaljač'}`,
-    description: loc(p, 'short', l) || t(l).shopIntro,
+    description: productMetaDescription({
+      locale: l,
+      name: loc(p, 'name', l),
+      short: loc(p, 'short', l),
+      material: loc(p, 'material', l),
+      variants: p.variants,
+      delivery: l === 'en' ? s.deliveryEn : s.deliveryHr,
+    }),
     openGraph: { images: p.images[0] ? [{ url: p.images[0] }] : undefined },
     alternates: { canonical: href(l, 'product', slug), languages: { hr: href('hr', 'product', slug), en: href('en', 'product', slug), 'x-default': href('hr', 'product', slug) } },
   }
@@ -98,7 +106,7 @@ export default async function ProductPage({ params }: Props) {
     <div className="container-x pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <nav className="mb-8 text-xs text-mute"><Link href={href(locale, 'shop')} className="hover:text-bone">{d.allCases}</Link> <span className="mx-1.5">/</span> {name}</nav>
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+      <div className="grid min-w-0 grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
         <Gallery images={p.images} alt={name} />
         <div className="lg:sticky lg:top-24 lg:self-start">
           <p className="eyebrow">Firecase</p>

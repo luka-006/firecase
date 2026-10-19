@@ -24,3 +24,18 @@ export function isPromoUsable(row: { usedAt: Date | string | null; expiresAt: Da
   if (new Date(row.expiresAt).getTime() <= now.getTime()) return 'expired' as const
   return 'ok' as const
 }
+
+/** Stripe Checkout sessions expire at most 24h after creation. Hold the code for the same window, a minute inside the limit. */
+export const PROMO_HOLD_SEC = 23 * 60 * 60 + 59 * 60
+
+export function promoHoldUntil(now = new Date()) {
+  return new Date(now.getTime() + PROMO_HOLD_SEC * 1000)
+}
+
+export function isPromoHeld(
+  row: { reservedOrderId?: number | null; reservedUntil?: Date | string | null },
+  now = new Date(),
+) {
+  if (!row.reservedOrderId || !row.reservedUntil) return false
+  return new Date(row.reservedUntil).getTime() > now.getTime()
+}

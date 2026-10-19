@@ -71,7 +71,11 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
 
   if (order.discountCodeId) {
     const marked = await markPromoUsed(order.discountCodeId, order.id)
-    if (!marked) console.error('[promo] kod je već iskorišten na drugoj narudžbi', order.id, order.discountCodeId)
+    if (!marked) {
+      const warning = 'Kod je već iskorišten na drugoj narudžbi. Plaćena narudžba je ipak provedena.'
+      console.error('[promo]', warning, order.id, order.discountCodeId)
+      await sql`update orders set promo_warning = ${warning} where id = ${order.id}`
+    }
   }
   schedulePostPaymentForOrder(order)
   return order
