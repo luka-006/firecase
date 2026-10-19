@@ -8,11 +8,10 @@ import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 
 export function FreeShippingBar({ locale }: { locale: Locale }) {
-  const { subtotal, discount, shipping } = useCart()
+  const { subtotal, shipping } = useCart()
   const d = t(locale)
-  const net = Math.max(0, subtotal - discount)
-  const left = shipping.freeThresholdCents - net
-  const pct = Math.min(100, (net / shipping.freeThresholdCents) * 100)
+  const left = shipping.freeThresholdCents - subtotal
+  const pct = Math.min(100, (subtotal / shipping.freeThresholdCents) * 100)
   return (
     <div>
       <p className="mb-2 text-xs text-mute">{left > 0 ? d.freeLeft(money(left, locale)) : d.freeReached}</p>

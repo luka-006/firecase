@@ -49,7 +49,7 @@ export function priceOrder(
   const discountCents = upsellDiscountCents + promoDiscountCents
   const net = Math.max(0, subtotalCents - discountCents)
   const shippingCents = country === 'HR'
-    ? hrShippingCents(net, settings.shippingCents, settings.freeThresholdCents)
+    ? hrShippingCents(subtotalCents, settings.shippingCents, settings.freeThresholdCents)
     : settings.euShippingCents
   return { upsellDiscountCents, promoDiscountCents, discountCents, shippingCents, totalCents: net + shippingCents }
 }

@@ -28,7 +28,7 @@ test('a code is single use and expires', () => {
   assert.equal(isPromoUsable({ usedAt: null, expiresAt: now }, now), 'expired')
 })
 
-test('5% and 10% stay separate and shipping uses the net subtotal', () => {
+test('5% and 10% stay separate and shipping uses the subtotal before discounts', () => {
   assert.equal(PROMO_PERCENT, 5)
   assert.equal(promoCentsFor(2000, 5), 100)
 
@@ -39,16 +39,21 @@ test('5% and 10% stay separate and shipping uses the net subtotal', () => {
   assert.equal(both.shippingCents, 499)
   assert.equal(both.totalCents, 3000 - 450 + 499)
 
-  const nearFree = priceOrder(4200, 1, false, 'HR', ship, 5)
-  assert.equal(nearFree.promoDiscountCents, 210)
-  assert.equal(nearFree.upsellDiscountCents, 0)
-  assert.equal(nearFree.shippingCents, ship.shippingCents)
-  assert.equal(nearFree.totalCents, 4200 - 210 + ship.shippingCents)
+  const withCode = priceOrder(4200, 1, false, 'HR', ship, 5)
+  assert.equal(withCode.promoDiscountCents, 210)
+  assert.equal(withCode.upsellDiscountCents, 0)
+  assert.equal(withCode.shippingCents, 0)
+  assert.equal(withCode.totalCents, 4200 - 210)
 
-  const stillFree = priceOrder(4500, 1, false, 'HR', ship, 5)
-  assert.equal(stillFree.promoDiscountCents, 225)
-  assert.equal(stillFree.shippingCents, 0)
-  assert.equal(stillFree.totalCents, 4500 - 225)
+  const under = priceOrder(3800, 1, false, 'HR', ship, 5)
+  assert.equal(under.promoDiscountCents, 190)
+  assert.equal(under.shippingCents, ship.shippingCents)
+  assert.equal(under.totalCents, 3800 - 190 + ship.shippingCents)
+
+  const underUpsell = priceOrder(3800, 2, true, 'HR', ship, 0)
+  assert.equal(underUpsell.upsellDiscountCents, 380)
+  assert.equal(underUpsell.shippingCents, ship.shippingCents)
+  assert.equal(underUpsell.totalCents, 3800 - 380 + ship.shippingCents)
 })
 
 test('invoice and email lines keep the 10% and the 5% apart', () => {

@@ -11,7 +11,7 @@ export function CartView({ locale }: { locale: Locale }) {
   const { items, subtotal, discount, shipping } = useCart()
   const d = t(locale)
   const net = Math.max(0, subtotal - discount)
-  const ship = net >= shipping.freeThresholdCents ? 0 : shipping.shippingCents
+  const ship = subtotal >= shipping.freeThresholdCents ? 0 : shipping.shippingCents
   return (
     <>
     <PageHead eyebrow={d.footerShop} title={d.cart} />

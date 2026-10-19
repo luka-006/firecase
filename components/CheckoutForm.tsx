@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useActionState, useRef, useState } from 'react'
 import { useCart } from './CartProvider'
+import { FreeShippingBar } from './CartLines'
 import { UpsellPopup, type UpsellProduct } from './UpsellPopup'
 import { Field } from './Ui'
 import { lookupPromo, startCheckout } from '@/app/actions'
@@ -152,6 +153,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
           {promoError && <p role="alert" className="mt-1.5 text-xs text-red-400">{promoError}</p>}
           {activePromo && !promoError && <p className="mt-1.5 text-xs text-mute">{d.promoApplied}</p>}
         </div>
+        {country === 'HR' && <FreeShippingBar locale={locale} />}
         <div className="space-y-2 border-t border-line pt-4 text-sm">
           <div className="flex justify-between"><span className="text-mute">{d.subtotal}</span><span className="tabular-nums">{money(subtotal, locale)}</span></div>
           {priced.upsellDiscountCents > 0 && <div className="flex justify-between"><span className="text-mute">{d.discount}</span><span className="tabular-nums">{money(-priced.upsellDiscountCents, locale)}</span></div>}
