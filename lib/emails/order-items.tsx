@@ -1,6 +1,7 @@
 import { Column, Img, Row, Section, Text } from '@react-email/components'
 import type { Locale } from '../routes'
 import { t } from '../dict'
+import { invoiceDiscountLines } from '../invoice-lines'
 import { money } from '../money'
 import type { OrderItem } from '../types'
 import { absImageUrl } from './util'
@@ -9,16 +10,23 @@ export function OrderItemsTable({
   items,
   shippingCents,
   discountCents = 0,
+  upsellDiscountCents = 0,
+  promoDiscountCents = 0,
+  promoCode,
   totalCents,
   locale,
 }: {
   items: OrderItem[]
   shippingCents: number
   discountCents?: number
+  upsellDiscountCents?: number
+  promoDiscountCents?: number
+  promoCode?: string | null
   totalCents: number
   locale: Locale
 }) {
   const d = t(locale)
+  const discounts = invoiceDiscountLines({ discountCents, upsellDiscountCents, promoDiscountCents, promoCode })
   return (
     <Section style={{ marginTop: 20 }}>
       <Text style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: '#d6d3d1', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -45,17 +53,17 @@ export function OrderItemsTable({
           </Row>
         )
       })}
-      {discountCents > 0 && (
-        <Row style={{ borderTop: '1px solid #2a2a2a', paddingTop: 10, marginTop: 4 }}>
+      {discounts.map((line) => (
+        <Row key={line.labelHr} style={{ borderTop: '1px solid #2a2a2a', paddingTop: 10, marginTop: 4 }}>
           <Column>
-            <Text style={{ margin: 0, color: '#a8a29e' }}>{d.discount}</Text>
+            <Text style={{ margin: 0, color: '#a8a29e' }}>{locale === 'en' ? line.labelEn : line.labelHr}</Text>
           </Column>
           <Column align="right">
-            <Text style={{ margin: 0, color: '#e8e4df' }}>{money(-discountCents, locale)}</Text>
+            <Text style={{ margin: 0, color: '#e8e4df' }}>{money(line.unitCents, locale)}</Text>
           </Column>
         </Row>
-      )}
-      <Row style={{ borderTop: discountCents > 0 ? undefined : '1px solid #2a2a2a', paddingTop: 10, marginTop: 4 }}>
+      ))}
+      <Row style={{ borderTop: discounts.length ? undefined : '1px solid #2a2a2a', paddingTop: 10, marginTop: 4 }}>
         <Column>
           <Text style={{ margin: 0, color: '#a8a29e' }}>{d.mailShipping}</Text>
         </Column>

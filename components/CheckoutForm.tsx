@@ -5,8 +5,8 @@ import { useActionState, useRef, useState } from 'react'
 import { useCart } from './CartProvider'
 import { UpsellPopup, type UpsellProduct } from './UpsellPopup'
 import { Field } from './Ui'
-import { startCheckout } from '@/app/actions'
-import { UPSELL_SEEN_KEY, UPSELL_SUBTOTAL_LIMIT_CENTS } from '@/lib/commerce'
+import { lookupPromo, startCheckout } from '@/app/actions'
+import { priceOrder, UPSELL_SEEN_KEY, UPSELL_SUBTOTAL_LIMIT_CENTS } from '@/lib/commerce'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
@@ -23,14 +23,20 @@ type Props = {
 
 export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, delivery, upsellProducts }: Props) {
   const d = t(locale)
-  const { items, subtotal, discount, add, upsell } = useCart()
+  const { items, subtotal, count, discount, add, upsell } = useCart()
   const [country, setCountry] = useState(defaults.country || 'HR')
   const [state, action, pending] = useActionState(startCheckout, null)
   const [popup, setPopup] = useState(false)
   const [offerDiscount, setOfferDiscount] = useState(false)
+  const [promoInput, setPromoInput] = useState('')
+  const [promo, setPromo] = useState<{ code: string; percent: number } | null>(null)
+  const [promoError, setPromoError] = useState('')
+  const [promoPending, setPromoPending] = useState(false)
   const seen = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
-  const shipping = country === 'HR' ? (subtotal >= ship.freeThresholdCents ? 0 : ship.shippingCents) : ship.euShippingCents
+  const activePromo = promo && promo.code === promoInput.trim().toUpperCase().replace(/\s+/g, '') ? promo : null
+  const priced = priceOrder(subtotal, count, upsell, country, ship, activePromo?.percent ?? 0)
+  const shipping = priced.shippingCents
   const cart = JSON.stringify(items.map((i) => ({ id: i.id, vi: i.vi, qty: i.qty })))
   const offers = (() => {
     const others = upsellProducts.filter((p) => !items.some((i) => i.id === p.id))
@@ -111,13 +117,50 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
             </li>
           ))}
         </ul>
+        <div>
+          <label className="label" htmlFor="promo">{d.promoLabel}</label>
+          <div className="mt-1.5 flex gap-2">
+            <input
+              id="promo"
+              name="promo"
+              value={promoInput}
+              onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError('') }}
+              className="input min-w-0 flex-1 font-mono"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={32}
+              placeholder="FC-XXXXXX"
+            />
+            <button
+              type="button"
+              className="btn-ghost btn-sm shrink-0 px-3"
+              disabled={promoPending || !promoInput.trim()}
+              onClick={async () => {
+                setPromoPending(true)
+                setPromoError('')
+                try {
+                  const res = await lookupPromo(promoInput, locale)
+                  if (!res.ok) { setPromo(null); setPromoError(res.error); return }
+                  setPromo({ code: res.code, percent: res.percent })
+                  setPromoInput(res.code)
+                } finally {
+                  setPromoPending(false)
+                }
+              }}
+            >{promoPending ? '…' : d.promoApply}</button>
+          </div>
+          {promoError && <p role="alert" className="mt-1.5 text-xs text-red-400">{promoError}</p>}
+          {activePromo && !promoError && <p className="mt-1.5 text-xs text-mute">{d.promoApplied}</p>}
+        </div>
         <div className="space-y-2 border-t border-line pt-4 text-sm">
           <div className="flex justify-between"><span className="text-mute">{d.subtotal}</span><span className="tabular-nums">{money(subtotal, locale)}</span></div>
-          {discount > 0 && <div className="flex justify-between"><span className="text-mute">{d.discount}</span><span className="tabular-nums">{money(-discount, locale)}</span></div>}
+          {priced.upsellDiscountCents > 0 && <div className="flex justify-between"><span className="text-mute">{d.discount}</span><span className="tabular-nums">{money(-priced.upsellDiscountCents, locale)}</span></div>}
+          {priced.promoDiscountCents > 0 && <div className="flex justify-between"><span className="text-mute">{d.promoDiscount}{activePromo ? ` ${activePromo.code}` : ''}</span><span className="tabular-nums">{money(-priced.promoDiscountCents, locale)}</span></div>}
+          {priced.upsellDiscountCents === 0 && priced.promoDiscountCents === 0 && discount > 0 && <div className="flex justify-between"><span className="text-mute">{d.discount}</span><span className="tabular-nums">{money(-discount, locale)}</span></div>}
           <div className="flex justify-between"><span className="text-mute">{d.shipping}</span><span className="tabular-nums">{shipping ? money(shipping, locale) : d.free}</span></div>
           <p className="text-xs text-mute">{d.deliveryTime}: {delivery}</p>
         </div>
-        <div className="flex justify-between border-t border-line pt-4 text-base font-medium"><span>{d.total}</span><span className="tabular-nums">{money(subtotal - discount + shipping, locale)}</span></div>
+        <div className="flex justify-between border-t border-line pt-4 text-base font-medium"><span>{d.total}</span><span className="tabular-nums">{money(priced.totalCents, locale)}</span></div>
         <label className="flex gap-3 text-xs leading-relaxed text-bone/75">
           <input type="checkbox" name="terms" required className="mt-0.5 size-4 shrink-0 accent-[#d08a2e]" />
           <span>

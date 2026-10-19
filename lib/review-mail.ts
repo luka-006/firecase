@@ -1,6 +1,7 @@
 import 'server-only'
 import { SITE_URL } from './config'
 import { sql } from './db'
+import { issueReviewCode } from './discount-codes'
 import { sendReviewRequest } from './mail'
 import { href, type Locale } from './routes'
 import { signReviewToken } from './auth'
@@ -17,7 +18,8 @@ export async function reviewPathForOrder(orderId: number, locale: Locale) {
 export async function sendReviewRequestEmail(order: Order): Promise<SendMailResult> {
   const locale: Locale = order.locale === 'en' ? 'en' : 'hr'
   const path = await reviewPathForOrder(order.id, locale)
-  return sendReviewRequest(order, `${SITE_URL}${path}`)
+  const promo = await issueReviewCode(order)
+  return sendReviewRequest(order, `${SITE_URL}${path}`, promo.code)
 }
 
 /** Ručno iz admina (i prije 14 dana). Uspjeh se pamti da cron ne pošalje drugi put. */

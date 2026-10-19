@@ -5,6 +5,7 @@ import { PDFDocument, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
 import QRCode from 'qrcode'
 import { SELLER, SITE_URL } from '../config'
+import { invoiceDiscountLines } from '../invoice-lines'
 import { money, zagrebParts } from '../money'
 import type { Invoice } from '../types'
 
@@ -113,7 +114,9 @@ export async function renderInvoicePdf(inv: Invoice): Promise<Uint8Array> {
     row(i.variant ? `${i.name} (${i.variant})` : i.name, String(i.qty), money(i.unitCents), money(i.totalCents))
   }
   row(L('Dostava', 'Shipping'), '1', money(d.shippingCents), money(d.shippingCents))
-  if (d.discountCents > 0) row(L('Popust 10%', 'Discount 10%'), '1', money(-d.discountCents), money(-d.discountCents))
+  for (const line of invoiceDiscountLines(d)) {
+    row(L(line.labelHr, line.labelEn), '1', money(line.unitCents), money(line.unitCents))
+  }
   y -= 10
   hline(y)
   y -= 22

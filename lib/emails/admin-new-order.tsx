@@ -14,6 +14,9 @@ export function AdminNewOrderEmail({ order }: { order: Order }) {
         items={order.items}
         shippingCents={order.shippingCents}
         discountCents={order.discountCents || 0}
+        upsellDiscountCents={order.upsellDiscountCents || 0}
+        promoDiscountCents={order.promoDiscountCents || 0}
+        promoCode={order.promoCode}
         totalCents={order.totalCents}
         locale="hr"
       />

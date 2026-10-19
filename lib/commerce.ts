@@ -14,6 +14,17 @@ export function discountCentsFor(subtotalCents: number, qty: number, upsell: boo
   return Math.min(subtotalCents, Math.round(subtotalCents * 0.1))
 }
 
+/** Percent off the product subtotal. Shipping is never included. */
+export function promoCentsFor(subtotalCents: number, percent: number) {
+  if (percent <= 0 || subtotalCents <= 0) return 0
+  return Math.min(subtotalCents, Math.round(subtotalCents * percent / 100))
+}
+
+/** Stripe allows one coupon. Both discounts share it; the name stays within 40 characters. */
+export function stripeCouponName(labels: string[], fallback: string) {
+  return labels.filter(Boolean).join(' + ').slice(0, 40) || fallback
+}
+
 export function hrShippingCents(
   subtotalCents: number,
   shippingCents: number,
@@ -28,10 +39,17 @@ export function priceOrder(
   upsell: boolean,
   country: string,
   settings: { shippingCents: number; freeThresholdCents: number; euShippingCents: number },
+  promoPercent = 0,
 ) {
-  const discountCents = discountCentsFor(subtotalCents, qty, upsell)
+  const upsellDiscountCents = discountCentsFor(subtotalCents, qty, upsell)
+  let promoDiscountCents = promoCentsFor(subtotalCents, promoPercent)
+  if (upsellDiscountCents + promoDiscountCents > subtotalCents) {
+    promoDiscountCents = Math.max(0, subtotalCents - upsellDiscountCents)
+  }
+  const discountCents = upsellDiscountCents + promoDiscountCents
+  const net = Math.max(0, subtotalCents - discountCents)
   const shippingCents = country === 'HR'
-    ? hrShippingCents(subtotalCents, settings.shippingCents, settings.freeThresholdCents)
+    ? hrShippingCents(net, settings.shippingCents, settings.freeThresholdCents)
     : settings.euShippingCents
-  return { discountCents, shippingCents, totalCents: subtotalCents - discountCents + shippingCents }
+  return { upsellDiscountCents, promoDiscountCents, discountCents, shippingCents, totalCents: net + shippingCents }
 }

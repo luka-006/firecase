@@ -7,7 +7,8 @@ import { sql } from '@/lib/db'
 import { clearUserSession, getUser, setUserSession } from '@/lib/auth'
 import { t } from '@/lib/dict'
 import { href, isLocale, type Locale } from '@/lib/routes'
-import { priceOrder } from '@/lib/commerce'
+import { priceOrder, stripeCouponName } from '@/lib/commerce'
+import { findPromo } from '@/lib/discount-codes'
 import { isOrderNumberConflict, randomOrderNumber } from '@/lib/order-number.mjs'
 import { getProductsByIds } from '@/lib/products'
 import { getSettingsFresh } from '@/lib/settings'
@@ -69,7 +70,12 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   }
   const subtotal = items.reduce((a, i) => a + i.unitCents * i.qty, 0)
   const qty = items.reduce((a, i) => a + i.qty, 0)
-  const priced = priceOrder(subtotal, qty, f.get('upsell') === '1', c.country, s)
+  const promoRaw = str(f, 'promo', 32)
+  const promo = promoRaw ? await findPromo(promoRaw) : null
+  if (promo && !promo.ok) {
+    return { error: promo.reason === 'used' ? d.errors.promoUsed : promo.reason === 'expired' ? d.errors.promoExpired : d.errors.promo }
+  }
+  const priced = priceOrder(subtotal, qty, f.get('upsell') === '1', c.country, s, promo?.ok ? promo.percent : 0)
   const discount = priced.discountCents
   const shipping = priced.shippingCents
   const total = priced.totalCents
@@ -91,6 +97,10 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       const [row] = await sql<{ id: number; orderNumber: number }[]>`insert into orders ${sql({
         publicId, orderNumber, userId: user?.id ?? null, ...c, items: sql.json(items as never),
         subtotalCents: subtotal, discountCents: discount, shippingCents: shipping, totalCents: total, locale,
+        discountCodeId: promo?.ok ? promo.id : null,
+        promoCode: promo?.ok ? promo.code : '',
+        promoDiscountCents: priced.promoDiscountCents,
+        upsellDiscountCents: priced.upsellDiscountCents,
       })} returning id, order_number`
       order = row
       break
@@ -126,7 +136,13 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
                   currency: 'eur',
                   duration: 'once',
                   max_redemptions: 1,
-                  name: d.discount,
+                  name: stripeCouponName(
+                    [
+                      priced.upsellDiscountCents > 0 ? d.discount : '',
+                      priced.promoDiscountCents > 0 ? (promo?.ok ? `${d.promoDiscount} ${promo.code}` : d.promoDiscount) : '',
+                    ],
+                    d.discount,
+                  ),
                 })
               ).id,
             }],
@@ -154,6 +170,16 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   }
   if (!url) return { error: d.errors.payments }
   redirect(url)
+}
+
+export async function lookupPromo(raw: string, localeRaw: string): Promise<{ ok: true; code: string; percent: number } | { ok: false; error: string }> {
+  const locale = isLocale(localeRaw) ? localeRaw : 'hr'
+  const d = t(locale)
+  const promo = await findPromo(raw)
+  if (!promo.ok) {
+    return { ok: false, error: promo.reason === 'used' ? d.errors.promoUsed : promo.reason === 'expired' ? d.errors.promoExpired : d.errors.promo }
+  }
+  return { ok: true, code: promo.code, percent: promo.percent }
 }
 
 // ---------- Korisnički račun ----------
