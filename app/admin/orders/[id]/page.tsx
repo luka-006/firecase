@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireAdmin, signReviewToken } from '@/lib/auth'
+import { codesForOrder } from '@/lib/discount-codes'
 import { sql } from '@/lib/db'
 import { getInvoicesForOrder } from '@/lib/invoice'
 import { money, formatDateTime } from '@/lib/money'
@@ -13,7 +14,7 @@ import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, ref
 import { ConfirmShipForm } from '@/components/admin/ConfirmShipForm'
 import { SupplierLink } from '@/components/SupplierLink'
 import { href } from '@/lib/routes'
-import type { Invoice, Order, Product } from '@/lib/types'
+import type { DiscountCode, Invoice, Order, Product } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,10 +38,12 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
   let o: Order | undefined
   let invoices: Invoice[] = []
   let products: Product[] = []
+  let codes: DiscountCode[] = []
   try {
     ;[o] = await sql<Order[]>`select * from orders where id = ${Number(id) || 0}`
     if (o) {
       invoices = await getInvoicesForOrder(o.id)
+      codes = [...(await codesForOrder(o.id))]
       const ids = [...new Set(o.items.map((i) => i.productId))]
       if (ids.length) products = [...(await sql<Product[]>`select * from products where id in ${sql(ids)}`)]
     }
@@ -141,6 +144,9 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                   <span className="font-mono tabular-nums">{money(i.unitCents * i.qty)}</span>
                 </li>
               ))}
+              {(o.upsellDiscountCents || 0) > 0 && <li className="flex justify-between py-2.5 text-mute"><span>Popust 10%</span><span className="font-mono">{money(-(o.upsellDiscountCents || 0))}</span></li>}
+              {(o.promoDiscountCents || 0) > 0 && <li className="flex justify-between py-2.5 text-mute"><span>Popust 5%{o.promoCode ? ` (${o.promoCode})` : ''}</span><span className="font-mono">{money(-(o.promoDiscountCents || 0))}</span></li>}
+              {!(o.upsellDiscountCents || o.promoDiscountCents) && o.discountCents > 0 && <li className="flex justify-between py-2.5 text-mute"><span>Popust</span><span className="font-mono">{money(-o.discountCents)}</span></li>}
               <li className="flex justify-between py-2.5 text-mute"><span>Dostava</span><span className="font-mono">{money(o.shippingCents)}</span></li>
               <li className="flex justify-between py-2.5 font-medium"><span>Kupac platio</span><span className="font-mono">{money(o.totalCents)}</span></li>
             </ul>
@@ -192,6 +198,23 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
               ) : o.confirmationEmailSentAt ? (
                 <p className="text-mute">Poslan: {formatDateTime(o.confirmationEmailSentAt)}</p>
               ) : null}
+            </section>
+          )}
+
+          {codes.length > 0 && (
+            <section className="card space-y-2 p-5 text-sm">
+              <h2 className="font-medium">Kodovi za popust</h2>
+              {codes.map((c) => (
+                <p key={c.id} className="text-xs leading-relaxed text-mute">
+                  <span className="font-mono text-bone">{c.code}</span>
+                  {' · '}{c.percent}%
+                  {c.issuedOrderId === o.id ? ' · izdan uz ovu narudžbu' : ''}
+                  {c.usedOrderId === o.id ? ' · iskorišten na ovoj narudžbi' : ''}
+                  {c.usedAt ? ` · iskorišten ${formatDateTime(c.usedAt)}` : ' · nije iskorišten'}
+                  {' · '}vrijedi do {formatDateTime(c.expiresAt)}
+                  {c.email ? ` · ${c.email}` : ''}
+                </p>
+              ))}
             </section>
           )}
 

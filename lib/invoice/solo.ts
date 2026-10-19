@@ -1,4 +1,5 @@
 import 'server-only'
+import { invoiceDiscountLines } from '../invoice-lines'
 import type { InvoiceData, Order } from '../types'
 import { SoloHourlyLimit, isSoloAuthError } from './retry-policy'
 
@@ -91,12 +92,11 @@ export function buildSoloInvoiceBody(order: Order, data: InvoiceData) {
       unitCents: data.shippingCents,
     })
   }
-  const discountCents = data.discountCents || 0
-  if (discountCents > 0) {
+  for (const line of invoiceDiscountLines(data)) {
     lines.push({
-      desc: order.locale === 'en' ? 'Discount 10%' : 'Popust 10%',
+      desc: order.locale === 'en' ? line.labelEn : line.labelHr,
       qty: 1,
-      unitCents: -discountCents,
+      unitCents: line.unitCents,
     })
   }
 

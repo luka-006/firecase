@@ -4,6 +4,7 @@ import type Stripe from 'stripe'
 import { revalidateTag } from 'next/cache'
 import { sql } from './db'
 import { stripe } from './stripe'
+import { markPromoUsed } from './discount-codes'
 import { schedulePostPaymentForOrder } from './invoice/schedule'
 import { stornoOrderInvoice } from './invoice'
 import { sendAdminNewOrder } from './mail'
@@ -68,6 +69,10 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     order = existing
   }
 
+  if (order.discountCodeId) {
+    const marked = await markPromoUsed(order.discountCodeId, order.id)
+    if (!marked) console.error('[promo] kod je već iskorišten na drugoj narudžbi', order.id, order.discountCodeId)
+  }
   schedulePostPaymentForOrder(order)
   return order
 }

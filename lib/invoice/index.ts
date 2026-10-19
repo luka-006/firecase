@@ -31,6 +31,9 @@ function invoiceDataFromOrder(order: Order, storno?: Invoice): InvoiceData {
       }))
   const shippingCents = storno ? -storno.data.shippingCents : order.shippingCents
   const discountCents = storno ? -(storno.data.discountCents || 0) : order.discountCents || 0
+  const upsellDiscountCents = storno ? -(storno.data.upsellDiscountCents || 0) : order.upsellDiscountCents || 0
+  const promoDiscountCents = storno ? -(storno.data.promoDiscountCents || 0) : order.promoDiscountCents || 0
+  const promoCode = storno ? storno.data.promoCode : order.promoCode || ''
   const totalCents = storno ? -storno.totalCents : order.totalCents
   return {
     seller: { legalName: SELLER.legalName, address: SELLER.address, postal: SELLER.postal, city: SELLER.city, oib: SELLER.oib, email: SELLER.email },
@@ -38,6 +41,9 @@ function invoiceDataFromOrder(order: Order, storno?: Invoice): InvoiceData {
     items,
     shippingCents,
     discountCents,
+    upsellDiscountCents,
+    promoDiscountCents,
+    promoCode: promoCode || undefined,
     totalCents,
     paymentLabel: order.paymentMethod || 'Kartica',
     orderPublicId: order.publicId,

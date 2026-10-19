@@ -26,11 +26,11 @@ test('free shipping starts at 40 €', () => {
 
 test('checkout totals stay the same for Stripe and the invoice', () => {
   const under = priceOrder(3999, 2, true, 'HR', ship)
-  assert.deepEqual(under, { discountCents: 400, shippingCents: 499, totalCents: 3999 - 400 + 499 })
+  assert.deepEqual(under, { upsellDiscountCents: 400, promoDiscountCents: 0, discountCents: 400, shippingCents: 499, totalCents: 3999 - 400 + 499 })
 
   const exact = priceOrder(4000, 2, true, 'HR', ship)
-  assert.deepEqual(exact, { discountCents: 0, shippingCents: 0, totalCents: 4000 })
+  assert.deepEqual(exact, { upsellDiscountCents: 0, promoDiscountCents: 0, discountCents: 0, shippingCents: 0, totalCents: 4000 })
 
   const over = priceOrder(4500, 2, true, 'HR', ship)
-  assert.deepEqual(over, { discountCents: 0, shippingCents: 0, totalCents: 4500 })
+  assert.deepEqual(over, { upsellDiscountCents: 0, promoDiscountCents: 0, discountCents: 0, shippingCents: 0, totalCents: 4500 })
 })

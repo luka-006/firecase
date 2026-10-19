@@ -4,7 +4,7 @@ import type { Order } from '../types'
 import { EmailLayout, btn, heading, muted } from './layout'
 import { absImageUrl } from './util'
 
-export function ReviewRequestEmail({ order, url }: { order: Order; url: string }) {
+export function ReviewRequestEmail({ order, url, code }: { order: Order; url: string; code?: string }) {
   const l = order.locale === 'en' ? 'en' : 'hr'
   const d = t(l)
   const first = order.name.trim().split(/\s+/)[0]
@@ -41,6 +41,7 @@ export function ReviewRequestEmail({ order, url }: { order: Order; url: string }
           {d.mailReviewCta}
         </Button>
       </Section>
+      {code ? <Text style={{ color: '#e8e4df', margin: '22px 0 0' }}>{d.mailReviewPromo(code)}</Text> : null}
       <Text style={{ color: '#e8e4df', margin: '20px 0 0' }}>{d.mailOrderThanks}</Text>
     </EmailLayout>
   )

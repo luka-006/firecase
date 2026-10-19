@@ -70,9 +70,9 @@ export async function sendShipped(o: Order): Promise<SendMailResult> {
   )
 }
 
-export async function sendReviewRequest(o: Order, url: string): Promise<SendMailResult> {
+export async function sendReviewRequest(o: Order, url: string, code: string): Promise<SendMailResult> {
   const d = t(o.locale === 'en' ? 'en' : 'hr')
-  return sendRendered(o.email, d.mailReviewSubject, <ReviewRequestEmail order={o} url={url} />)
+  return sendRendered(o.email, d.mailReviewSubject, <ReviewRequestEmail order={o} url={url} code={code} />)
 }
 
 export async function sendRefunded(

@@ -108,6 +108,12 @@ export type Order = {
   items: OrderItem[]
   subtotalCents: number
   discountCents: number
+  /** 10% extra-case discount, separate from a promo code. */
+  upsellDiscountCents?: number
+  /** 5% review code, separate from the upsell discount. */
+  promoDiscountCents?: number
+  promoCode?: string | null
+  discountCodeId?: number | null
   shippingCents: number
   totalCents: number
   locale: Locale
@@ -150,12 +156,28 @@ export type Review = {
   moderatedAt: Date | null
 }
 
+export type DiscountCode = {
+  id: number
+  code: string
+  percent: number
+  email: string
+  issuedOrderId: number | null
+  singleUse: boolean
+  expiresAt: Date
+  createdAt: Date
+  usedAt: Date | null
+  usedOrderId: number | null
+}
+
 export type InvoiceData = {
   seller: { legalName: string; address: string; postal: string; city: string; oib: string; email: string }
   buyer: { name: string; email: string; address: string; postal: string; city: string; country: string }
   items: { name: string; variant?: string; qty: number; unitCents: number; totalCents: number }[]
   shippingCents: number
   discountCents: number
+  upsellDiscountCents?: number
+  promoDiscountCents?: number
+  promoCode?: string
   totalCents: number
   paymentLabel: string
   orderPublicId: string
