@@ -24,6 +24,21 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          // Report-Only: Next inline scripts, Turnstile, GA (after consent) and Vercel Analytics must stay allowed before this is enforced.
+          { key: 'Content-Security-Policy-Report-Only', value: [
+            "default-src 'self'",
+            "base-uri 'self'",
+            "object-src 'none'",
+            "frame-ancestors 'none'",
+            "form-action 'self'",
+            "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://www.googletagmanager.com https://va.vercel-scripts.com https://vercel.live",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com https://vercel.live https://vercel.com",
+            "font-src 'self' data:",
+            "connect-src 'self' https://challenges.cloudflare.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://vitals.vercel-insights.com https://va.vercel-scripts.com https://vercel.live",
+            "frame-src https://challenges.cloudflare.com https://vercel.live",
+            "worker-src 'self' blob:",
+          ].join('; ') },
         ],
       },
     ]

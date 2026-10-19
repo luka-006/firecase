@@ -114,6 +114,7 @@ export type Order = {
   promoDiscountCents?: number
   promoCode?: string | null
   discountCodeId?: number | null
+  promoWarning?: string | null
   shippingCents: number
   totalCents: number
   locale: Locale
@@ -167,6 +168,8 @@ export type DiscountCode = {
   createdAt: Date
   usedAt: Date | null
   usedOrderId: number | null
+  reservedOrderId?: number | null
+  reservedUntil?: Date | null
 }
 
 export type InvoiceData = {

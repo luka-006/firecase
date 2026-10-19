@@ -47,6 +47,8 @@ export function toInternal(pathname: string): string {
     locale = 'en'
     parts.shift()
   }
+  // SSR ponekad vidi već prepisanu internu putanju (/hr/product/...), a hr nije javni prefiks.
+  if (parts[0] === 'hr') parts.shift()
   if (parts.length === 0) return `/${locale}`
   const route = Object.values(ROUTES).find((r) => r[locale] !== '' && r[locale] === parts[0])
   if (!route) return `/${locale}/${parts.join('/')}`

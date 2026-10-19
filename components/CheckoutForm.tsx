@@ -71,6 +71,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="cart" value={cart} />
       <input type="hidden" name="upsell" value={upsell ? '1' : '0'} />
+      <input type="hidden" name="promo" value={activePromo?.code ?? ''} />
       <div className="space-y-10">
         <fieldset className="space-y-4">
           <legend className="h-display mb-6 text-xl"><span className="idx mr-3 align-top">01</span>{d.contactDetails}</legend>
@@ -123,7 +124,6 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
           <div className="mt-1.5 flex gap-2">
             <input
               id="promo"
-              name="promo"
               value={promoInput}
               onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError('') }}
               className="input min-w-0 flex-1 font-mono"
@@ -166,7 +166,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
         <label className="flex gap-3 text-xs leading-relaxed text-bone/75">
           <input type="checkbox" name="terms" required className="mt-0.5 size-4 shrink-0 accent-[#d08a2e]" />
           <span>
-            {d.acceptTermsPre}<Link href={href(locale, 'terms')} target="_blank" className="link">{d.terms}</Link>{d.acceptTermsMid}
+            {d.acceptTermsPre}<Link href={href(locale, 'terms')} target="_blank" className="link">{d.termsAccusative}</Link>{d.acceptTermsMid}
             <Link href={href(locale, 'returns')} target="_blank" className="link">{d.withdrawalInfo}</Link>{d.acceptTermsPost}
           </span>
         </label>

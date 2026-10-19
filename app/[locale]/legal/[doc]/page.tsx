@@ -7,6 +7,7 @@ import { t } from '@/lib/dict'
 import { LEGAL, LEGAL_DOCS, type LegalDoc } from '@/lib/legal'
 import { getSettings } from '@/lib/settings'
 import { href, LOCALES, type Locale, type RouteKey } from '@/lib/routes'
+import { contactMetaDescription } from '@/lib/seo'
 
 export const revalidate = 300
 export function generateStaticParams() {
@@ -20,7 +21,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const d = LEGAL[locale as Locale]?.[doc as LegalDoc]
   if (!d) return {}
   const key = doc as RouteKey
-  return { title: d.title, alternates: { canonical: href(locale as Locale, key), languages: { hr: href('hr', key), en: href('en', key) } } }
+  const l = locale as Locale
+  return {
+    title: d.title,
+    description: doc === 'contact' ? contactMetaDescription(l) : undefined,
+    alternates: { canonical: href(l, key), languages: { hr: href('hr', key), en: href('en', key) } },
+  }
 }
 
 export default async function LegalPage({ params }: Props) {

@@ -201,9 +201,10 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
             </section>
           )}
 
-          {codes.length > 0 && (
+          {(codes.length > 0 || o.promoWarning) && (
             <section className="card space-y-2 p-5 text-sm">
               <h2 className="font-medium">Kodovi za popust</h2>
+              {o.promoWarning && <p className="text-xs text-red-300">{o.promoWarning}</p>}
               {codes.map((c) => (
                 <p key={c.id} className="text-xs leading-relaxed text-mute">
                   <span className="font-mono text-bone">{c.code}</span>
@@ -211,6 +212,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                   {c.issuedOrderId === o.id ? ' · izdan uz ovu narudžbu' : ''}
                   {c.usedOrderId === o.id ? ' · iskorišten na ovoj narudžbi' : ''}
                   {c.usedAt ? ` · iskorišten ${formatDateTime(c.usedAt)}` : ' · nije iskorišten'}
+                  {c.reservedOrderId && c.reservedUntil ? ` · rezerviran do ${formatDateTime(c.reservedUntil)} (#${c.reservedOrderId})` : ''}
                   {' · '}vrijedi do {formatDateTime(c.expiresAt)}
                   {c.email ? ` · ${c.email}` : ''}
                 </p>

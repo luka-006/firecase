@@ -119,6 +119,7 @@ const hr: Record<LegalDoc, Doc> = {
         <h2>4. Primatelji podataka</h2>
         <ul>
           <li>Vercel Inc., SAD – hosting stranice i anonimna statistika posjeta.</li>
+          <li>Cloudflare, Inc., SAD – zaštita od robota (Turnstile) i usmjeravanje e-pošte za info@firecase.net.</li>
           <li>Neon Inc. – baza podataka (podaci pohranjeni u EU).</li>
           <li>Stripe Payments Europe Ltd., Irska – obrada plaćanja; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luksemburg – ako plaćate PayPalom.</li>
           <li>Resend Inc. (SAD) – slanje transakcijskih e-mailova (potvrde narudžbi, obavijesti o slanju, računi u privitku).</li>
@@ -336,6 +337,7 @@ const en: Record<LegalDoc, Doc> = {
         <h2>4. Recipients</h2>
         <ul>
           <li>Vercel Inc., USA – website hosting and anonymous statistics.</li>
+          <li>Cloudflare, Inc., USA – bot protection (Turnstile) and email routing for info@firecase.net.</li>
           <li>Neon Inc. – database (data stored in the EU).</li>
           <li>Stripe Payments Europe Ltd., Ireland – payment processing; PayPal (Europe) S.à r.l. et Cie, S.C.A., Luxembourg – if you pay with PayPal.</li>
           <li>Resend Inc. (USA) – transactional email (order confirmations, shipping notices, invoices as attachments).</li>
