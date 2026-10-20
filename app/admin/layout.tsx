@@ -17,11 +17,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <body className="min-h-svh">
         {admin && (
           <header className="sticky top-0 z-30 border-b border-line bg-ink/90 backdrop-blur">
-            <div className="container-x flex h-14 items-center gap-4 md:gap-6">
+            <div className="container-x flex h-14 min-w-0 items-center gap-2 md:gap-6">
               <Link href="/admin" className="flex shrink-0 items-center gap-2"><Image src="/logo-mark.svg" alt="" width={11} height={21} className="h-5 w-auto" /><span className="text-xs tracking-widest text-mute">ADMIN</span></Link>
               <AdminNav />
-              <div className="ml-auto flex shrink-0 items-center gap-4 text-sm">
-                <Link href="/" target="_blank" className="text-mute hover:text-bone">Stranica ↗</Link>
+              <div className="ml-auto flex shrink-0 items-center gap-3 text-sm">
+                <Link href="/" target="_blank" className="hidden text-mute hover:text-bone sm:inline">Stranica ↗</Link>
                 <form action={adminLogout}><button className="text-mute hover:text-bone">Odjava</button></form>
               </div>
             </div>

@@ -5,7 +5,8 @@ import { requireAdmin } from '@/lib/auth'
 import { getProposal } from '@/lib/proposals'
 import { money } from '@/lib/money'
 import { ActionForm } from '@/components/Ui'
-import { acceptProposal, rejectProposal } from '../../actions'
+import { PROPOSAL_STATUS_LABEL } from '@/lib/proposal-bucket'
+import { acceptProposal, rejectProposal, returnProposalToPending } from '../../actions'
 import { DbError } from '@/components/admin/DbError'
 import { SupplierLink } from '@/components/SupplierLink'
 
@@ -22,24 +23,34 @@ export default async function AdminProposalDetail({ params }: { params: Promise<
         <div className="flex flex-wrap items-center gap-3">
           <Link href="/admin/prijedlozi" className="text-sm text-mute hover:text-bone">← Prijedlozi</Link>
           <h1 className="h-display text-2xl">{p.nameHr || `Prijedlog #${p.id}`}</h1>
-          <span className="text-xs text-mute">#{p.id} · {p.status}</span>
+          <span className="text-xs text-mute">#{p.id} · {PROPOSAL_STATUS_LABEL[p.status] ?? p.status}</span>
         </div>
 
-        {p.status === 'review' && (
-          <div className="card flex flex-wrap gap-3 p-5">
-            <form action={acceptProposal}>
+        <div className="card flex flex-col gap-4 p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            {p.status !== 'accepted' && (
+              <form action={acceptProposal}>
+                <input type="hidden" name="id" value={p.id} />
+                <button className="btn btn-sm min-h-11 w-full touch-manipulation sm:w-auto">{p.productId ? 'Prihvati' : 'Prihvati (forma proizvoda)'}</button>
+              </form>
+            )}
+            {p.status !== 'review' && p.status !== 'draft' && (
+              <form action={returnProposalToPending}>
+                <input type="hidden" name="id" value={p.id} />
+                <button className="btn-ghost btn-sm min-h-11 w-full touch-manipulation sm:w-auto">Na čekanju</button>
+              </form>
+            )}
+          </div>
+          {p.status !== 'rejected' && (
+            <ActionForm action={rejectProposal} submit="Odbij" className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" danger>
               <input type="hidden" name="id" value={p.id} />
-              <button className="btn btn-sm">Prihvati (forma proizvoda)</button>
-            </form>
-            <ActionForm action={rejectProposal} submit="Odbij" className="flex flex-wrap items-end gap-3" danger>
-              <input type="hidden" name="id" value={p.id} />
-              <label className="block min-w-[280px] flex-1">
-                <span className="label">Razlog odbijanja</span>
-                <input name="reason" required className="input" placeholder="Kratko objašnjenje za staff" />
+              <label className="block w-full min-w-0 sm:min-w-64 sm:flex-1">
+                <span className="label">Razlog</span>
+                <input name="reason" required className="input text-base" style={{ fontSize: 16 }} placeholder="Razlog" />
               </label>
             </ActionForm>
-          </div>
-        )}
+          )}
+        </div>
 
         {p.productId && (
           <p className="text-sm">
