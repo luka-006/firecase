@@ -2,6 +2,7 @@ import type Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { fulfillCheckoutSession, handleChargeRefunded } from '@/lib/orders'
 import { releasePromoReservation } from '@/lib/discount-codes'
+import { adjustOrderStock } from '@/lib/stock-db'
 import { sql } from '@/lib/db'
 
 export const runtime = 'nodejs'
@@ -27,7 +28,8 @@ export async function POST(req: Request) {
       case 'checkout.session.expired': {
         const orderId = Number(event.data.object.metadata?.orderId) || 0
         await releasePromoReservation(orderId)
-        await sql`update orders set status = 'cancelled' where id = ${orderId} and status = 'pending'`
+        const [cancelled] = await sql<{ id: number }[]>`update orders set status = 'cancelled' where id = ${orderId} and status = 'pending' returning id`
+        if (cancelled) await adjustOrderStock(orderId, 'give')
         break
       }
       case 'charge.refunded':

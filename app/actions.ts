@@ -9,6 +9,7 @@ import { clearUserSession, getUser, setUserSession } from '@/lib/auth'
 import { t } from '@/lib/dict'
 import { href, isLocale, type Locale } from '@/lib/routes'
 import { priceOrder, stripeCouponName } from '@/lib/commerce'
+import { exceedsStock } from '@/lib/stock'
 import { clientIpFromHeaders } from '@/lib/client-ip'
 import { findPromo, releasePromoReservation, reservePromo } from '@/lib/discount-codes'
 import { checkRateLimit, hitRateLimit } from '@/lib/auth/rate-limit'
@@ -75,17 +76,22 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
 
   const products = await getProductsByIds([...new Set(cart.map((i) => i.id))])
   const items: OrderItem[] = []
+  for (const id of new Set(cart.map((line) => line.id))) {
+    const p = products.find((x) => x.id === id)
+    if (!p) return { error: d.errors.stock }
+    const lines = cart.filter((line) => line.id === id)
+    if (lines.some((line) => line.vi >= 0 && !p.variants[line.vi])) return { error: d.errors.stock }
+    if (exceedsStock(p, lines)) return { error: d.errors.stockQty }
+  }
   for (const line of cart) {
     const p = products.find((x) => x.id === line.id)
     if (!p) return { error: d.errors.stock }
-    const qtyInCart = cart.filter((x) => x.id === p.id).reduce((a, x) => a + x.qty, 0)
-    if (p.stock !== null && p.stock < qtyInCart) return { error: d.errors.stock }
     const v = line.vi >= 0 ? p.variants[line.vi] : undefined
-    if (line.vi >= 0 && !v) return { error: d.errors.stock }
     items.push({
       productId: p.id, slug: p.slug,
       name: locale === 'en' && p.nameEn ? p.nameEn : p.nameHr,
       variant: v ? (locale === 'en' && v.en ? v.en : v.hr) : '',
+      variantIndex: line.vi >= 0 ? line.vi : undefined,
       qty: line.qty, unitCents: p.priceCents, image: p.images[0],
       supplierUrl: p.supplierUrl || '', supplierOption: v?.sup ?? '', costCents: p.costCents ?? null,
     })

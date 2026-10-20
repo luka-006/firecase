@@ -8,6 +8,7 @@ import { ArrowIcon, CheckIcon, HeartIcon, MinusIcon, PlusIcon, XIcon } from './i
 import { favoriteState, toggleFavorite } from '@/app/actions'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
+import { isOptionSoldOut, optionStock } from '@/lib/stock'
 import type { Variant } from '@/lib/types'
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
@@ -159,16 +160,29 @@ function Lightbox({ images, index, go, onClose, alt }: { images: string[]; index
 
 type BuyProps = {
   locale: Locale
-  product: { id: number; slug: string; nameHr: string; nameEn: string; image: string; priceCents: number; variants: Variant[]; soldOut: boolean }
+  product: { id: number; slug: string; nameHr: string; nameEn: string; image: string; priceCents: number; variants: Variant[]; stock: number | null }
 }
 
 export function BuyBox({ locale, product }: BuyProps) {
-  const { add } = useCart()
+  const { add, items } = useCart()
   const d = t(locale)
-  const [vi, setVi] = useState(product.variants.length ? 0 : -1)
+  const stocked = { stock: product.stock, variants: product.variants }
+  const firstOpen = product.variants.findIndex((_, i) => !isOptionSoldOut(stocked, i))
+  const [vi, setVi] = useState(product.variants.length ? (firstOpen >= 0 ? firstOpen : 0) : -1)
   const [qty, setQty] = useState(1)
   const [done, setDone] = useState(false)
+  const tracked = optionStock(stocked, vi)
+  const inCart = items.find((i) => i.id === product.id && i.vi === vi)?.qty ?? 0
+  const room = tracked === null ? null : Math.max(0, tracked - inCart)
+  const cap = room === null ? 99 : room
+  const soldOut = tracked !== null && cap <= 0
+  const low = tracked !== null && tracked >= 1 && tracked <= 10
+  useEffect(() => {
+    if (cap <= 0) return
+    setQty((q) => Math.min(q, cap))
+  }, [cap])
   const onAdd = () => {
+    if (soldOut || qty < 1 || qty > cap) return
     const v = product.variants[vi]
     add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' }, qty)
     setDone(true)
@@ -176,16 +190,22 @@ export function BuyBox({ locale, product }: BuyProps) {
   }
   return (
     <div className="space-y-6">
+      {low && (
+        <p className="inline-flex max-w-full border border-flame/70 bg-ink/85 px-2 py-1 font-mono text-[10px] uppercase leading-tight tracking-[0.14em] text-flame">{d.lastPieces}</p>
+      )}
       {product.variants.length > 0 && (
         <div>
           <p className="label">{d.colour}</p>
           <div className="flex flex-wrap gap-2">
-            {product.variants.map((v, idx) => (
-              <button key={idx} onClick={() => setVi(idx)}
-                className={`border px-4 py-3 font-mono text-xs uppercase tracking-[0.1em] transition ${idx === vi ? 'border-flame bg-flame text-ink' : 'border-line text-bone/80 hover:border-bone/50'}`}>
-                {locale === 'en' && v.en ? v.en : v.hr}
-              </button>
-            ))}
+            {product.variants.map((v, idx) => {
+              const gone = isOptionSoldOut(stocked, idx)
+              return (
+                <button key={idx} onClick={() => setVi(idx)}
+                  className={`border px-4 py-3 font-mono text-xs uppercase tracking-[0.1em] transition ${idx === vi ? 'border-flame bg-flame text-ink' : gone ? 'border-line text-mute line-through' : 'border-line text-bone/80 hover:border-bone/50'}`}>
+                  {locale === 'en' && v.en ? v.en : v.hr}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
@@ -193,10 +213,10 @@ export function BuyBox({ locale, product }: BuyProps) {
         <div className="flex items-center rounded-none border border-line">
           <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="p-3.5 text-mute hover:text-bone" aria-label="-"><MinusIcon className="size-4" /></button>
           <span className="w-7 overflow-hidden text-center tabular-nums" aria-label={d.qty}><span key={qty} className="tick">{qty}</span></span>
-          <button onClick={() => setQty((q) => Math.min(99, q + 1))} className="p-3.5 text-mute hover:text-bone" aria-label="+"><PlusIcon className="size-4" /></button>
+          <button onClick={() => setQty((q) => Math.min(cap > 0 ? cap : q, q + 1))} disabled={cap <= 0 || qty >= cap} className="p-3.5 text-mute hover:text-bone disabled:opacity-40" aria-label="+"><PlusIcon className="size-4" /></button>
         </div>
-        <button onClick={onAdd} disabled={product.soldOut} className="btn flex-1">
-          {product.soldOut ? d.outOfStock : done ? (<span className="pop-in inline-flex items-center gap-2"><CheckIcon className="size-4" /> {d.added}</span>) : d.addToCart}
+        <button onClick={onAdd} disabled={soldOut} className="btn flex-1">
+          {soldOut ? d.outOfStock : done ? (<span className="pop-in inline-flex items-center gap-2"><CheckIcon className="size-4" /> {d.added}</span>) : d.addToCart}
         </button>
         <FavoriteButton locale={locale} productId={product.id} />
       </div>

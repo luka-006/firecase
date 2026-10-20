@@ -1,7 +1,7 @@
 import type { Locale } from './routes'
 
 // sup = opcija koju treba odabrati kod dobavljača
-export type Variant = { hr: string; en: string; sup?: string }
+export type Variant = { hr: string; en: string; sup?: string; stock?: number | null }
 
 export type ProposalStatus = 'draft' | 'review' | 'rejected' | 'accepted'
 
@@ -82,6 +82,7 @@ export type OrderItem = {
   slug: string
   name: string
   variant: string
+  variantIndex?: number
   qty: number
   unitCents: number
   image?: string

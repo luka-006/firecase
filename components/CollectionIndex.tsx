@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { ArrowIcon } from './icons'
 
-export type IndexItem = { slug: string; href: string; name: string; short: string; price: string; image: string; sizes: string }
+export type IndexItem = { slug: string; href: string; name: string; short: string; price: string; image: string; sizes: string; badge?: string }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -30,6 +30,7 @@ export function CollectionIndex({ items, note }: { items: IndexItem[]; note?: Re
               <span className="min-w-0">
                 <span className="h-display block text-lg leading-[1.05] [overflow-wrap:anywhere] transition-colors duration-300 group-hover:text-flame sm:text-2xl lg:text-[2.1rem]">{it.name}</span>
                 {it.short && <span className="mt-2 block truncate text-sm text-mute">{it.short}</span>}
+                {it.badge && <span className="mt-2 inline-block max-w-full border border-flame/70 bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase leading-tight tracking-[0.14em] text-flame sm:text-[10px]">{it.badge}</span>}
               </span>
               <span className="whitespace-nowrap text-right">
                 <span className="block font-mono text-sm tabular-nums lg:text-base">{it.price}</span>

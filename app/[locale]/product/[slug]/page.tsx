@@ -15,6 +15,7 @@ import { loc } from '@/lib/types'
 import { t } from '@/lib/dict'
 import { SITE_URL } from '@/lib/config'
 import { productMetaDescription } from '@/lib/seo'
+import { isSoldOut } from '@/lib/stock'
 
 export const revalidate = 300
 export function generateStaticParams() {
@@ -52,7 +53,7 @@ export default async function ProductPage({ params }: Props) {
   const d = t(locale)
   const related = all.filter((x) => x.id !== p.id).slice(0, 3)
   const name = loc(p, 'name', locale)
-  const soldOut = p.stock !== null && p.stock <= 0
+  const soldOut = isSoldOut(p)
   const desc = loc(p, 'desc', locale)
   const material = loc(p, 'material', locale)
   const safety = loc(p, 'safety', locale)
@@ -124,7 +125,7 @@ export default async function ProductPage({ params }: Props) {
           {p.compareCents && <p className="mt-1 text-xs text-mute">{d.lowest30}: {money(lowest, locale)}</p>}
           {loc(p, 'short', locale) && <p className="mt-6 leading-relaxed text-bone/70">{loc(p, 'short', locale)}</p>}
           <div className="mt-8">
-            <BuyBox locale={locale} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: p.variants, soldOut }} />
+            <BuyBox locale={locale} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: p.variants, stock: p.stock }} />
           </div>
           <div className="mt-8 grid gap-3 text-sm text-bone/75">
             <p className="flex items-center gap-3"><TruckIcon className="size-5 text-flame" />{d.deliveryTime}: {delivery} · {d.freeOver(euros(s.freeThresholdCents, locale))}</p>
