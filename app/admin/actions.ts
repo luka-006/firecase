@@ -12,7 +12,9 @@ import { deliverReviewRequest } from '@/lib/review-mail'
 import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
-import type { Invoice, Order, Variant } from '@/lib/types'
+import { getProposal, setProposalBucket } from '@/lib/proposals'
+import { isProposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
+import type { Invoice, Order, ProposalStatus, Variant } from '@/lib/types'
 import { parseVariantLine } from '@/lib/variants'
 
 type State = { error?: string; ok?: string } | null
@@ -142,22 +144,63 @@ export async function deleteProduct(f: FormData) {
 }
 
 // ---------- Prijedlozi proizvoda ----------
+function revalidateProposal(id: number) {
+  revalidatePath('/admin/prijedlozi')
+  revalidatePath(`/admin/prijedlozi/${id}`)
+  revalidatePath('/staff/proposals')
+  revalidatePath(`/staff/proposals/${id}`)
+  revalidatePath('/admin/products')
+}
+
+export async function moveProposalStatus(id: number, bucket: ProposalListBucket, reason?: string): Promise<
+  | { ok: true; status: ProposalStatus; productId: number | null }
+  | { ok: false; error: string }
+> {
+  await requireAdmin()
+  if (!Number.isInteger(id) || id <= 0 || !isProposalListBucket(bucket)) return { ok: false, error: 'Prijedlog ne postoji.' }
+  try {
+    const result = await setProposalBucket(id, bucket, reason)
+    if (result.created) refresh()
+    revalidateProposal(id)
+    if (result.productId) revalidatePath(`/admin/products/${result.productId}`)
+    return { ok: true, status: result.status, productId: result.productId }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
 export async function rejectProposal(_: State, f: FormData): Promise<State> {
   await requireAdmin()
   const id = Number(f.get('id'))
   const reason = str(f, 'reason', 2000)
-  if (!reason) return { error: 'Upišite razlog odbijanja.' }
-  await sql`
-    update product_proposals set status = 'rejected', reject_reason = ${reason}, updated_at = now()
-    where id = ${id} and status in ('review', 'draft')`
-  revalidatePath('/admin/prijedlozi')
-  revalidatePath(`/admin/prijedlozi/${id}`)
+  try {
+    await setProposalBucket(id, 'rejected', reason)
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+  revalidateProposal(id)
   return { ok: 'Prijedlog je odbijen.' }
+}
+
+export async function returnProposalToPending(f: FormData) {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  await setProposalBucket(id, 'pending')
+  revalidateProposal(id)
 }
 
 export async function acceptProposal(f: FormData) {
   await requireAdmin()
   const id = Number(f.get('id'))
+  const p = await getProposal(id)
+  if (!p) redirect('/admin/prijedlozi')
+  if (p.productId) {
+    const result = await setProposalBucket(id, 'accepted')
+    if (result.created) refresh()
+    revalidateProposal(id)
+    if (result.productId) revalidatePath(`/admin/products/${result.productId}`)
+    redirect(`/admin/prijedlozi/${id}`)
+  }
   redirect(`/admin/products/new?proposal=${id}`)
 }
 

@@ -58,12 +58,11 @@ export function proposalToProductDefaults(p: ProductProposal): Partial<Product> 
   }
 }
 
-/** Neobjavljeni proizvod iz prijedloga (bez prodajne cijene). */
-export async function createDraftProductFromProposal(p: ProductProposal) {
+async function insertDraftProduct(p: ProductProposal, slug: string) {
   const d = proposalToProductDefaults(p)
   const [row] = await sql<Product[]>`
     insert into products ${sql({
-      slug: d.slug!,
+      slug,
       nameHr: d.nameHr,
       nameEn: d.nameEn ?? '',
       shortHr: d.shortHr ?? '',
@@ -90,9 +89,71 @@ export async function createDraftProductFromProposal(p: ProductProposal) {
       proposalId: p.id,
     })} returning *`
   await sql`
-    update product_proposals set status = 'accepted', product_id = ${row.id}, updated_at = now()
+    update product_proposals set status = 'accepted', product_id = ${row.id}, reject_reason = null, updated_at = now()
     where id = ${p.id}`
   return row
+}
+
+/** Neobjavljeni proizvod iz prijedloga (bez prodajne cijene). */
+export async function createDraftProductFromProposal(p: ProductProposal) {
+  if (p.productId) {
+    const [existing] = await sql<Product[]>`select * from products where id = ${p.productId}`
+    if (existing) {
+      await sql`
+        update product_proposals set status = 'accepted', product_id = ${existing.id}, reject_reason = null, updated_at = now()
+        where id = ${p.id}`
+      return existing
+    }
+  }
+  const base = proposalToProductDefaults(p).slug || `prijedlog-${p.id}`
+  try {
+    return await insertDraftProduct(p, base)
+  } catch (e) {
+    if ((e as { code?: string }).code !== '23505') throw e
+    return insertDraftProduct(p, `${base.slice(0, 68)}-${p.id}`.slice(0, 80))
+  }
+}
+
+/**
+ * Premještaj između Na čekanju / Prihvaćeno / Odbijeno.
+ * Prihvat bez proizvoda i dalje otvara neobjavljeni proizvod.
+ * Odbijanje i dalje traži razlog. Proizvod se ne briše kad status ode s prihvaćenog.
+ */
+export async function setProposalBucket(id: number, bucket: 'pending' | 'accepted' | 'rejected', reason?: string) {
+  const p = await getProposal(id)
+  if (!p) throw new Error('Prijedlog ne postoji.')
+
+  if (bucket === 'rejected') {
+    const why = (reason ?? '').trim().slice(0, 2000)
+    if (!why) throw new Error('Upišite razlog odbijanja.')
+    await sql`
+      update product_proposals set status = 'rejected', reject_reason = ${why}, updated_at = now()
+      where id = ${id}`
+    return { status: 'rejected' as const, productId: p.productId, created: false }
+  }
+
+  if (bucket === 'pending') {
+    if (p.status === 'draft' || p.status === 'review') {
+      return { status: p.status, productId: p.productId, created: false }
+    }
+    await sql`
+      update product_proposals set status = 'review', reject_reason = null, updated_at = now()
+      where id = ${id}`
+    return { status: 'review' as const, productId: p.productId, created: false }
+  }
+
+  if (p.productId) {
+    const [existing] = await sql<Product[]>`select * from products where id = ${p.productId}`
+    if (existing) {
+      await sql`
+        update product_proposals set status = 'accepted', reject_reason = null, updated_at = now()
+        where id = ${id}`
+      return { status: 'accepted' as const, productId: existing.id, created: false }
+    }
+  }
+
+  const row = await createDraftProductFromProposal({ ...p, productId: null })
+  return { status: 'accepted' as const, productId: row.id, created: true }
 }
 
 export async function maybeAutoAcceptProposal(proposalId: number) {
