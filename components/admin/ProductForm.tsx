@@ -4,6 +4,7 @@ import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
 import { saveProduct, translateToEn } from '@/app/admin/actions'
 import { SupplierLink } from '@/components/SupplierLink'
 import type { Product } from '@/lib/types'
+import { formatVariantLine } from '@/lib/variants'
 
 // Smanji fotografiju u pregledniku (najviše 2000 px) da upload ostane ispod Vercelovog limita
 async function shrink(file: File): Promise<File> {
@@ -164,7 +165,7 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
         <In label="Cijena (€) *" name="price" defaultValue={base?.priceCents ? eur(base.priceCents) : ''} inputMode="decimal" required={!!(base?.active ?? false)} placeholder="14,99" hint={!base?.priceCents ? 'Obavezno prije objave (Vidljiv na stranici).' : undefined} />
         <In label="Stara cijena (€)" name="compare" defaultValue={eur(base?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
         <div className="md:col-span-2">
-          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(base?.variants ?? []).map((v) => [v.hr, v.en, v.sup].filter(Boolean).join(' | ')).join('\n')} hint="Jedna po retku: HR naziv | EN naziv | opcija dobavljača (neobavezno). Npr. BIC J6 (standardni) | BIC J6 (regular) | Black J6. Prazno = bez izbora." />
+          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(base?.variants ?? []).map((v) => formatVariantLine(v)).join('\n')} hint="Jedna po retku: HR naziv | EN naziv | opcija dobavljača | zaliha. Zaliha je neobavezna. Prazno = koristi zalihu proizvoda. Npr. Crna | Black | | 4" />
         </div>
         <div className="flex flex-wrap gap-6 text-sm md:col-span-2">
           <label className="flex items-center gap-3"><input type="checkbox" name="active" defaultChecked={base?.active ?? false} className="size-4 accent-[#d08a2e]" /> Vidljiv na stranici</label>
@@ -209,7 +210,7 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
       </Section>
 
       <Section title="Napredno" grid>
-        <In label="Zaliha" name="stock" defaultValue={base?.stock ?? ''} inputMode="numeric" hint="Prazno = neograničeno (dropshipping)." />
+        <In label="Zaliha" name="stock" defaultValue={base?.stock ?? ''} inputMode="numeric" hint="Prazno = neograničeno. 0 = rasprodano. 1–10 se ističe u trgovini." />
         <In label="Redoslijed" name="sort" defaultValue={base?.sort ?? 0} inputMode="numeric" hint="Manji broj = prikazuje se prije." />
         <In label="URL (slug)" name="slug" defaultValue={base?.slug} hint="Prazno = automatski iz naziva." />
         <In label="Šifra (SKU)" name="sku" defaultValue={base?.sku} />

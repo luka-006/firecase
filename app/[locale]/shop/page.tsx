@@ -4,6 +4,7 @@ import { ProductCard } from '@/components/ProductCard'
 import { getActiveProducts } from '@/lib/products'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
+import { withLowStockFirst } from '@/lib/stock'
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ sort?: string }> }
 
@@ -21,9 +22,10 @@ export default async function Shop({ params, searchParams }: Props) {
   const { sort } = await searchParams
   const d = t(locale)
   const all = await getActiveProducts()
-  let list = all
-  if (sort === 'asc') list = [...list].sort((a, b) => a.priceCents - b.priceCents)
-  if (sort === 'desc') list = [...list].sort((a, b) => b.priceCents - a.priceCents)
+  let list = [...all]
+  if (sort === 'asc') list.sort((a, b) => a.priceCents - b.priceCents)
+  if (sort === 'desc') list.sort((a, b) => b.priceCents - a.priceCents)
+  list = withLowStockFirst(list)
   const q = (s?: string) => href(locale, 'shop', undefined, s ? `sort=${s}` : undefined)
 
   return (

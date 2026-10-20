@@ -4,10 +4,12 @@ import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { loc, type Product } from '@/lib/types'
 import { t } from '@/lib/dict'
+import { isLowStock, isSoldOut } from '@/lib/stock'
 
 export function ProductCard({ p, locale, priority, delay = 0 }: { p: Product; locale: Locale; priority?: boolean; delay?: number }) {
   const d = t(locale)
-  const soldOut = p.stock !== null && p.stock <= 0
+  const soldOut = isSoldOut(p)
+  const low = !soldOut && isLowStock(p)
   const name = loc(p, 'name', locale)
   return (
     <Link href={href(locale, 'product', p.slug)} className="group block min-w-0" data-reveal style={{ ['--d' as string]: `${delay}ms` }}>
@@ -22,7 +24,8 @@ export function ProductCard({ p, locale, priority, delay = 0 }: { p: Product; lo
             <Image src={p.images[1]} alt="" fill sizes="(min-width:1024px) 30vw, 50vw" className="object-cover opacity-0 transition duration-700 group-hover:opacity-100" />
           )}
           </div>
-          {soldOut && <span className="absolute left-3 top-3 bg-black/80 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.outOfStock}</span>}
+          {soldOut && <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] bg-black/80 px-2 py-1 font-mono text-[9px] uppercase leading-tight tracking-[0.14em] text-mute sm:left-3 sm:top-3 sm:text-[10px]">{d.outOfStock}</span>}
+          {low && <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] border border-flame/70 bg-ink/85 px-1.5 py-1 font-mono text-[9px] uppercase leading-tight tracking-[0.14em] text-flame sm:left-3 sm:top-3 sm:px-2 sm:text-[10px]">{d.lastPieces}</span>}
         </div>
       </div>
       <div className="mt-4 flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">

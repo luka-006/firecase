@@ -1,13 +1,13 @@
 import 'server-only'
 import crypto from 'node:crypto'
 import type Stripe from 'stripe'
-import { revalidateTag } from 'next/cache'
 import { sql } from './db'
 import { stripe } from './stripe'
 import { markPromoUsed } from './discount-codes'
 import { schedulePostPaymentForOrder } from './invoice/schedule'
 import { stornoOrderInvoice } from './invoice'
 import { sendAdminNewOrder } from './mail'
+import { adjustOrderStock } from './stock-db'
 import type { Order } from './types'
 
 export const newPublicId = () => crypto.randomBytes(16).toString('base64url')
@@ -57,10 +57,6 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
 
   if (freshPaid) {
     order = freshPaid
-    for (const i of order.items) {
-      await sql`update products set stock = greatest(stock - ${i.qty}, 0) where id = ${i.productId} and stock is not null`
-    }
-    revalidateTag('products', 'max')
     const adminResult = await sendAdminNewOrder(order)
     if (!adminResult.ok) console.error('[mail] admin nova narudžba', order.id, adminResult.error)
   } else {
@@ -68,6 +64,8 @@ export async function fulfillCheckoutSession(session: Stripe.Checkout.Session) {
     if (!existing) return null
     order = existing
   }
+
+  await adjustOrderStock(order.id, 'take')
 
   if (order.discountCodeId) {
     const marked = await markPromoUsed(order.discountCodeId, order.id)
@@ -89,6 +87,7 @@ export async function handleChargeRefunded(charge: Stripe.Charge) {
 
   const [updated] = await sql<Order[]>`update orders set status = 'refunded' where id = ${order.id} and status in ('paid', 'shipped', 'delivered') returning *`
   if (!updated) return null
+  await adjustOrderStock(updated.id, 'give')
 
   const storno = await stornoOrderInvoice(updated)
   if (!storno.ok) console.error('[solo] storno nakon refunda', order.id, storno.error)

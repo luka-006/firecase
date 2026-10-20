@@ -6,12 +6,14 @@ import { sql } from '@/lib/db'
 import { clearAdminSession, isAdmin, requireAdmin, setAdminSession } from '@/lib/auth'
 import { stripe } from '@/lib/stripe'
 import { ensureOrderInvoice, getInvoicesForOrder, retryIssueInvoice, stornoOrderInvoice } from '@/lib/invoice'
+import { adjustOrderStock } from '@/lib/stock-db'
 import { sendRefunded, sendShipped } from '@/lib/mail'
 import { deliverReviewRequest } from '@/lib/review-mail'
 import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
 import type { Invoice, Order, Variant } from '@/lib/types'
+import { parseVariantLine } from '@/lib/variants'
 
 type State = { error?: string; ok?: string } | null
 const str = (f: FormData, k: string, max = 5000) => String(f.get(k) ?? '').trim().slice(0, max)
@@ -90,8 +92,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   if (compare !== null && compare <= price) return { error: 'Stara cijena mora biti veća od nove (ili ostavi prazno).' }
   let images: string[] = []
   try { images = JSON.parse(str(f, 'images') || '[]') } catch {}
-  const variants: Variant[] = str(f, 'variants').split('\n').map((l) => l.trim()).filter(Boolean)
-    .map((l) => { const [hr, en, sup] = l.split('|').map((x) => x.trim()); return sup ? { hr, en: en || hr, sup } : { hr, en: en || hr } })
+  const variants: Variant[] = str(f, 'variants').split('\n').map((l) => parseVariantLine(l)).filter((v): v is Variant => !!v)
   const stockRaw = str(f, 'stock')
   const proposalId = Number(f.get('proposalId')) || null
   const data = {
@@ -238,7 +239,8 @@ export async function markDelivered(f: FormData) {
 
 export async function cancelPending(f: FormData) {
   const o = await orderOf(f)
-  await sql`update orders set status = 'cancelled' where id = ${o.id} and status = 'pending'`
+  const [cancelled] = await sql<{ id: number }[]>`update orders set status = 'cancelled' where id = ${o.id} and status = 'pending' returning id`
+  if (cancelled) await adjustOrderStock(o.id, 'give')
   revalidatePath(`/admin/orders/${o.id}`)
 }
 
@@ -253,6 +255,7 @@ export async function refundOrder(_: State, f: FormData): Promise<State> {
     return { error: `Stripe: ${(e as Error).message}` }
   }
   const [u] = await sql<Order[]>`update orders set status = 'refunded' where id = ${o.id} returning *`
+  await adjustOrderStock(u.id, 'give')
   const storno = await stornoOrderInvoice(u)
   const mail = await sendRefunded(u)
   if (!mail.ok) console.error('[mail] povrat novca', o.id, mail.error)
