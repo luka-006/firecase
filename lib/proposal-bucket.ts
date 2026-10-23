@@ -25,3 +25,16 @@ export function proposalListBucket(status: string): ProposalListBucket {
 export function isProposalListBucket(value: string): value is ProposalListBucket {
   return value === 'pending' || value === 'accepted' || value === 'rejected'
 }
+
+/** Skica i pregled (Na čekanju). Prihvaćeno i odbijeno se ne brišu. */
+export function isDeletableProposalStatus(status: string): boolean {
+  return status === 'draft' || status === 'review'
+}
+
+/** Pozitivan int4 iz `?id=`. Odbija prazno, predznak, razmake i decimalni zapis. */
+export function parseProposalId(raw: string | null): number | null {
+  if (raw == null || !/^[1-9]\d*$/.test(raw)) return null
+  const id = Number(raw)
+  if (!Number.isSafeInteger(id) || id > 2_147_483_647) return null
+  return id
+}
