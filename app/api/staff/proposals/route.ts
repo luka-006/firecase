@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { staffApiAuthorized } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { maybeAutoAcceptProposal } from '@/lib/proposals'
+import { parseProposalId } from '@/lib/proposal-bucket'
+import { deleteOpenProposal, maybeAutoAcceptProposal } from '@/lib/proposals'
 import { proposalCreateSchema, proposalPatchSchema } from '@/lib/staff/proposal-schema'
 import type { ProductProposal } from '@/lib/types'
 
@@ -96,4 +97,15 @@ export async function PATCH(req: Request) {
     update product_proposals set ${sql(patch)}, updated_at = now() where id = ${id} returning *`
   if (row.status === 'review') await maybeAutoAcceptProposal(row.id)
   return Response.json({ proposal: row })
+}
+
+export async function DELETE(req: Request) {
+  if (!staffApiAuthorized(req)) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  const id = parseProposalId(new URL(req.url).searchParams.get('id'))
+  if (id == null) return Response.json({ error: 'Invalid id' }, { status: 400 })
+  const result = await deleteOpenProposal(id)
+  if (result.ok) return Response.json({ ok: true, id: result.id })
+  if (result.error === 'not_found') return Response.json({ error: 'Not found' }, { status: 404 })
+  if (result.error === 'linked') return Response.json({ error: 'Proposal is linked to a product' }, { status: 409 })
+  return Response.json({ error: 'Only draft or review proposals can be deleted' }, { status: 409 })
 }

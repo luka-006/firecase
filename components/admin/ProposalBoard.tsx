@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { moveProposalStatus } from '@/app/admin/actions'
+import { deletePendingProposal, moveProposalStatus } from '@/app/admin/actions'
 import { PROPOSAL_LIST_TABS, proposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
 import type { ProposalStatus } from '@/lib/types'
 
@@ -31,6 +31,7 @@ export function ProposalBoard({ items: initial }: { items: ProposalListItem[] })
   const [phase, setPhase] = useState<Phase | null>(null)
   const [arrivedId, setArrivedId] = useState<number | null>(null)
   const [rejectFor, setRejectFor] = useState<number | null>(null)
+  const [deleteFor, setDeleteFor] = useState<number | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<{ id: number; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -43,7 +44,10 @@ export function ProposalBoard({ items: initial }: { items: ProposalListItem[] })
     if (!animating.current) setItems(initial)
   }, [initial])
 
-  useEffect(() => () => { mounted.current = false }, [])
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false }
+  }, [])
 
   function selectTab(next: ProposalListBucket, focus = false) {
     tabRef.current = next
@@ -113,6 +117,27 @@ export function ProposalBoard({ items: initial }: { items: ProposalListItem[] })
     window.setTimeout(() => {
       if (mounted.current) setArrivedId((cur) => (cur === item.id ? null : cur))
     }, 450)
+  }
+
+  async function remove(item: ProposalListItem) {
+    if (busy || animating.current) return
+    setBusy(true)
+    setError(null)
+    try {
+      const result = await deletePendingProposal(item.id)
+      if (!mounted.current) return
+      if (!result.ok) {
+        setError({ id: item.id, text: result.error })
+        return
+      }
+      setItems((prev) => prev.filter((row) => row.id !== item.id))
+      setDeleteFor(null)
+    } catch {
+      if (!mounted.current) return
+      setError({ id: item.id, text: 'Brisanje nije uspjelo.' })
+    } finally {
+      if (mounted.current) setBusy(false)
+    }
   }
 
   const counts = {
@@ -214,16 +239,25 @@ export function ProposalBoard({ items: initial }: { items: ProposalListItem[] })
                         <button type="button" className="btn-ghost btn-sm min-h-11 touch-manipulation" onClick={() => { setRejectFor(null); setError(null) }}>Odustani</button>
                         <button type="submit" className="btn btn-sm min-h-11 touch-manipulation" disabled={busy}>Odbij</button>
                       </form>
+                    ) : deleteFor === item.id ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        <p className="col-span-2 text-sm text-bone">Obrisati prijedlog?</p>
+                        <button type="button" className="btn-ghost btn-sm min-h-11 w-full touch-manipulation" onClick={() => { setDeleteFor(null); setError(null) }}>Odustani</button>
+                        <button type="button" className="btn btn-sm min-h-11 w-full touch-manipulation" disabled={busy} onClick={() => void remove(item)}>Obriši</button>
+                      </div>
                     ) : (
                       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                         {bucket !== 'accepted' && (
                           <button type="button" className="btn btn-sm min-h-11 w-full touch-manipulation sm:w-auto" disabled={busy} onClick={() => void move(item, 'accepted')}>Prihvati</button>
                         )}
                         {bucket !== 'rejected' && (
-                          <button type="button" className="btn-ghost btn-sm min-h-11 w-full touch-manipulation border-red-900 text-red-300 sm:w-auto" disabled={busy} onClick={() => { setRejectFor(item.id); setReason(''); setError(null) }}>Odbij</button>
+                          <button type="button" className="btn-ghost btn-sm min-h-11 w-full touch-manipulation border-red-900 text-red-300 sm:w-auto" disabled={busy} onClick={() => { setRejectFor(item.id); setDeleteFor(null); setReason(''); setError(null) }}>Odbij</button>
                         )}
                         {bucket !== 'pending' && (
                           <button type="button" className="btn-ghost btn-sm min-h-11 w-full touch-manipulation sm:w-auto" disabled={busy} onClick={() => void move(item, 'pending')}>Na čekanju</button>
+                        )}
+                        {bucket === 'pending' && (
+                          <button type="button" className="btn-ghost btn-sm min-h-11 w-full touch-manipulation border-red-900 text-red-300 sm:w-auto" disabled={busy} onClick={() => { setDeleteFor(item.id); setRejectFor(null); setReason(''); setError(null) }}>Obriši</button>
                         )}
                       </div>
                     )}

@@ -12,7 +12,7 @@ import { deliverReviewRequest } from '@/lib/review-mail'
 import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
-import { getProposal, setProposalBucket } from '@/lib/proposals'
+import { deleteOpenProposal, getProposal, setProposalBucket } from '@/lib/proposals'
 import { isProposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
 import type { Invoice, Order, ProposalStatus, Variant } from '@/lib/types'
 import { parseVariantLine } from '@/lib/variants'
@@ -167,6 +167,18 @@ export async function moveProposalStatus(id: number, bucket: ProposalListBucket,
   } catch (e) {
     return { ok: false, error: (e as Error).message }
   }
+}
+
+export async function deletePendingProposal(id: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin()
+  const result = await deleteOpenProposal(id)
+  if (result.ok) {
+    revalidateProposal(id)
+    return { ok: true }
+  }
+  if (result.error === 'not_found' || result.error === 'invalid') return { ok: false, error: 'Prijedlog ne postoji.' }
+  if (result.error === 'linked') return { ok: false, error: 'Prijedlog je vezan uz proizvod i ne može se obrisati.' }
+  return { ok: false, error: 'Može se obrisati samo prijedlog na čekanju.' }
 }
 
 export async function rejectProposal(_: State, f: FormData): Promise<State> {

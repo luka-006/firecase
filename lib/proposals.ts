@@ -1,5 +1,6 @@
 import 'server-only'
 import { sql } from './db'
+import { isDeletableProposalStatus } from './proposal-bucket'
 import { getSettingsFresh } from './settings'
 import type { Product, ProductProposal, Variant } from './types'
 
@@ -154,6 +155,34 @@ export async function setProposalBucket(id: number, bucket: 'pending' | 'accepte
 
   const row = await createDraftProductFromProposal({ ...p, productId: null })
   return { status: 'accepted' as const, productId: row.id, created: true }
+}
+
+export type DeleteOpenProposalResult =
+  | { ok: true; id: number }
+  | { ok: false; error: 'invalid' | 'not_found' | 'locked' | 'linked' }
+
+/**
+ * Briše samo skicu ili pregled. Prihvaćene i odbijene ostaju.
+ * Ako proizvod još pokazuje na prijedlog, brisanje se odbija da se proizvod ne dira
+ * (proposal_id bi inače postao null). Slike ostaju URL-ovi na retku; blobovi se ne brišu,
+ * isto kao staff deleteProposal.
+ */
+export async function deleteOpenProposal(id: number): Promise<DeleteOpenProposalResult> {
+  if (!Number.isInteger(id) || id <= 0) return { ok: false, error: 'invalid' }
+  const [deleted] = await sql<{ id: number }[]>`
+    delete from product_proposals
+    where id = ${id}
+      and status in ('draft', 'review')
+      and not exists (select 1 from products where proposal_id = ${id})
+    returning id`
+  if (deleted) return { ok: true, id: deleted.id }
+
+  const [cur] = await sql<{ status: string }[]>`select status from product_proposals where id = ${id}`
+  if (!cur) return { ok: false, error: 'not_found' }
+  if (!isDeletableProposalStatus(cur.status)) return { ok: false, error: 'locked' }
+  const [linked] = await sql<{ id: number }[]>`select id from products where proposal_id = ${id} limit 1`
+  if (linked) return { ok: false, error: 'linked' }
+  return { ok: false, error: 'locked' }
 }
 
 export async function maybeAutoAcceptProposal(proposalId: number) {
