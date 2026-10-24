@@ -5,6 +5,7 @@ import { useActionState, useState } from 'react'
 import { saveProposal } from '@/app/staff/actions'
 import { SupplierLink } from '@/components/SupplierLink'
 import { QUALITY_TAGS, type ProductProposal } from '@/lib/types'
+import { formatStaffVariantLine } from '@/lib/variants'
 
 const eur = (c?: number | null) => (c ? (c / 100).toFixed(2).replace('.', ',') : '')
 
@@ -84,8 +85,8 @@ export function ProposalForm({ p }: { p: ProductProposal | null }) {
         <label className="block"><span className="label">Težina / dimenzije</span><input name="weightDims" defaultValue={p?.weightDims} className="input" /></label>
         <label className="block"><span className="label">Procijenjena dostava (HR)</span><input name="estDeliveryHr" defaultValue={p?.estDeliveryHr} className="input" /></label>
         <label className="block"><span className="label">Procijenjena dostava (EN)</span><input name="estDeliveryEn" defaultValue={p?.estDeliveryEn} className="input" /></label>
-        <label className="block md:col-span-2"><span className="label">Veličine (jedan red = HR | EN | opcija dobavljača)</span>
-          <textarea name="variants" rows={3} className="input" defaultValue={(p?.variants ?? []).map((v) => [v.hr, v.en, v.sup].filter(Boolean).join(' | ')).join('\n')} />
+        <label className="block md:col-span-2"><span className="label">Veličine (HR | EN | opcija na AE | SKU | bilješka)</span>
+          <textarea name="variants" rows={3} className="input" defaultValue={(p?.variants ?? []).map((v) => formatStaffVariantLine(v)).join('\n')} />
         </label>
       </section>
 

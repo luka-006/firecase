@@ -5,6 +5,8 @@ const variantSchema = z.object({
   hr: z.string().max(200),
   en: z.string().max(200).optional(),
   sup: z.string().max(200).optional(),
+  supplierSku: z.string().max(120).optional(),
+  supplierNote: z.string().max(500).optional(),
 })
 
 export const proposalBodySchema = z.object({

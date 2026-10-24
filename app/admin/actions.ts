@@ -14,8 +14,8 @@ import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
 import { deleteOpenProposal, getProposal, setProposalBucket } from '@/lib/proposals'
 import { isProposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
-import type { Invoice, Order, ProposalStatus, Variant } from '@/lib/types'
-import { parseVariantLine } from '@/lib/variants'
+import type { Invoice, Order, ProposalStatus } from '@/lib/types'
+import { variantsFromAdminForm } from '@/lib/variants'
 
 type State = { error?: string; ok?: string } | null
 const str = (f: FormData, k: string, max = 5000) => String(f.get(k) ?? '').trim().slice(0, max)
@@ -94,7 +94,14 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   if (compare !== null && compare <= price) return { error: 'Stara cijena mora biti veća od nove (ili ostavi prazno).' }
   let images: string[] = []
   try { images = JSON.parse(str(f, 'images') || '[]') } catch {}
-  const variants: Variant[] = str(f, 'variants').split('\n').map((l) => parseVariantLine(l)).filter((v): v is Variant => !!v)
+  const variantsRaw = String(f.get('variants') ?? '')
+  if (variantsRaw.length > 100_000) return { error: 'Previše veličina.' }
+  let variants
+  try {
+    variants = variantsFromAdminForm(variantsRaw)
+  } catch {
+    return { error: 'Neispravne veličine.' }
+  }
   const stockRaw = str(f, 'stock')
   const proposalId = Number(f.get('proposalId')) || null
   const data = {

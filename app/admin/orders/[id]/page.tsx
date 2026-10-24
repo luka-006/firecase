@@ -6,26 +6,18 @@ import { sql } from '@/lib/db'
 import { getInvoicesForOrder } from '@/lib/invoice'
 import { money, formatDateTime } from '@/lib/money'
 import { Status, orderStage } from '@/components/admin/Status'
-import { CopyField } from '@/components/admin/AdminUi'
+import { SupplierOrderPanel } from '@/components/admin/SupplierOrderPanel'
 import { ActionForm } from '@/components/Ui'
 import { DbError } from '@/components/admin/DbError'
 import { MAX_AUTO_ATTEMPTS } from '@/lib/invoice/retry-policy'
 import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryIssueInvoiceAction, sendReviewRequestAction, setSupplierOrder } from '../../actions'
 import { ConfirmShipForm } from '@/components/admin/ConfirmShipForm'
-import { SupplierLink } from '@/components/SupplierLink'
 import { href } from '@/lib/routes'
+import { resolveSupplierLine, supplierAddressFields } from '@/lib/supplier-order'
 import type { DiscountCode, Invoice, Order, Product } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-const COUNTRY: Record<string, string> = { HR: 'Croatia', SI: 'Slovenia', AT: 'Austria', DE: 'Germany', IT: 'Italy', HU: 'Hungary' }
-const COUNTY: Record<string, string> = {
-  '20': 'Dubrovačko-neretvanska', '21': 'Splitsko-dalmatinska', '22': 'Šibensko-kninska', '23': 'Zadarska', '31': 'Osječko-baranjska',
-  '32': 'Vukovarsko-srijemska', '33': 'Virovitičko-podravska', '34': 'Požeško-slavonska', '35': 'Brodsko-posavska', '40': 'Međimurska',
-  '42': 'Varaždinska', '43': 'Bjelovarsko-bilogorska', '44': 'Sisačko-moslavačka', '47': 'Karlovačka', '48': 'Koprivničko-križevačka',
-  '49': 'Krapinsko-zagorska', '51': 'Primorsko-goranska', '52': 'Istarska', '53': 'Ličko-senjska', '10': 'Grad Zagreb / Zagrebačka',
-}
-const NOTE = 'Dropshipping order. Please do not include an invoice, prices or promotional material in the package. Thank you!'
 const stepTitle = (n: number, t: string, done?: boolean) => (
   <h2 className="flex items-center gap-3 font-medium">
     <span className={`grid size-6 place-items-center font-mono text-[11px] ${done ? 'bg-emerald-800 text-emerald-100' : 'bg-flame text-ink'}`}>{done ? '✓' : n}</span>{t}
@@ -55,11 +47,10 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
     ? href(o.locale === 'en' ? 'en' : 'hr', 'review', undefined, `t=${encodeURIComponent(await signReviewToken(o.id))}`)
     : null
 
-  // Podaci za dobavljača: iz narudžbe, a za starije narudžbe iz trenutnog proizvoda
   const lines = o.items.map((i) => {
     const p = products.find((x) => x.id === i.productId)
-    const v = p?.variants.find((x) => x.hr === i.variant || x.en === i.variant)
-    return { ...i, url: i.supplierUrl || p?.supplierUrl || '', option: i.supplierOption || v?.sup || '', cost: i.costCents ?? p?.costCents ?? null }
+    const supplier = resolveSupplierLine(i, p)
+    return { ...supplier, cost: i.costCents ?? p?.costCents ?? null }
   })
   const stage = orderStage(o)
   const paid = ['paid', 'shipped', 'delivered'].includes(o.status)
@@ -73,6 +64,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
         <Link href="/admin/orders" className="text-sm text-mute hover:text-bone">← Narudžbe</Link>
         <h1 className="h-display text-2xl">Narudžba #{o.orderNumber}</h1>
         <Status s={stage} />
+        {o.supplierOrder?.trim() ? <span className="font-mono text-sm text-mute">AE {o.supplierOrder.trim()}</span> : null}
         <span className="text-xs text-mute">{formatDateTime(o.createdAt)} · {o.paymentMethod ?? 'nije plaćeno'}</span>
       </div>
 
@@ -80,41 +72,14 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
         <div className="space-y-6">
           {paid && (
             <section className="card space-y-5 p-5">
-              {stepTitle(1, 'Dobavljač', !!o.supplierOrder)}
-              <ul className="divide-y divide-line border-y border-line">
-                {lines.map((l, idx) => (
-                  <li key={idx} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
-                    <span>
-                      <span className="font-mono text-flame">{l.qty} ×</span> {l.name}{l.variant && <span className="text-mute"> ({l.variant})</span>}
-                      {l.option && <span className="mt-1 block text-xs text-bone/70">{l.option}</span>}
-                    </span>
-                    {l.url ? (
-                      <SupplierLink url={l.url} className="btn btn-sm" />
-                    ) : (
-                      <Link href={`/admin/products/${l.productId}`} className="text-xs text-amber-300 underline">Dodaj link dobavljača</Link>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <div>
-                <p className="label">Adresa za dostavu (klikni polje za kopiranje)</p>
-                <CopyField label="Ime i prezime" value={o.name} />
-                <CopyField label="Mobitel" value={o.phone} />
-                <CopyField label="Ulica i kućni broj" value={o.address} />
-                <CopyField label="Poštanski broj" value={o.postal} />
-                <CopyField label="Grad" value={o.city} />
-                {o.country === 'HR' && <CopyField label="Županija (procjena)" value={COUNTY[o.postal.slice(0, 2)] ?? ''} />}
-                <CopyField label="Država" value={COUNTRY[o.country] ?? o.country} />
-                <CopyField label="Napomena prodavaču" value={NOTE} />
-              </div>
-              <form action={setSupplierOrder} className="flex flex-wrap items-end gap-3">
-                <input type="hidden" name="id" value={o.id} />
-                <label className="block flex-1">
-                  <span className="label">Broj narudžbe kod dobavljača</span>
-                  <input name="supplierOrder" defaultValue={o.supplierOrder} className="input" />
-                </label>
-                <button className="btn-ghost btn-sm">Spremi</button>
-              </form>
+              {stepTitle(1, 'Naruči na AE', !!o.supplierOrder?.trim())}
+              <SupplierOrderPanel
+                lines={lines}
+                fields={supplierAddressFields(o)}
+                orderId={o.id}
+                supplierOrder={o.supplierOrder}
+                saveAction={setSupplierOrder}
+              />
             </section>
           )}
 

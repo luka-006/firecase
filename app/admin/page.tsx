@@ -5,6 +5,7 @@ import { getSettingsFresh } from '@/lib/settings'
 import { OrdersTable } from '@/components/admin/OrdersTable'
 import { DbError } from '@/components/admin/DbError'
 import { money } from '@/lib/money'
+import { stageLabel } from '@/lib/supplier-order'
 import type { Order } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -18,8 +19,8 @@ export default async function Dashboard() {
   let dbError: unknown = null
   try {
     const [r] = await sql<typeof st[]>`select
-      (select count(*)::int from orders where status = 'paid' and supplier_order = '') as todo,
-      (select count(*)::int from orders where status = 'paid' and supplier_order <> '') as ordered,
+      (select count(*)::int from orders where status = 'paid' and btrim(supplier_order) = '') as todo,
+      (select count(*)::int from orders where status = 'paid' and btrim(supplier_order) <> '') as ordered,
       (select coalesce(sum(total_cents), 0)::int from orders where status in ('paid','shipped','delivered') and paid_at >= date_trunc('month', now())) as month,
       (select count(*)::int from orders where status in ('paid','shipped','delivered') and paid_at >= date_trunc('month', now())) as month_count,
       (select count(*)::int from invoices where fiscal_status = 'pending') as fiscal_pending,
@@ -62,8 +63,8 @@ export default async function Dashboard() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card href="/admin/orders?status=todo" n={st.todo} title="Za naručiti" sub="Plaćeno" hot />
-        <Card href="/admin/orders?status=ordered" n={st.ordered} title="Čeka slanje" sub="Naručeno" hot />
+        <Card href="/admin/orders?status=todo" n={st.todo} title={stageLabel('todo')} sub="Plaćeno" hot />
+        <Card href="/admin/orders?status=ordered" n={st.ordered} title={stageLabel('ordered')} sub="Plaćeno" hot />
         <div className="card p-5">
           <p className="h-display text-3xl">{money(st.month)}</p>
           <p className="mt-3 font-medium">Promet ovaj mjesec</p>

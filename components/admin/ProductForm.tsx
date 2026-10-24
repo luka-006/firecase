@@ -3,8 +3,7 @@ import Image from 'next/image'
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
 import { saveProduct, translateToEn } from '@/app/admin/actions'
 import { SupplierLink } from '@/components/SupplierLink'
-import type { Product } from '@/lib/types'
-import { formatVariantLine } from '@/lib/variants'
+import type { Product, Variant } from '@/lib/types'
 
 // Smanji fotografiju u pregledniku (najviše 2000 px) da upload ostane ispod Vercelovog limita
 async function shrink(file: File): Promise<File> {
@@ -30,11 +29,18 @@ function SupplierField({ defaultValue }: { defaultValue?: string }) {
   const [url, setUrl] = useState(defaultValue ?? '')
   return (
     <label className="block">
-      <span className="label">Link dobavljača</span>
+      <span className="label">Link artikla (AE)</span>
       <input name="supplierUrl" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" className="input" />
       {url.trim() ? <span className="mt-2 block text-sm"><SupplierLink url={url} /></span> : null}
     </label>
   )
+}
+
+function setAt(list: Variant[], i: number, patch: Partial<Variant> | ((v: Variant) => Variant)) {
+  return list.map((v, idx) => {
+    if (idx !== i) return v
+    return typeof patch === 'function' ? patch(v) : { ...v, ...patch }
+  })
 }
 function In({ label, name, defaultValue, hint, ...rest }: { label: string; name: string; defaultValue?: string | number | null; hint?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
@@ -126,6 +132,7 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
   const base = p ?? (initial ? ({ ...initial, id: 0 } as Product) : null)
   const [state, action, pending] = useActionState(saveProduct, null)
   const [images, setImages] = useState<string[]>(base?.images ?? [])
+  const [variants, setVariants] = useState<Variant[]>(base?.variants ?? [])
   const [uploading, setUploading] = useState(false)
   const [upErr, setUpErr] = useState('')
 
@@ -159,13 +166,34 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
       <input type="hidden" name="id" value={p?.id ? String(p.id) : ''} />
       {proposalId ? <input type="hidden" name="proposalId" value={proposalId} /> : null}
       <input type="hidden" name="images" value={JSON.stringify(images)} />
+      <input type="hidden" name="variants" value={JSON.stringify(variants)} />
 
       <Section title="Osnovno" open>
         <Pair label="Naziv" base="name" hr={base?.nameHr} en={base?.nameEn} required />
         <In label="Cijena (€) *" name="price" defaultValue={base?.priceCents ? eur(base.priceCents) : ''} inputMode="decimal" required={!!(base?.active ?? false)} placeholder="14,99" hint={!base?.priceCents ? 'Obavezno prije objave (Vidljiv na stranici).' : undefined} />
         <In label="Stara cijena (€)" name="compare" defaultValue={eur(base?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
-        <div className="md:col-span-2">
-          <Ta label="Dostupne veličine" name="variants" rows={3} defaultValue={(base?.variants ?? []).map((v) => formatVariantLine(v)).join('\n')} hint="Jedna po retku: HR naziv | EN naziv | opcija dobavljača | zaliha. Zaliha je neobavezna. Prazno = koristi zalihu proizvoda. Npr. Crna | Black | | 4" />
+        <div className="space-y-3 md:col-span-2">
+          <span className="label">Veličine</span>
+          {variants.map((v, i) => (
+            <div key={i} className="grid gap-2 md:grid-cols-[1fr_1fr_7rem_auto]">
+              <input value={v.hr} placeholder="Naziv (HR)" aria-label={`Veličina ${i + 1} HR`} onChange={(e) => setVariants((list) => setAt(list, i, { hr: e.target.value }))} className="input" />
+              <input value={v.en} placeholder="Naziv (EN)" aria-label={`Veličina ${i + 1} EN`} onChange={(e) => setVariants((list) => setAt(list, i, { en: e.target.value }))} className="input" />
+              <input value={v.stock ?? ''} placeholder="Zaliha" inputMode="numeric" aria-label={`Veličina ${i + 1} zaliha`} onChange={(e) => {
+                const raw = e.target.value.trim()
+                setVariants((list) => setAt(list, i, (cur) => {
+                  if (!raw) {
+                    const next = { ...cur }
+                    delete next.stock
+                    return next
+                  }
+                  const n = Number.parseInt(raw, 10)
+                  return Number.isFinite(n) ? { ...cur, stock: Math.max(0, n) } : cur
+                }))
+              }} className="input" />
+              <button type="button" onClick={() => setVariants((list) => list.filter((_, idx) => idx !== i))} className="px-2 text-sm text-red-300 hover:text-red-200">Ukloni</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setVariants((list) => [...list, { hr: '', en: '' }])} className="btn-ghost btn-sm">Dodaj veličinu</button>
         </div>
         <div className="flex flex-wrap gap-6 text-sm md:col-span-2">
           <label className="flex items-center gap-3"><input type="checkbox" name="active" defaultChecked={base?.active ?? false} className="size-4 accent-[#d08a2e]" /> Vidljiv na stranici</label>
@@ -207,6 +235,23 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
           <SupplierField defaultValue={base?.supplierUrl} />
         </div>
         <In label="Nabavna cijena po komadu (€)" name="cost" defaultValue={eur(base?.costCents)} inputMode="decimal" placeholder="4,20" />
+        {variants.map((v, i) => (
+          <div key={i} className="grid gap-3 border border-line p-3 md:col-span-2 md:grid-cols-3">
+            <p className="text-sm md:col-span-3">{v.hr.trim() || v.en.trim() || `Veličina ${i + 1}`}</p>
+            <label className="block">
+              <span className="label">Opcija na AE</span>
+              <input value={v.sup ?? ''} placeholder="No2 silver grey" aria-label={`Opcija na AE ${i + 1}`} onChange={(e) => setVariants((list) => setAt(list, i, { sup: e.target.value }))} className="input" />
+            </label>
+            <label className="block">
+              <span className="label">SKU</span>
+              <input value={v.supplierSku ?? ''} aria-label={`SKU ${i + 1}`} onChange={(e) => setVariants((list) => setAt(list, i, { supplierSku: e.target.value }))} className="input" />
+            </label>
+            <label className="block md:col-span-1">
+              <span className="label">Bilješka</span>
+              <input value={v.supplierNote ?? ''} aria-label={`Bilješka ${i + 1}`} onChange={(e) => setVariants((list) => setAt(list, i, { supplierNote: e.target.value }))} className="input" />
+            </label>
+          </div>
+        ))}
       </Section>
 
       <Section title="Napredno" grid>
