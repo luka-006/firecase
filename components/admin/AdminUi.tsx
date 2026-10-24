@@ -40,24 +40,9 @@ export function StatusFilter({ options }: { options: [string, string, number?][]
   const router = useRouter()
   const sp = useSearchParams()
   return (
-    <select value={sp.get('status') ?? ''} onChange={(e) => router.push(e.target.value ? `/admin/orders?status=${e.target.value}` : '/admin/orders')} className="input w-auto min-w-56">
+    <select value={sp.get('status') ?? ''} onChange={(e) => router.push(e.target.value ? `/admin/orders?status=${e.target.value}` : '/admin/orders')} className="input w-full min-w-0 sm:w-auto sm:min-w-80">
       {options.map(([v, l, n]) => <option key={v} value={v}>{l}{typeof n === 'number' ? ` (${n})` : ''}</option>)}
     </select>
   )
 }
 
-// Polje s gumbom za kopiranje adrese kupca
-export function CopyField({ label, value }: { label: string; value: string }) {
-  const [ok, setOk] = useState(false)
-  return (
-    <button type="button" disabled={!value}
-      onClick={async () => { await navigator.clipboard.writeText(value); setOk(true); setTimeout(() => setOk(false), 1200) }}
-      className="group flex w-full items-center justify-between gap-3 border-b border-line py-2.5 text-left disabled:opacity-50">
-      <span className="min-w-0">
-        <span className="block font-mono text-[10px] uppercase tracking-[0.14em] text-mute">{label}</span>
-        <span className="block break-words text-sm">{value || '—'}</span>
-      </span>
-      <span className={`shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] transition ${ok ? 'text-emerald-400' : 'text-mute group-hover:text-flame'}`}>{ok ? 'Kopirano' : 'Kopiraj'}</span>
-    </button>
-  )
-}

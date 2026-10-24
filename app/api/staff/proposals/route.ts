@@ -4,12 +4,13 @@ import { sql } from '@/lib/db'
 import { parseProposalId } from '@/lib/proposal-bucket'
 import { deleteOpenProposal, maybeAutoAcceptProposal } from '@/lib/proposals'
 import { proposalCreateSchema, proposalPatchSchema } from '@/lib/staff/proposal-schema'
-import type { ProductProposal } from '@/lib/types'
+import type { ProductProposal, Variant } from '@/lib/types'
+import { cleanVariant } from '@/lib/variants'
 
 export const runtime = 'nodejs'
 
-function normalizeVariants(v: { hr: string; en?: string; sup?: string }[]) {
-  return v.map(({ hr, en, sup }) => (sup ? { hr, en: en || hr, sup } : { hr, en: en || hr }))
+function normalizeVariants(v: { hr: string; en?: string; sup?: string; supplierSku?: string; supplierNote?: string }[]) {
+  return v.map((row) => cleanVariant(row)).filter((row): row is Variant => !!row)
 }
 
 export async function GET(req: Request) {

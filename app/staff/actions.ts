@@ -8,7 +8,8 @@ import { clearStaffSession, isStaff, requireStaff, setStaffSession } from '@/lib
 import { checkRateLimit, clearRateLimit, hitRateLimit } from '@/lib/auth/rate-limit'
 import { sql } from '@/lib/db'
 import { maybeAutoAcceptProposal } from '@/lib/proposals'
-import type { ProductProposal, Variant } from '@/lib/types'
+import { parseStaffVariantLine } from '@/lib/variants'
+import type { Variant } from '@/lib/types'
 
 type State = { error?: string; ok?: string } | null
 const str = (f: FormData, k: string, max = 8000) => String(f.get(k) ?? '').trim().slice(0, max)
@@ -40,15 +41,11 @@ export async function staffLogout() {
   redirect('/staff/login')
 }
 
-function parseVariants(raw: string): Variant[] {
+function parseVariants(raw: string) {
   return raw
     .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map((l) => {
-      const [hr, en, sup] = l.split('|').map((x) => x.trim())
-      return sup ? { hr, en: en || hr, sup } : { hr, en: en || hr }
-    })
+    .map((line) => parseStaffVariantLine(line))
+    .filter((line): line is Variant => !!line)
 }
 
 function parseTags(f: FormData) {

@@ -1,7 +1,15 @@
 import type { Locale } from './routes'
 
-// sup = opcija koju treba odabrati kod dobavljača
-export type Variant = { hr: string; en: string; sup?: string; stock?: number | null }
+// sup = točan tekst opcije kod dobavljača (npr. "No2 silver grey")
+// supplierSku / supplierNote = neobavezno, samo admin
+export type Variant = {
+  hr: string
+  en: string
+  sup?: string
+  supplierSku?: string
+  supplierNote?: string
+  stock?: number | null
+}
 
 export type ProposalStatus = 'draft' | 'review' | 'rejected' | 'accepted'
 
@@ -88,6 +96,8 @@ export type OrderItem = {
   image?: string
   supplierUrl?: string
   supplierOption?: string
+  supplierSku?: string
+  supplierNote?: string
   costCents?: number | null
 }
 

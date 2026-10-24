@@ -2,7 +2,8 @@ import 'server-only'
 import { sql } from './db'
 import { isDeletableProposalStatus } from './proposal-bucket'
 import { getSettingsFresh } from './settings'
-import type { Product, ProductProposal, Variant } from './types'
+import { mergeSupplierFromProposal, sameSupplierMapping } from './variants'
+import type { Product, ProductProposal } from './types'
 
 const slugify = (s: string) =>
   s
@@ -59,6 +60,17 @@ export function proposalToProductDefaults(p: ProductProposal): Partial<Product> 
   }
 }
 
+async function applyProposalSupplier(proposal: ProductProposal, product: Product) {
+  const next = mergeSupplierFromProposal(product, proposal)
+  if (sameSupplierMapping(product, next)) return product
+  const [row] = await sql<Product[]>`
+    update products
+    set supplier_url = ${next.supplierUrl}, variants = ${sql.json(next.variants as never)}, updated_at = now()
+    where id = ${product.id}
+    returning *`
+  return row ?? product
+}
+
 async function insertDraftProduct(p: ProductProposal, slug: string) {
   const d = proposalToProductDefaults(p)
   const [row] = await sql<Product[]>`
@@ -100,10 +112,11 @@ export async function createDraftProductFromProposal(p: ProductProposal) {
   if (p.productId) {
     const [existing] = await sql<Product[]>`select * from products where id = ${p.productId}`
     if (existing) {
+      const synced = await applyProposalSupplier(p, existing)
       await sql`
-        update product_proposals set status = 'accepted', product_id = ${existing.id}, reject_reason = null, updated_at = now()
+        update product_proposals set status = 'accepted', product_id = ${synced.id}, reject_reason = null, updated_at = now()
         where id = ${p.id}`
-      return existing
+      return synced
     }
   }
   const base = proposalToProductDefaults(p).slug || `prijedlog-${p.id}`
@@ -146,10 +159,11 @@ export async function setProposalBucket(id: number, bucket: 'pending' | 'accepte
   if (p.productId) {
     const [existing] = await sql<Product[]>`select * from products where id = ${p.productId}`
     if (existing) {
+      const synced = await applyProposalSupplier(p, existing)
       await sql`
         update product_proposals set status = 'accepted', reject_reason = null, updated_at = now()
         where id = ${id}`
-      return { status: 'accepted' as const, productId: existing.id, created: false }
+      return { status: 'accepted' as const, productId: synced.id, created: false }
     }
   }
 
