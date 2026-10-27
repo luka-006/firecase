@@ -12,7 +12,5 @@ export const PlusIcon = ({ className }: P) => (<svg {...base(className)}><path d
 export const MinusIcon = ({ className }: P) => (<svg {...base(className)}><path d="M5 12h14" /></svg>)
 export const ArrowIcon = ({ className }: P) => (<svg {...base(className)}><path d="M5 12h14M13 6l6 6-6 6" /></svg>)
 export const CheckIcon = ({ className }: P) => (<svg {...base(className)}><path d="m5 12 5 5 9-10" /></svg>)
-export const TruckIcon = ({ className }: P) => (<svg {...base(className)}><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7" /><circle cx="7" cy="18" r="1.6" /><circle cx="17" cy="18" r="1.6" /></svg>)
 export const ShieldIcon = ({ className }: P) => (<svg {...base(className)}><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>)
-export const ReturnIcon = ({ className }: P) => (<svg {...base(className)}><path d="M9 14 4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>)
 export const ChevronIcon = ({ className }: P) => (<svg {...base(className)}><path d="m6 9 6 6 6-6" /></svg>)
