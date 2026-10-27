@@ -4,12 +4,12 @@ import Link from 'next/link'
 import { BuyBox, Gallery } from '@/components/ProductClient'
 import { ProductReviews } from '@/components/ProductReviews'
 import { Stars, formatRating } from '@/components/Stars'
-import { ChevronIcon, ReturnIcon, TruckIcon } from '@/components/icons'
+import { ChevronIcon } from '@/components/icons'
 import { getActiveProducts, getProductBySlug } from '@/lib/products'
 import { getProductReviewBundle } from '@/lib/reviews'
 import { ProductCard } from '@/components/ProductCard'
 import { getSettings } from '@/lib/settings'
-import { euros, money } from '@/lib/money'
+import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { loc } from '@/lib/types'
 import { t } from '@/lib/dict'
@@ -58,7 +58,6 @@ export default async function ProductPage({ params }: Props) {
   const desc = loc(p, 'desc', locale)
   const material = loc(p, 'material', locale)
   const safety = loc(p, 'safety', locale)
-  const delivery = locale === 'en' ? s.deliveryEn : s.deliveryHr
   const lowest = p.lowest30 ?? p.priceCents
   const img = (u: string) => (u.startsWith('http') ? u : SITE_URL + u)
   const days = (s.deliveryHr.match(/\d+/g) ?? ['8', '16']).map(Number)
@@ -127,10 +126,6 @@ export default async function ProductPage({ params }: Props) {
           {loc(p, 'short', locale) && <p className="mt-6 leading-relaxed text-bone/70">{loc(p, 'short', locale)}</p>}
           <div className="mt-8">
             <BuyBox locale={locale} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: p.stock }} />
-          </div>
-          <div className="mt-8 grid gap-3 text-sm text-bone/75">
-            <p className="flex items-center gap-3"><TruckIcon className="size-5 text-flame" />{d.deliveryTime}: {delivery} · {d.freeOver(euros(s.freeThresholdCents, locale))}</p>
-            <p className="flex items-center gap-3"><ReturnIcon className="size-5 text-flame" />{d.ret14}</p>
           </div>
           <div className="mt-8 border-t border-line">
             {desc && <Row title={d.description} open>{desc}</Row>}

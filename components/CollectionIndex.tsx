@@ -8,7 +8,7 @@ export type IndexItem = { slug: string; href: string; name: string; short: strin
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-export function CollectionIndex({ items, note }: { items: IndexItem[]; note?: React.ReactNode }) {
+export function CollectionIndex({ items }: { items: IndexItem[] }) {
   const [active, setActive] = useState(0)
   if (!items.length) return null
   return (
@@ -41,7 +41,6 @@ export function CollectionIndex({ items, note }: { items: IndexItem[]; note?: Re
           </li>
         ))}
       </ul>
-      {note}
       </div>
       <div className="hidden lg:col-span-5 lg:block">
         <div className="sticky top-28" data-reveal>

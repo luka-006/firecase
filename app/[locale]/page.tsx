@@ -52,11 +52,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   ]
   const idx = 'idx mr-3 align-top sm:mr-4'
   const words: [string, boolean][] = [...d.storyA.split(' ').map((w): [string, boolean] => [w, false]), ...d.storyB.split(' ').map((w): [string, boolean] => [w, true])]
-  const facts: [string, string][] = [
-    [d.delivery, d.freeOver(freeLabel)],
-    [d.deliveryTime, locale === 'en' ? s.deliveryEn : s.deliveryHr],
-    [d.returnLabel, d.returnValue],
-  ]
 
   return (
     <>
@@ -88,21 +83,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             {d.viewAll} <ArrowIcon className="size-4" />
           </Link>
         </div>
-        {items.length ? (
-          <CollectionIndex
-            items={items}
-            note={
-              <dl className="mt-10 divide-y divide-line border-y border-line font-mono text-xs">
-                {facts.map(([k, v]) => (
-                  <div key={k} className="grid grid-cols-[8rem_1fr] gap-4 py-4 sm:grid-cols-[10rem_1fr]">
-                    <dt className="uppercase tracking-[0.16em] text-mute">{k}</dt>
-                    <dd className="text-bone/80">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            }
-          />
-        ) : <p className="text-mute">{d.noProducts}</p>}
+        {items.length ? <CollectionIndex items={items} /> : <p className="text-mute">{d.noProducts}</p>}
       </section>
 
       <section className="sweep-host mt-28 bg-flame text-ink md:mt-44">
