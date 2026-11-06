@@ -46,6 +46,14 @@ export function OrderItemsTable({
               {item.variant ? (
                 <Text style={{ margin: '4px 0 0', fontSize: 13, color: '#a8a29e' }}>{item.variant}</Text>
               ) : null}
+              {item.components?.length ? (
+                <Text style={{ margin: '4px 0 0', fontSize: 13, color: '#a8a29e' }}>
+                  {item.components.map((part) => part.name).join(' · ')}
+                </Text>
+              ) : null}
+              {item.sizeMix ? (
+                <Text style={{ margin: '4px 0 0', fontSize: 13, color: '#a8a29e' }}>{item.sizeMix}</Text>
+              ) : null}
               <Text style={{ margin: '6px 0 0', fontSize: 13, color: '#d6d3d1' }}>
                 {d.qty}: {item.qty} · {money(item.unitCents * item.qty, locale)}
               </Text>

@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useCart } from './CartProvider'
 import { CartLines, FreeShippingBar } from './CartLines'
+import { cartHasFreeShipping } from '@/lib/setovi'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
@@ -11,7 +12,7 @@ export function CartView({ locale }: { locale: Locale }) {
   const { items, subtotal, discount, shipping } = useCart()
   const d = t(locale)
   const net = Math.max(0, subtotal - discount)
-  const ship = subtotal >= shipping.freeThresholdCents ? 0 : shipping.shippingCents
+  const ship = cartHasFreeShipping(items) || subtotal >= shipping.freeThresholdCents ? 0 : shipping.shippingCents
   return (
     <>
     <PageHead eyebrow={d.footerShop} title={d.cart} />

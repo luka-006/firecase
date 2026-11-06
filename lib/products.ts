@@ -49,3 +49,8 @@ export async function getProductsByIds(ids: number[]): Promise<Product[]> {
   if (!ids.length) return []
   return [...(await sql<Product[]>`select * from products where id in ${sql(ids)} and active`)]
 }
+
+export async function getProductsByIdsAll(ids: number[]): Promise<Product[]> {
+  if (!ids.length) return []
+  return [...(await sql<Product[]>`select * from products where id in ${sql(ids)}`)]
+}

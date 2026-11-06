@@ -1,11 +1,14 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { BuyBox, Gallery } from '@/components/ProductClient'
 import { ProductReviews } from '@/components/ProductReviews'
 import { Stars, formatRating } from '@/components/Stars'
 import { ChevronIcon } from '@/components/icons'
-import { getActiveProducts, getProductBySlug } from '@/lib/products'
+import { getActiveProducts, getProductBySlug, getProductsByIdsAll } from '@/lib/products'
+import { setPartsBlocked } from '@/lib/set-order'
+import { quoteSet } from '@/lib/setovi'
 import { getProductReviewBundle } from '@/lib/reviews'
 import { ProductCard } from '@/components/ProductCard'
 import { getSettings } from '@/lib/settings'
@@ -50,11 +53,20 @@ export default async function ProductPage({ params }: Props) {
   const locale = l as Locale
   const [p, s, all] = await Promise.all([getProductBySlug(slug), getSettings(), getActiveProducts()])
   if (!p) notFound()
+  const setRefs = p.kind === 'set' ? (p.setItems ?? []) : []
+  const setParts = setRefs.length ? await getProductsByIdsAll([...new Set(setRefs.map((item) => item.productId))]) : []
+  const included = setRefs.map((ref) => setParts.find((item) => item.id === ref.productId) ?? null)
+  const quote = p.kind === 'set'
+    ? quoteSet(p.priceCents, included.map((item) => item
+      ? { priceCents: item.priceCents, costCents: item.costCents ?? null }
+      : { priceCents: 0, costCents: null, missing: true }))
+    : null
+  const setBlocked = p.kind === 'set' && (included.some((item) => !item) || setPartsBlocked(included.filter((item): item is NonNullable<typeof item> => !!item)))
   const reviewBundle = await getProductReviewBundle(p.id)
   const d = t(locale)
   const related = all.filter((x) => x.id !== p.id).slice(0, 3)
   const name = loc(p, 'name', locale)
-  const soldOut = isSoldOut(p)
+  const soldOut = isSoldOut(p) || setBlocked
   const desc = loc(p, 'desc', locale)
   const material = loc(p, 'material', locale)
   const safety = loc(p, 'safety', locale)
@@ -78,7 +90,7 @@ export default async function ProductPage({ params }: Props) {
       availability: soldOut ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock', itemCondition: 'https://schema.org/NewCondition',
       shippingDetails: {
         '@type': 'OfferShippingDetails',
-        shippingRate: { '@type': 'MonetaryAmount', value: (p.priceCents >= s.freeThresholdCents ? 0 : s.shippingCents / 100).toFixed(2), currency: 'EUR' },
+        shippingRate: { '@type': 'MonetaryAmount', value: (p.freeShipping || p.priceCents >= s.freeThresholdCents ? 0 : s.shippingCents / 100).toFixed(2), currency: 'EUR' },
         shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'HR' },
         deliveryTime: { '@type': 'ShippingDeliveryTime', handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 2, unitCode: 'DAY' },
           transitTime: { '@type': 'QuantitativeValue', minValue: days[0], maxValue: days[1] ?? days[0], unitCode: 'DAY' } },
@@ -123,9 +135,36 @@ export default async function ProductPage({ params }: Props) {
             </a>
           )}
           {p.compareCents && <p className="mt-1 text-xs text-mute">{d.lowest30}: {money(lowest, locale)}</p>}
+          {quote?.separateCents != null && <p className="mt-1 text-sm text-mute">{d.setSeparate(money(quote.separateCents, locale))}</p>}
+          {p.kind === 'set' && p.freeShipping && <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-flame">{d.setFreeShip}</p>}
+          {p.kind === 'set' && p.sizeMix && <p className="mt-3 text-sm text-bone/80"><span className="text-mute">{d.setSizes}: </span>{p.sizeMix}</p>}
           {loc(p, 'short', locale) && <p className="mt-6 leading-relaxed text-bone/70">{loc(p, 'short', locale)}</p>}
+          {p.kind === 'set' && (
+            <div className="mt-8">
+              <p className="label">{d.setIncludes}</p>
+              <ul className="mt-3 divide-y divide-line border-y border-line">
+                {included.map((item, index) => {
+                  const ref = setRefs[index]
+                  const name = item ? loc(item, 'name', locale) : ref.slug
+                  return (
+                    <li key={`${ref.productId}-${index}`} className="flex items-center gap-3 py-3">
+                      <span className="relative size-14 shrink-0 overflow-hidden bg-ink-3">
+                        {item?.images[0] && <Image src={item.images[0]} alt="" fill sizes="56px" className="object-cover" />}
+                      </span>
+                      {item?.active ? (
+                        <Link href={href(locale, 'product', item.slug)} className="min-w-0 flex-1 text-sm hover:text-flame">{name}</Link>
+                      ) : (
+                        <span className="min-w-0 flex-1 text-sm">{name}</span>
+                      )}
+                      <span className="font-mono text-sm tabular-nums">{item ? money(item.priceCents, locale) : '—'}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
           <div className="mt-8">
-            <BuyBox locale={locale} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: p.stock }} />
+            <BuyBox locale={locale} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: soldOut ? 0 : p.stock, freeShipping: p.freeShipping }} />
           </div>
           <div className="mt-8 border-t border-line">
             {desc && <Row title={d.description} open>{desc}</Row>}

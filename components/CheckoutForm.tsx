@@ -8,6 +8,7 @@ import { UpsellPopup, type UpsellProduct } from './UpsellPopup'
 import { Field } from './Ui'
 import { lookupPromo, startCheckout } from '@/app/actions'
 import { priceOrder, UPSELL_SEEN_KEY, UPSELL_SUBTOTAL_LIMIT_CENTS } from '@/lib/commerce'
+import { cartHasFreeShipping } from '@/lib/setovi'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
@@ -36,7 +37,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
   const seen = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
   const activePromo = promo && promo.code === promoInput.trim().toUpperCase().replace(/\s+/g, '') ? promo : null
-  const priced = priceOrder(subtotal, count, upsell, country, ship, activePromo?.percent ?? 0)
+  const priced = priceOrder(subtotal, count, upsell, country, ship, activePromo?.percent ?? 0, cartHasFreeShipping(items))
   const shipping = priced.shippingCents
   const cart = JSON.stringify(items.map((i) => ({ id: i.id, vi: i.vi, qty: i.qty })))
   const offers = (() => {

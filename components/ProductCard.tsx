@@ -4,6 +4,7 @@ import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { loc, type Product } from '@/lib/types'
 import { t } from '@/lib/dict'
+import { SET_ENTITY_ONE } from '@/lib/setovi'
 import { isLowStock, isSoldOut } from '@/lib/stock'
 
 export function ProductCard({ p, locale, priority, delay = 0 }: { p: Product; locale: Locale; priority?: boolean; delay?: number }) {
@@ -35,7 +36,9 @@ export function ProductCard({ p, locale, priority, delay = 0 }: { p: Product; lo
           {p.compareCents && <span className="whitespace-nowrap text-xs text-mute line-through">{money(p.compareCents, locale)}</span>}
         </div>
       </div>
-      {p.variants.length > 0 && <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.sizes(p.variants.length)}</p>}
+      {p.kind === 'set'
+        ? <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{SET_ENTITY_ONE}</p>
+        : p.variants.length > 0 && <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.sizes(p.variants.length)}</p>}
     </Link>
   )
 }

@@ -5,6 +5,7 @@ import { sql } from '@/lib/db'
 import { money } from '@/lib/money'
 import { toggleProduct } from '../actions'
 import type { Product } from '@/lib/types'
+import { SET_ENTITY_ONE } from '@/lib/setovi'
 import { hasOwnStock, needsStockAttention } from '@/lib/stock'
 import { DbError } from '@/components/admin/DbError'
 import { SupplierLink } from '@/components/SupplierLink'
@@ -43,7 +44,7 @@ export default async function Products() {
                     <span className="hover:text-flame-2">{p.nameHr}{p.featured && <span className="ml-2 text-[10px] text-flame">★</span>}</span>
                   </Link>
                 </td>
-                <td className="p-3 text-mute">{p.fits || '-'}</td>
+                <td className="p-3 text-mute">{p.kind === 'set' ? SET_ENTITY_ONE : (p.fits || '-')}</td>
                 <td className="p-3">{p.supplierUrl ? <SupplierLink url={p.supplierUrl} /> : null}</td>
                 <td className="p-3 tabular-nums">{money(p.priceCents)}{p.compareCents && <span className="ml-1 text-xs text-mute line-through">{money(p.compareCents)}</span>}</td>
                 <td className={`p-3 tabular-nums ${attention ? 'font-medium text-flame' : 'text-mute'}`}>{stockLabel}</td>

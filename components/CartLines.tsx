@@ -3,15 +3,17 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from './CartProvider'
 import { MinusIcon, PlusIcon, XIcon } from './icons'
+import { cartHasFreeShipping } from '@/lib/setovi'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 
 export function FreeShippingBar({ locale }: { locale: Locale }) {
-  const { subtotal, shipping } = useCart()
+  const { items, subtotal, shipping } = useCart()
   const d = t(locale)
-  const left = shipping.freeThresholdCents - subtotal
-  const pct = Math.min(100, (subtotal / shipping.freeThresholdCents) * 100)
+  const waived = cartHasFreeShipping(items)
+  const left = waived ? 0 : shipping.freeThresholdCents - subtotal
+  const pct = waived || shipping.freeThresholdCents <= 0 ? 100 : Math.min(100, (subtotal / shipping.freeThresholdCents) * 100)
   return (
     <div>
       <p className="mb-2 text-xs text-mute">{left > 0 ? d.freeLeft(money(left, locale)) : d.freeReached}</p>

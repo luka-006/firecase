@@ -13,6 +13,8 @@ import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
 import { deleteOpenProposal, getProposal, setProposalBucket } from '@/lib/proposals'
+import { deleteOpenSetProposal, getSetProposal, setSetProposalBucket } from '@/lib/set-proposals'
+import { SET_ADMIN_HREF } from '@/lib/setovi'
 import { isProposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
 import type { Invoice, Order, ProposalStatus } from '@/lib/types'
 import { variantsFromAdminForm } from '@/lib/variants'
@@ -186,6 +188,72 @@ export async function deletePendingProposal(id: number): Promise<{ ok: true } | 
   if (result.error === 'not_found' || result.error === 'invalid') return { ok: false, error: 'Prijedlog ne postoji.' }
   if (result.error === 'linked') return { ok: false, error: 'Prijedlog je vezan uz proizvod i ne može se obrisati.' }
   return { ok: false, error: 'Može se obrisati samo prijedlog na čekanju.' }
+}
+
+function revalidateSetProposal(id: number) {
+  revalidatePath(SET_ADMIN_HREF)
+  revalidatePath(`${SET_ADMIN_HREF}/${id}`)
+  revalidatePath('/admin/products')
+}
+
+export async function moveSetProposalStatus(id: number, bucket: ProposalListBucket, reason?: string): Promise<
+  | { ok: true; status: ProposalStatus; productId: number | null }
+  | { ok: false; error: string }
+> {
+  await requireAdmin()
+  if (!Number.isInteger(id) || id <= 0 || !isProposalListBucket(bucket)) return { ok: false, error: 'Prijedlog ne postoji.' }
+  try {
+    const result = await setSetProposalBucket(id, bucket, reason)
+    if (result.created) refresh()
+    revalidateSetProposal(id)
+    if (result.productId) revalidatePath(`/admin/products/${result.productId}`)
+    return { ok: true, status: result.status, productId: result.productId }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
+export async function deletePendingSetProposal(id: number): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin()
+  const result = await deleteOpenSetProposal(id)
+  if (result.ok) {
+    revalidateSetProposal(id)
+    return { ok: true }
+  }
+  if (result.error === 'not_found' || result.error === 'invalid') return { ok: false, error: 'Prijedlog ne postoji.' }
+  if (result.error === 'linked') return { ok: false, error: 'Prijedlog je vezan uz proizvod i ne može se obrisati.' }
+  return { ok: false, error: 'Može se obrisati samo prijedlog na čekanju.' }
+}
+
+export async function rejectSetProposal(_: State, f: FormData): Promise<State> {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  try {
+    await setSetProposalBucket(id, 'rejected', str(f, 'reason', 2000))
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+  revalidateSetProposal(id)
+  return { ok: 'Prijedlog je odbijen.' }
+}
+
+export async function returnSetProposalToPending(f: FormData) {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  await setSetProposalBucket(id, 'pending')
+  revalidateSetProposal(id)
+}
+
+export async function acceptSetProposal(f: FormData) {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  const proposal = await getSetProposal(id)
+  if (!proposal) redirect(SET_ADMIN_HREF)
+  const result = await setSetProposalBucket(id, 'accepted')
+  if (result.created) refresh()
+  revalidateSetProposal(id)
+  if (result.productId) revalidatePath(`/admin/products/${result.productId}`)
+  redirect(`${SET_ADMIN_HREF}/${id}`)
 }
 
 export async function rejectProposal(_: State, f: FormData): Promise<State> {

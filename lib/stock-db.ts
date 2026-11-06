@@ -1,7 +1,8 @@
 import 'server-only'
 import { revalidateTag } from 'next/cache'
 import { sql } from './db'
-import { moveStock, type StockLine } from './stock'
+import { orderStockGroups } from './setovi'
+import { moveStock } from './stock'
 import type { Order, Variant } from './types'
 
 /** Takes stock when an order is paid, and puts it back on storno or cancel. Idempotent via orders.stock_adjusted. */
@@ -13,16 +14,12 @@ export async function adjustOrderStock(orderId: number, direction: 'take' | 'giv
     if (!claim) return false
     const [order] = await tx<Pick<Order, 'items'>[]>`select items from orders where id = ${orderId}`
     if (!order) return false
-    const ids = [...new Set(order.items.map((item) => item.productId))]
-    for (const id of ids) {
+    for (const group of orderStockGroups(order.items)) {
       const [row] = await tx<{ stock: number | null; variants: Variant[] }[]>`
-        select stock, variants from products where id = ${id} for update`
+        select stock, variants from products where id = ${group.productId} for update`
       if (!row) continue
-      const lines: StockLine[] = order.items
-        .filter((item) => item.productId === id)
-        .map((item) => ({ qty: item.qty, variant: item.variant, variantIndex: item.variantIndex }))
-      const next = moveStock({ stock: row.stock, variants: row.variants ?? [] }, lines, direction === 'take' ? -1 : 1)
-      await tx`update products set stock = ${next.stock}, variants = ${sql.json(next.variants as never)}, updated_at = now() where id = ${id}`
+      const next = moveStock({ stock: row.stock, variants: row.variants ?? [] }, group.lines, direction === 'take' ? -1 : 1)
+      await tx`update products set stock = ${next.stock}, variants = ${sql.json(next.variants as never)}, updated_at = now() where id = ${group.productId}`
     }
     return true
   })

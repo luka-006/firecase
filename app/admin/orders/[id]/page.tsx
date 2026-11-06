@@ -13,7 +13,8 @@ import { MAX_AUTO_ATTEMPTS } from '@/lib/invoice/retry-policy'
 import { cancelPending, confirmShipment, issueMissingInvoice, markDelivered, refundOrder, resendShippedEmail, retryIssueInvoiceAction, sendReviewRequestAction, setSupplierOrder } from '../../actions'
 import { ConfirmShipForm } from '@/components/admin/ConfirmShipForm'
 import { href } from '@/lib/routes'
-import { resolveSupplierLine, supplierAddressFields } from '@/lib/supplier-order'
+import { supplierViewLines } from '@/lib/set-order'
+import { supplierAddressFields } from '@/lib/supplier-order'
 import type { DiscountCode, Invoice, Order, Product } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -36,7 +37,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
     if (o) {
       invoices = await getInvoicesForOrder(o.id)
       codes = [...(await codesForOrder(o.id))]
-      const ids = [...new Set(o.items.map((i) => i.productId))]
+      const ids = [...new Set(o.items.flatMap((i) => [i.productId, ...(i.components ?? []).map((part) => part.productId)]))]
       if (ids.length) products = [...(await sql<Product[]>`select * from products where id in ${sql(ids)}`)]
     }
   } catch (e) {
@@ -47,11 +48,8 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
     ? href(o.locale === 'en' ? 'en' : 'hr', 'review', undefined, `t=${encodeURIComponent(await signReviewToken(o.id))}`)
     : null
 
-  const lines = o.items.map((i) => {
-    const p = products.find((x) => x.id === i.productId)
-    const supplier = resolveSupplierLine(i, p)
-    return { ...supplier, cost: i.costCents ?? p?.costCents ?? null }
-  })
+  const lines = supplierViewLines(o.items, products)
+  const sizeNotes = o.items.filter((item) => item.sizeMix)
   const stage = orderStage(o)
   const paid = ['paid', 'shipped', 'delivered'].includes(o.status)
   const fee = Math.round(o.totalCents * 0.015) + 25
@@ -73,6 +71,9 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
           {paid && (
             <section className="card space-y-5 p-5">
               {stepTitle(1, 'Naruči na AE', !!o.supplierOrder?.trim())}
+              {sizeNotes.map((item) => (
+                <p key={`${item.productId}-${item.slug}`} className="text-sm text-bone/80">Veličine ({item.name}): {item.sizeMix}</p>
+              ))}
               <SupplierOrderPanel
                 lines={lines}
                 fields={supplierAddressFields(o)}
@@ -104,9 +105,19 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
             <h2 className="mb-3 font-medium">Stavke</h2>
             <ul className="divide-y divide-line text-sm">
               {o.items.map((i, idx) => (
-                <li key={idx} className="flex justify-between gap-4 py-2.5">
-                  <span>{i.name}{i.variant && <span className="text-mute"> ({i.variant})</span>} × {i.qty}</span>
-                  <span className="font-mono tabular-nums">{money(i.unitCents * i.qty)}</span>
+                <li key={idx} className="py-2.5">
+                  <div className="flex justify-between gap-4">
+                    <span>{i.name}{i.variant && <span className="text-mute"> ({i.variant})</span>} × {i.qty}</span>
+                    <span className="font-mono tabular-nums">{money(i.unitCents * i.qty)}</span>
+                  </div>
+                  {i.components?.length ? (
+                    <ul className="mt-1 space-y-0.5 text-xs text-mute">
+                      {i.components.map((part) => (
+                        <li key={part.productId}>{part.qty * i.qty}× {part.name}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {i.sizeMix ? <p className="mt-1 text-xs text-mute">Veličine: {i.sizeMix}</p> : null}
                 </li>
               ))}
               {(o.upsellDiscountCents || 0) > 0 && <li className="flex justify-between py-2.5 text-mute"><span>Popust 10%</span><span className="font-mono">{money(-(o.upsellDiscountCents || 0))}</span></li>}
