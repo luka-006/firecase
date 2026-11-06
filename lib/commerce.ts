@@ -40,6 +40,7 @@ export function priceOrder(
   country: string,
   settings: { shippingCents: number; freeThresholdCents: number; euShippingCents: number },
   promoPercent = 0,
+  freeShipping = false,
 ) {
   const upsellDiscountCents = discountCentsFor(subtotalCents, qty, upsell)
   let promoDiscountCents = promoCentsFor(subtotalCents, promoPercent)
@@ -48,8 +49,10 @@ export function priceOrder(
   }
   const discountCents = upsellDiscountCents + promoDiscountCents
   const net = Math.max(0, subtotalCents - discountCents)
-  const shippingCents = country === 'HR'
-    ? hrShippingCents(subtotalCents, settings.shippingCents, settings.freeThresholdCents)
-    : settings.euShippingCents
+  const shippingCents = freeShipping
+    ? 0
+    : country === 'HR'
+      ? hrShippingCents(subtotalCents, settings.shippingCents, settings.freeThresholdCents)
+      : settings.euShippingCents
   return { upsellDiscountCents, promoDiscountCents, discountCents, shippingCents, totalCents: net + shippingCents }
 }

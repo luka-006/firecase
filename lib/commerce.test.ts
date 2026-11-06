@@ -24,6 +24,16 @@ test('free shipping starts at 40 €', () => {
   assert.equal(hrShippingCents(4500, ship.shippingCents), 0)
 })
 
+test('a free-shipping set waives delivery under the threshold', () => {
+  const hr = priceOrder(2500, 1, false, 'HR', ship, 0, true)
+  assert.equal(hr.shippingCents, 0)
+  assert.equal(hr.totalCents, 2500)
+  const eu = priceOrder(2500, 1, false, 'DE', ship, 0, true)
+  assert.equal(eu.shippingCents, 0)
+  assert.equal(eu.totalCents, 2500)
+  assert.equal(priceOrder(2500, 1, false, 'HR', ship).shippingCents, ship.shippingCents)
+})
+
 test('checkout totals stay the same for Stripe and the invoice', () => {
   const under = priceOrder(3999, 2, true, 'HR', ship)
   assert.deepEqual(under, { upsellDiscountCents: 400, promoDiscountCents: 0, discountCents: 400, shippingCents: 499, totalCents: 3999 - 400 + 499 })

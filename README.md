@@ -49,6 +49,10 @@ Redom kojim bi trebalo ići. Detaljni koraci za svaku stavku su niže u ovom dok
 
 Uz svaki proizvod upiši **link dobavljača** i **nabavnu cijenu**. Uz veličine: `HR naziv | EN naziv | opcija dobavljača`.
 
+## Setovi
+
+Asistent šalje prijedloge setova na `POST /api/staff/set-proposals` (Bearer `STAFF_API_TOKEN`, slike preko `/api/staff/upload`). Vlasnik ih vidi u `/admin/setovi`. Prihvat otvara neobjavljen proizvod. Naziv kartice mijenja se u `lib/setovi.ts` (`SET_ENTITY_LABEL`). Primjer `curl` je u [docs/set-proposals.md](docs/set-proposals.md).
+
 ## GPSR
 
 Uz proizvod upiši **proizvođača** i **odgovornu osobu u EU**. Bez toga artikl ne stavljaj u prodaju.

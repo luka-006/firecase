@@ -15,7 +15,9 @@ import { findPromo, releasePromoReservation, reservePromo } from '@/lib/discount
 import { checkRateLimit, hitRateLimit } from '@/lib/auth/rate-limit'
 import { promoHoldUntil } from '@/lib/promo'
 import { isOrderNumberConflict, randomOrderNumber } from '@/lib/order-number.mjs'
-import { getProductsByIds } from '@/lib/products'
+import { getProductsByIds, getProductsByIdsAll } from '@/lib/products'
+import { componentSnapshots } from '@/lib/set-order'
+import { orderStockGroups, quoteSet } from '@/lib/setovi'
 import { getSettingsFresh } from '@/lib/settings'
 import { stripe } from '@/lib/stripe'
 import { newPublicId } from '@/lib/orders'
@@ -83,10 +85,23 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
     if (lines.some((line) => line.vi >= 0 && !p.variants[line.vi])) return { error: d.errors.stock }
     if (exceedsStock(p, lines)) return { error: d.errors.stockQty }
   }
+  const componentIds = [...new Set(products.flatMap((p) => p.kind === 'set' ? (p.setItems ?? []).map((item) => item.productId) : []))]
+  const extras = await getProductsByIdsAll(componentIds.filter((id) => !products.some((p) => p.id === id)))
+  const catalog = [...products, ...extras]
   for (const line of cart) {
     const p = products.find((x) => x.id === line.id)
     if (!p) return { error: d.errors.stock }
     const v = line.vi >= 0 ? p.variants[line.vi] : undefined
+    let components: OrderItem['components']
+    let sizeMix: string | undefined
+    let costCents = p.costCents ?? null
+    if (p.kind === 'set') {
+      const snap = componentSnapshots(p.setItems ?? [], catalog, locale)
+      if (!snap.ok) return { error: d.errors.stock }
+      components = snap.components
+      sizeMix = p.sizeMix || ''
+      costCents = quoteSet(p.priceCents, snap.components.map((part) => ({ priceCents: part.unitCents, costCents: part.costCents ?? null }))).costCents
+    }
     items.push({
       productId: p.id, slug: p.slug,
       name: locale === 'en' && p.nameEn ? p.nameEn : p.nameHr,
@@ -95,8 +110,14 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       qty: line.qty, unitCents: p.priceCents, image: p.images[0],
       supplierUrl: p.supplierUrl || '', supplierOption: v?.sup ?? '',
       supplierSku: v?.supplierSku ?? '', supplierNote: v?.supplierNote ?? '',
-      costCents: p.costCents ?? null,
+      costCents,
+      components,
+      sizeMix,
     })
+  }
+  for (const group of orderStockGroups(items)) {
+    const stocked = catalog.find((p) => p.id === group.productId)
+    if (!stocked || exceedsStock(stocked, group.lines)) return { error: d.errors.stockQty }
   }
   const subtotal = items.reduce((a, i) => a + i.unitCents * i.qty, 0)
   const qty = items.reduce((a, i) => a + i.qty, 0)
@@ -107,7 +128,8 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   }
   const promo = promoRaw ? await findPromo(promoRaw) : null
   if (promo && !promo.ok) return { error: promoError(locale, promo.reason) }
-  const priced = priceOrder(subtotal, qty, f.get('upsell') === '1', c.country, s, promo?.ok ? promo.percent : 0)
+  const freeShip = cart.some((line) => products.find((p) => p.id === line.id)?.freeShipping)
+  const priced = priceOrder(subtotal, qty, f.get('upsell') === '1', c.country, s, promo?.ok ? promo.percent : 0, freeShip)
   const discount = priced.discountCents
   const shipping = priced.shippingCents
   const total = priced.totalCents

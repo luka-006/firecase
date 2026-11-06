@@ -14,6 +14,7 @@ export type CartItem = {
   variantHr: string
   variantEn: string
   qty: number
+  freeShipping?: boolean
 }
 
 type Ctx = {

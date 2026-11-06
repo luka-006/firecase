@@ -160,7 +160,7 @@ function Lightbox({ images, index, go, onClose, alt }: { images: string[]; index
 
 type BuyProps = {
   locale: Locale
-  product: { id: number; slug: string; nameHr: string; nameEn: string; image: string; priceCents: number; variants: Variant[]; stock: number | null }
+  product: { id: number; slug: string; nameHr: string; nameEn: string; image: string; priceCents: number; variants: Variant[]; stock: number | null; freeShipping?: boolean }
 }
 
 export function BuyBox({ locale, product }: BuyProps) {
@@ -184,7 +184,7 @@ export function BuyBox({ locale, product }: BuyProps) {
   const onAdd = () => {
     if (soldOut || qty < 1 || qty > cap) return
     const v = product.variants[vi]
-    add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' }, qty)
+    add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '', freeShipping: product.freeShipping }, qty)
     setDone(true)
     setTimeout(() => setDone(false), 1800)
   }

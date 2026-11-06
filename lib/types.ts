@@ -76,6 +76,12 @@ export type Product = {
   costCents: number | null
   proposalId?: number | null
   lowest30?: number | null
+  /** product = a single case. set = a bundle of existing cases. */
+  kind?: 'product' | 'set'
+  setItems?: { productId: number; slug: string }[]
+  freeShipping?: boolean
+  sizeMix?: string
+  setProposalId?: number | null
 }
 
 type LocalizedField = 'name' | 'short' | 'desc' | 'material' | 'safety'
@@ -83,6 +89,22 @@ export function loc(p: Product, field: LocalizedField, locale: Locale): string {
   const en = p[`${field}En` as keyof Product] as string
   const hr = p[`${field}Hr` as keyof Product] as string
   return locale === 'en' && en ? en : hr
+}
+
+export type OrderComponent = {
+  productId: number
+  slug: string
+  name: string
+  qty: number
+  image?: string
+  unitCents: number
+  supplierUrl?: string
+  supplierOption?: string
+  supplierSku?: string
+  supplierNote?: string
+  costCents?: number | null
+  variant?: string
+  variantIndex?: number
 }
 
 export type OrderItem = {
@@ -99,6 +121,9 @@ export type OrderItem = {
   supplierSku?: string
   supplierNote?: string
   costCents?: number | null
+  /** Included cases, snapshotted when a set is ordered. */
+  components?: OrderComponent[]
+  sizeMix?: string
 }
 
 export type Order = {

@@ -3,7 +3,9 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const LINKS: [string, string][] = [['/admin', 'Pregled'], ['/admin/prijedlozi', 'Prijedlozi'], ['/admin/orders', 'Narudžbe'], ['/admin/reviews', 'Recenzije'], ['/admin/products', 'Proizvodi'], ['/admin/invoices', 'Računi'], ['/admin/settings', 'Postavke']]
+import { SET_ADMIN_HREF, SET_ENTITY_LABEL } from '@/lib/setovi'
+
+const LINKS: [string, string][] = [['/admin', 'Pregled'], ['/admin/prijedlozi', 'Prijedlozi'], [SET_ADMIN_HREF, SET_ENTITY_LABEL], ['/admin/orders', 'Narudžbe'], ['/admin/reviews', 'Recenzije'], ['/admin/products', 'Proizvodi'], ['/admin/invoices', 'Računi'], ['/admin/settings', 'Postavke']]
 
 // Glavni izbornik: na računalu tabovi, na mobitelu padajući izbornik
 export function AdminNav() {
