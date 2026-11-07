@@ -46,6 +46,41 @@ export function isPendingSetProposalStatus(status: string) {
   return status === 'draft' || status === 'review'
 }
 
+/** A published set is a product row with kind set. Proposals are a different table. */
+export function isSetProduct(p: { kind?: string | null }) {
+  return p.kind === 'set'
+}
+
+/** Public catalogue is active products only. Inactive sets and cases stay hidden. */
+export function publishedProducts<T extends { active?: boolean }>(products: T[]) {
+  return products.filter((p) => p.active !== false)
+}
+
+export function catalogueCases<T extends { kind?: string | null; active?: boolean }>(products: T[]) {
+  return publishedProducts(products).filter((p) => !isSetProduct(p))
+}
+
+export function catalogueSets<T extends { kind?: string | null; active?: boolean }>(products: T[]) {
+  return publishedProducts(products).filter((p) => isSetProduct(p))
+}
+
+/**
+ * Homepage assortment: alternate a classic case and a published set so neither
+ * group is dropped when the list is capped. Inactive rows are left out.
+ */
+export function mixHomeCollection<T extends { kind?: string | null; active?: boolean }>(products: T[], limit = 8) {
+  const cases = catalogueCases(products)
+  const sets = catalogueSets(products)
+  const out: T[] = []
+  let c = 0
+  let s = 0
+  while (out.length < limit && (c < cases.length || s < sets.length)) {
+    if (c < cases.length) out.push(cases[c++])
+    if (out.length < limit && s < sets.length) out.push(sets[s++])
+  }
+  return out
+}
+
 type StockTouch = { qty: number; variant?: string; variantIndex?: number }
 
 export function orderStockGroups(items: {

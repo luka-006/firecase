@@ -5,7 +5,11 @@ import {
   SET_ITEM_MAX,
   SET_ITEM_MIN,
   cartHasFreeShipping,
+  catalogueCases,
+  catalogueSets,
   isPendingSetProposalStatus,
+  isSetProduct,
+  mixHomeCollection,
   orderStockGroups,
   quoteSet,
 } from './setovi.ts'
@@ -60,6 +64,32 @@ test('only draft and review proposals can have their images replaced', () => {
   assert.equal(isPendingSetProposalStatus('rejected'), false)
   assert.equal(isPendingSetProposalStatus('pending'), false)
   assert.equal(isPendingSetProposalStatus(''), false)
+})
+
+test('the public catalogue shows only published sets and cases', () => {
+  const rows = [
+    { id: 1, kind: 'product', active: true, name: 'Zephyr' },
+    { id: 2, kind: 'set', active: true, name: 'Set Trio' },
+    { id: 3, kind: 'set', active: false, name: 'Neobjavljeni set' },
+    { id: 4, kind: 'product', active: false, name: 'Skrivena futrola' },
+    { id: 5, kind: undefined, active: true, name: 'Noir' },
+  ]
+  assert.equal(isSetProduct(rows[1]), true)
+  assert.equal(isSetProduct(rows[0]), false)
+  assert.deepEqual(catalogueSets(rows).map((row) => row.name), ['Set Trio'])
+  assert.deepEqual(catalogueCases(rows).map((row) => row.name), ['Zephyr', 'Noir'])
+  const manyCases = [
+    ...Array.from({ length: 10 }, (_, i) => ({ id: i, kind: 'product' as const, active: true })),
+    { id: 20, kind: 'set' as const, active: true },
+    { id: 21, kind: 'set' as const, active: false },
+  ]
+  const mixed = mixHomeCollection(manyCases, 8)
+  assert.equal(mixed.length, 8)
+  assert.equal(mixed.filter(isSetProduct).length, 1)
+  assert.equal(mixed.some((row) => row.id === 21), false)
+  assert.equal(mixed[0]?.kind, 'product')
+  assert.equal(mixed[1]?.kind, 'set')
+  assert.deepEqual(mixHomeCollection(catalogueCases(rows)).map((row) => row.id), [1, 5])
 })
 
 test('free shipping is detected from a cart line', () => {

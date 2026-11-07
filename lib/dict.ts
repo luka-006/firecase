@@ -3,6 +3,9 @@ import type { Locale } from './routes'
 const hr = {
   shop: 'Trgovina',
   allCases: 'Kolekcija',
+  sets: 'Setovi',
+  setsIntro: 'Gotovi setovi futrola, odvojeno od pojedinačnih modela.',
+  noSets: 'Trenutno nema objavljenih setova.',
   cart: 'Košarica',
   checkout: 'Blagajna',
   account: 'Moj račun',
@@ -244,6 +247,9 @@ export type Dict = typeof hr
 const en: Dict = {
   shop: 'Shop',
   allCases: 'Collection',
+  sets: 'Sets',
+  setsIntro: 'Ready-made sets of cases, separate from the individual models.',
+  noSets: 'No published sets right now.',
   cart: 'Cart',
   checkout: 'Checkout',
   account: 'My account',

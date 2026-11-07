@@ -6,6 +6,7 @@ export const isLocale = (v: string): v is Locale => (LOCALES as readonly string[
 export const ROUTES = {
   home: { internal: '', hr: '', en: '' },
   shop: { internal: 'shop', hr: 'trgovina', en: 'shop' },
+  sets: { internal: 'sets', hr: 'setovi', en: 'sets' },
   product: { internal: 'product', hr: 'proizvod', en: 'product' },
   cart: { internal: 'cart', hr: 'kosarica', en: 'cart' },
   checkout: { internal: 'checkout', hr: 'blagajna', en: 'checkout' },

@@ -9,6 +9,7 @@ export function Header({ locale, announcement }: { locale: Locale; announcement:
   const d = t(locale)
   const links = [
     { href: href(locale, 'shop'), label: d.allCases },
+    { href: href(locale, 'sets'), label: d.sets },
     { href: href(locale, 'contact'), label: d.contact },
   ]
   return (
