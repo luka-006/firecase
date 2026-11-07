@@ -104,7 +104,7 @@ export default async function ProductPage({ params }: Props) {
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Firecase', item: SITE_URL + href(locale, 'home') },
-      { '@type': 'ListItem', position: 2, name: d.allCases, item: SITE_URL + href(locale, 'shop') },
+      { '@type': 'ListItem', position: 2, name: p.kind === 'set' ? d.sets : d.allCases, item: SITE_URL + href(locale, p.kind === 'set' ? 'sets' : 'shop') },
       { '@type': 'ListItem', position: 3, name, item: SITE_URL + href(locale, 'product', p.slug) },
     ],
   }]
@@ -118,7 +118,7 @@ export default async function ProductPage({ params }: Props) {
   return (
     <div className="container-x pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <nav className="mb-8 text-xs text-mute"><Link href={href(locale, 'shop')} className="hover:text-bone">{d.allCases}</Link> <span className="mx-1.5">/</span> {name}</nav>
+      <nav className="mb-8 text-xs text-mute"><Link href={href(locale, p.kind === 'set' ? 'sets' : 'shop')} className="hover:text-bone">{p.kind === 'set' ? d.sets : d.allCases}</Link> <span className="mx-1.5">/</span> {name}</nav>
       <div className="grid min-w-0 grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
         <Gallery images={p.images} alt={name} />
         <div className="lg:sticky lg:top-24 lg:self-start">

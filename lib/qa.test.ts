@@ -14,6 +14,8 @@ test('language switch drops an internal hr prefix', () => {
   assert.equal(switchLocale('/hr/legal/contact', 'en'), '/en/contact')
   assert.equal(switchLocale('/trgovina', 'en'), '/en/shop')
   assert.equal(switchLocale('/en/shop', 'hr'), '/trgovina')
+  assert.equal(switchLocale('/setovi', 'en'), '/en/sets')
+  assert.equal(switchLocale('/en/sets', 'hr'), '/setovi')
   assert.equal(switchLocale('/en/product/zephyr', 'hr'), '/proizvod/zephyr')
 })
 

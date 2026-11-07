@@ -16,6 +16,7 @@ export function Footer({ locale }: { locale: Locale }) {
           <p className="eyebrow mb-5">{d.footerShop}</p>
           <ul className={ul}>
             <li><Link className={a} href={href(locale, 'shop')}>{d.allCases}</Link></li>
+            <li><Link className={a} href={href(locale, 'sets')}>{d.sets}</Link></li>
             <li><Link className={a} href={href(locale, 'account')}>{d.account}</Link></li>
             <li><Link className={a} href={href(locale, 'favorites')}>{d.favorites}</Link></li>
             <li><Link className={a} href={href(locale, 'contact')}>{d.contact}</Link></li>

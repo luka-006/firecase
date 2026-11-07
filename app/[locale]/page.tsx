@@ -13,6 +13,7 @@ import { euros, money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { loc } from '@/lib/types'
 import { t } from '@/lib/dict'
+import { isSetProduct, mixHomeCollection } from '@/lib/setovi'
 import { isLowStock, withLowStockFirst } from '@/lib/stock'
 
 export const revalidate = 300
@@ -30,14 +31,14 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const locale = (await params).locale as Locale
   const d = t(locale)
   const [products, s, homeReviews] = await Promise.all([getActiveProducts(), getSettings(), getHomepageReviews()])
-  const items: IndexItem[] = withLowStockFirst(products).slice(0, 8).map((p) => ({
+  const items: IndexItem[] = mixHomeCollection(withLowStockFirst(products)).map((p) => ({
     slug: p.slug,
     href: href(locale, 'product', p.slug),
     name: loc(p, 'name', locale),
     short: loc(p, 'short', locale),
     price: money(p.priceCents, locale),
     image: p.images[0] ?? '',
-    sizes: p.variants.length ? d.sizes(p.variants.length) : '',
+    sizes: isSetProduct(p) ? d.setBadge : p.variants.length ? d.sizes(p.variants.length) : '',
     badge: isLowStock(p) ? d.lastPieces : '',
   }))
   const freeLabel = euros(s.freeThresholdCents, locale)

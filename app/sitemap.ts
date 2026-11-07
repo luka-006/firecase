@@ -6,7 +6,7 @@ import { href, LOCALES, type RouteKey } from '@/lib/routes'
 export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const keys: RouteKey[] = ['home', 'shop', 'terms', 'privacy', 'cookies', 'shipping', 'returns', 'withdrawal', 'contact']
+  const keys: RouteKey[] = ['home', 'shop', 'sets', 'terms', 'privacy', 'cookies', 'shipping', 'returns', 'withdrawal', 'contact']
   const products = await getActiveProducts()
   return [
     ...keys.flatMap((k) => LOCALES.map((l) => ({ url: SITE_URL + href(l, k), changeFrequency: 'weekly' as const, priority: k === 'home' ? 1 : k === 'shop' ? 0.9 : 0.3, alternates: { languages: { hr: SITE_URL + href('hr', k), en: SITE_URL + href('en', k) } } }))),
