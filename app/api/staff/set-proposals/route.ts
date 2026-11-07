@@ -1,6 +1,7 @@
 import { staffApiAuthorized } from '@/lib/auth'
 import { sql } from '@/lib/db'
-import { listSetProposals, maybeAutoAcceptSetProposal, presentSetProposal, resolveSetItems, type SetProposal } from '@/lib/set-proposals'
+import { handleSetImageReplace } from '@/lib/set-proposal-image-http'
+import { listSetProposals, maybeAutoAcceptSetProposal, presentSetProposal, replacePendingSetProposalImages, resolveSetItems, type SetProposal } from '@/lib/set-proposals'
 import { setProposalCreateSchema } from '@/lib/staff/set-proposal-schema'
 
 export const runtime = 'nodejs'
@@ -41,4 +42,21 @@ export async function POST(req: Request) {
   if (status === 'review') await maybeAutoAcceptSetProposal(row.id)
   const [fresh] = await sql<SetProposal[]>`select * from set_proposals where id = ${row.id}`
   return Response.json({ proposal: await presentSetProposal(fresh ?? row) }, { status: 201 })
+}
+
+export async function PATCH(req: Request) {
+  let body: unknown
+  let jsonError = false
+  try {
+    body = await req.json()
+  } catch {
+    jsonError = true
+  }
+  return handleSetImageReplace({
+    authorized: staffApiAuthorized(req),
+    body,
+    jsonError,
+    replace: replacePendingSetProposalImages,
+    present: presentSetProposal,
+  })
 }
