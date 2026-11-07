@@ -2,7 +2,7 @@ import 'server-only'
 import { sql } from './db'
 import { isDeletableProposalStatus } from './proposal-bucket'
 import { getSettingsFresh } from './settings'
-import { quoteSet, type SetItemRef } from './setovi'
+import { isPendingSetProposalStatus, quoteSet, type SetItemRef } from './setovi'
 import type { Product, ProposalStatus } from './types'
 
 const slugify = (s: string) =>
@@ -270,6 +270,24 @@ export async function deleteOpenSetProposal(id: number) {
   const [linked] = await sql<{ id: number }[]>`select id from products where set_proposal_id = ${id} limit 1`
   if (linked) return { ok: false as const, error: 'linked' as const }
   return { ok: false as const, error: 'locked' as const }
+}
+
+/**
+ * Replaces images on a draft or review proposal. No other column is written,
+ * and the linked product (if one already exists) is left untouched.
+ */
+export async function replacePendingSetProposalImages(id: number, images: string[]) {
+  if (!Number.isInteger(id) || id <= 0) return { ok: false as const, error: 'invalid' as const }
+  const [updated] = await sql<SetProposal[]>`
+    update set_proposals
+    set images = ${sql.json(images)}, updated_at = now()
+    where id = ${id} and status in ('draft', 'review')
+    returning *`
+  if (updated) return { ok: true as const, proposal: normalize(updated) }
+  const [cur] = await sql<{ id: number; status: string }[]>`select id, status from set_proposals where id = ${id}`
+  if (!cur) return { ok: false as const, error: 'not_found' as const }
+  if (!isPendingSetProposalStatus(cur.status)) return { ok: false as const, error: 'not_pending' as const }
+  return { ok: false as const, error: 'not_pending' as const }
 }
 
 export async function maybeAutoAcceptSetProposal(proposalId: number) {

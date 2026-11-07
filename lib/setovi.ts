@@ -41,6 +41,11 @@ export function cartHasFreeShipping(items: { freeShipping?: boolean }[]) {
   return items.some((item) => !!item.freeShipping)
 }
 
+/** Draft and review are still waiting. Accepted and rejected are closed. */
+export function isPendingSetProposalStatus(status: string) {
+  return status === 'draft' || status === 'review'
+}
+
 type StockTouch = { qty: number; variant?: string; variantIndex?: number }
 
 export function orderStockGroups(items: {

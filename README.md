@@ -51,7 +51,7 @@ Uz svaki proizvod upiši **link dobavljača** i **nabavnu cijenu**. Uz veličine
 
 ## Setovi
 
-Asistent šalje prijedloge setova na `POST /api/staff/set-proposals` (Bearer `STAFF_API_TOKEN`, slike preko `/api/staff/upload`). Vlasnik ih vidi u `/admin/setovi`. Prihvat otvara neobjavljen proizvod. Naziv kartice mijenja se u `lib/setovi.ts` (`SET_ENTITY_LABEL`). Primjer `curl` je u [docs/set-proposals.md](docs/set-proposals.md).
+Asistent šalje prijedloge setova na `POST /api/staff/set-proposals` (Bearer `STAFF_API_TOKEN`, slike preko `/api/staff/upload`). Slike postojećeg prijedloga na čekanju zamjenjuje `PATCH /api/staff/set-proposals` s tijelom `{ "id", "images" }`; ostala polja i već prihvaćen proizvod se ne mijenjaju. Vlasnik ih vidi u `/admin/setovi`. Prihvat otvara neobjavljen proizvod. Naziv kartice mijenja se u `lib/setovi.ts` (`SET_ENTITY_LABEL`). Primjer `curl` je u [docs/set-proposals.md](docs/set-proposals.md).
 
 ## GPSR
 

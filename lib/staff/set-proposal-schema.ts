@@ -11,6 +11,12 @@ const imageSchema = z.string().min(8).max(2000).refine(
   { message: 'Image must be an http(s) URL' },
 )
 
+/** Replaces the whole image list. Extra fields are rejected so a replace cannot change the set. */
+export const setProposalImagesSchema = z.strictObject({
+  id: z.number().int().positive().max(2_147_483_647),
+  images: z.array(imageSchema).min(1).max(12),
+})
+
 export const setProposalCreateSchema = z.object({
   name: z.string().min(1).max(300).optional(),
   nameHr: z.string().min(1).max(300).optional(),

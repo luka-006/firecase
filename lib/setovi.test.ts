@@ -5,6 +5,7 @@ import {
   SET_ITEM_MAX,
   SET_ITEM_MIN,
   cartHasFreeShipping,
+  isPendingSetProposalStatus,
   orderStockGroups,
   quoteSet,
 } from './setovi.ts'
@@ -50,6 +51,15 @@ test('a missing case price or cost leaves the matching total empty', () => {
 test('a set lists three to five cases', () => {
   assert.equal(SET_ITEM_MIN, 3)
   assert.equal(SET_ITEM_MAX, 5)
+})
+
+test('only draft and review proposals can have their images replaced', () => {
+  assert.equal(isPendingSetProposalStatus('draft'), true)
+  assert.equal(isPendingSetProposalStatus('review'), true)
+  assert.equal(isPendingSetProposalStatus('accepted'), false)
+  assert.equal(isPendingSetProposalStatus('rejected'), false)
+  assert.equal(isPendingSetProposalStatus('pending'), false)
+  assert.equal(isPendingSetProposalStatus(''), false)
 })
 
 test('free shipping is detected from a cart line', () => {
