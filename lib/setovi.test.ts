@@ -7,7 +7,10 @@ import {
   cartHasFreeShipping,
   catalogueCases,
   catalogueSets,
+  acceptedSetEditHref,
+  inactiveAcceptedSetCanPublish,
   isPendingSetProposalStatus,
+  setIsPublicOnAccept,
   isSetProduct,
   mixHomeCollection,
   orderStockGroups,
@@ -55,6 +58,21 @@ test('a missing case price or cost leaves the matching total empty', () => {
 test('a set lists three to five cases', () => {
   assert.equal(SET_ITEM_MIN, 3)
   assert.equal(SET_ITEM_MAX, 5)
+})
+
+test('accepting a priced set makes it public, and only that hidden accepted set can be published later', () => {
+  assert.equal(setIsPublicOnAccept(1099), true)
+  assert.equal(setIsPublicOnAccept(0), false)
+  assert.equal(inactiveAcceptedSetCanPublish({ kind: 'set', proposalStatus: 'accepted', priceCents: 1099, active: false }), true)
+  assert.equal(inactiveAcceptedSetCanPublish({ kind: 'set', proposalStatus: 'accepted', priceCents: 1099, active: true }), false)
+  assert.equal(inactiveAcceptedSetCanPublish({ kind: 'set', proposalStatus: 'draft', priceCents: 1099, active: false }), false)
+  assert.equal(inactiveAcceptedSetCanPublish({ kind: 'set', proposalStatus: 'review', priceCents: 1099, active: false }), false)
+  assert.equal(inactiveAcceptedSetCanPublish({ kind: 'set', proposalStatus: 'rejected', priceCents: 1099, active: false }), false)
+  assert.equal(inactiveAcceptedSetCanPublish({ kind: 'product', proposalStatus: 'accepted', priceCents: 1099, active: false }), false)
+  assert.equal(inactiveAcceptedSetCanPublish({ kind: 'set', proposalStatus: 'accepted', priceCents: 0, active: false }), false)
+  assert.equal(acceptedSetEditHref(28, 'accepted'), '/admin/products/28')
+  assert.equal(acceptedSetEditHref(28, 'draft'), null)
+  assert.equal(acceptedSetEditHref(null, 'accepted'), null)
 })
 
 test('only draft and review proposals can have their images replaced', () => {

@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { deletePendingSetProposal, moveSetProposalStatus } from '@/app/admin/actions'
 import { PROPOSAL_LIST_TABS, proposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
-import { SET_ADMIN_HREF, SET_ENTITY_LABEL } from '@/lib/setovi'
+import { acceptedSetEditHref, SET_ADMIN_HREF, SET_ENTITY_LABEL } from '@/lib/setovi'
 import type { ProposalStatus } from '@/lib/types'
 
 export type SetProposalListItem = {
@@ -36,6 +37,7 @@ export function SetProposalBoard({ items: initial }: { items: SetProposalListIte
   const [reason, setReason] = useState('')
   const [error, setError] = useState<{ id: number; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
+  const router = useRouter()
   const animating = useRef(false)
   const tabRef = useRef(tab)
   const mounted = useRef(true)
@@ -87,6 +89,13 @@ export function SetProposalBoard({ items: initial }: { items: SetProposalListIte
       }
       animating.current = false
       setBusy(false)
+      return
+    }
+    if (bucket === 'accepted' && result.productId) {
+      animating.current = false
+      setBusy(false)
+      setPhase(null)
+      router.push(`/admin/products/${result.productId}`)
       return
     }
     setPhase({ id: item.id, bucket, stage: 'leave' })
@@ -174,6 +183,7 @@ export function SetProposalBoard({ items: initial }: { items: SetProposalListIte
           {visible.length === 0 && <li className="p-5 text-sm text-mute">Nema prijedloga.</li>}
           {visible.map((item) => {
             const bucket = proposalListBucket(item.status)
+            const editHref = acceptedSetEditHref(item.productId, item.status)
             const hot = phase?.id === item.id ? phase : null
             const leaving = hot?.stage === 'leave'
             const tone = hot?.bucket === 'accepted' || (!hot && bucket === 'accepted')
@@ -206,7 +216,7 @@ export function SetProposalBoard({ items: initial }: { items: SetProposalListIte
                         <Link href={`${SET_ADMIN_HREF}/${item.id}`} className="break-words font-medium link">{item.nameHr || `#${item.id}`}</Link>
                         {item.status === 'draft' && <span className="ml-2 text-xs text-mute">Skica</span>}
                         {item.meta ? <span className="mt-1 block text-xs text-mute">{item.meta}</span> : null}
-                        {item.productId ? <Link href={`/admin/products/${item.productId}`} className="mt-1 block text-xs link sm:inline">Proizvod</Link> : null}
+                        {editHref || !item.productId ? null : <Link href={`/admin/products/${item.productId}`} className="mt-1 block text-xs link sm:inline">Proizvod</Link>}
                       </div>
                       <span className="shrink-0 text-xs text-mute">{item.updatedLabel}</span>
                     </div>
@@ -242,6 +252,9 @@ export function SetProposalBoard({ items: initial }: { items: SetProposalListIte
                       </div>
                     ) : (
                       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                        {editHref && (
+                          <Link href={editHref} className="btn btn-sm min-h-11 w-full touch-manipulation sm:w-auto">Uredi set</Link>
+                        )}
                         {bucket !== 'accepted' && (
                           <button type="button" className="btn btn-sm min-h-11 w-full touch-manipulation sm:w-auto" disabled={busy} onClick={() => void move(item, 'accepted')}>Prihvati</button>
                         )}

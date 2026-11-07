@@ -45,6 +45,24 @@ export const getProductBySlug = unstable_cache(
   { tags: ['products'], revalidate: 300 },
 )
 
+/** Old URL of a product that is still for sale. Hidden products are not revealed. */
+export async function canonicalSlugForAlias(slug: string): Promise<string | null> {
+  try {
+    const rows = await sql<{ slug: string }[]>`
+      select p.slug
+      from product_slug_aliases a
+      join products p on p.id = a.product_id
+      where a.slug = ${slug} and p.active
+      limit 1`
+    const next = rows[0]?.slug
+    return next && next !== slug ? next : null
+  } catch (e) {
+    if ((e as { code?: string }).code === '42P01') return null
+    console.error('[products]', (e as Error).message)
+    return null
+  }
+}
+
 export async function getProductsByIds(ids: number[]): Promise<Product[]> {
   if (!ids.length) return []
   return [...(await sql<Product[]>`select * from products where id in ${sql(ids)} and active`)]

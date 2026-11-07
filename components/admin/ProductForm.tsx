@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
 import { saveProduct, translateToEn } from '@/app/admin/actions'
 import { SupplierLink } from '@/components/SupplierLink'
+import { slugifyHr } from '@/lib/product-slug.mjs'
 import type { Product, Variant } from '@/lib/types'
 
 // Smanji fotografiju u pregledniku (najviše 2000 px) da upload ostane ispod Vercelovog limita
@@ -63,8 +64,8 @@ function Ta({ label, name, defaultValue, rows = 4, hint }: { label: string; name
 
 // Par polja HR/EN: engleski se prevodi automatski dok pišete hrvatski.
 // Čim engleski uredite ručno, više se ne dira (hrvatski se nikad ne mijenja).
-function Pair({ label, base, hr: hr0, en: en0, rows, required, placeholder }: {
-  label: string; base: string; hr?: string; en?: string; rows?: number; required?: boolean; placeholder?: string
+function Pair({ label, base, hr: hr0, en: en0, rows, required, placeholder, onHr }: {
+  label: string; base: string; hr?: string; en?: string; rows?: number; required?: boolean; placeholder?: string; onHr?: (value: string) => void
 }) {
   const [hr, setHr] = useState(hr0 ?? '')
   const [en, setEn] = useState(en0 ?? '')
@@ -97,7 +98,7 @@ function Pair({ label, base, hr: hr0, en: en0, rows, required, placeholder }: {
     <>
       <label className="block">
         <span className="label">{label} (HR){required && ' *'}</span>
-        {field(`${base}Hr`, hr, setHr, required, placeholder)}
+        {field(`${base}Hr`, hr, (value) => { setHr(value); onHr?.(value) }, required, placeholder)}
       </label>
       <label className="block">
         <span className="label flex items-center justify-between gap-2">
@@ -135,6 +136,8 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
   const [variants, setVariants] = useState<Variant[]>(base?.variants ?? [])
   const [uploading, setUploading] = useState(false)
   const [upErr, setUpErr] = useState('')
+  const [nameHr, setNameHr] = useState(base?.nameHr ?? '')
+  const urlSlug = slugifyHr(nameHr)
 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return
@@ -169,7 +172,11 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
       <input type="hidden" name="variants" value={JSON.stringify(variants)} />
 
       <Section title="Osnovno" open>
-        <Pair label="Naziv" base="name" hr={base?.nameHr} en={base?.nameEn} required />
+        <Pair label="Naziv" base="name" hr={base?.nameHr} en={base?.nameEn} required onHr={setNameHr} />
+        <p className="text-xs text-mute md:col-span-2" data-slug-preview>
+          URL: {urlSlug || '—'}
+          <span className="mt-1 block">Prati hrvatski naziv. Engleski naziv ga ne mijenja. Stari URL i dalje otvara ovaj proizvod.</span>
+        </p>
         <In label="Cijena (€) *" name="price" defaultValue={base?.priceCents ? eur(base.priceCents) : ''} inputMode="decimal" required={!!(base?.active ?? false)} placeholder="14,99" hint={!base?.priceCents ? 'Obavezno prije objave (Vidljiv na stranici).' : undefined} />
         <In label="Stara cijena (€)" name="compare" defaultValue={eur(base?.compareCents)} inputMode="decimal" hint="Samo za sniženja – prikazuje se prekriženo uz najnižu cijenu u 30 dana." />
         <div className="space-y-3 md:col-span-2">
@@ -257,7 +264,6 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
       <Section title="Napredno" grid>
         <In label="Zaliha" name="stock" defaultValue={base?.stock ?? ''} inputMode="numeric" hint="Prazno = neograničeno. 0 = rasprodano. 1–10 se ističe u trgovini." />
         <In label="Redoslijed" name="sort" defaultValue={base?.sort ?? 0} inputMode="numeric" hint="Manji broj = prikazuje se prije." />
-        <In label="URL (slug)" name="slug" defaultValue={base?.slug} hint="Prazno = automatski iz naziva." />
         <In label="Šifra (SKU)" name="sku" defaultValue={base?.sku} />
       </Section>
 

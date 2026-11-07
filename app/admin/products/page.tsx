@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { money } from '@/lib/money'
+import { SlugSyncForm } from '@/components/admin/SlugSyncForm'
 import { toggleProduct } from '../actions'
 import type { Product } from '@/lib/types'
 import { SET_ENTITY_ONE } from '@/lib/setovi'
@@ -26,6 +27,7 @@ export default async function Products() {
         <h1 className="h-display text-2xl">Proizvodi</h1>
         <Link href="/admin/products/new" className="btn btn-sm">+ Novi proizvod</Link>
       </div>
+      <SlugSyncForm />
       <div className="overflow-x-auto rounded-sm border border-line">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-ink-2 text-left text-xs uppercase tracking-wider text-mute">
@@ -41,7 +43,10 @@ export default async function Products() {
                 <td className="p-3">
                   <Link href={`/admin/products/${p.id}`} className="flex items-center gap-3">
                     <span className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-ink-3">{p.images[0] && <Image src={p.images[0]} alt="" fill sizes="48px" className="object-cover" />}</span>
-                    <span className="hover:text-flame-2">{p.nameHr}{p.featured && <span className="ml-2 text-[10px] text-flame">★</span>}</span>
+                    <span>
+                      <span className="hover:text-flame-2">{p.nameHr}{p.featured && <span className="ml-2 text-[10px] text-flame">★</span>}</span>
+                      <span className="mt-0.5 block text-xs text-mute">{p.slug}</span>
+                    </span>
                   </Link>
                 </td>
                 <td className="p-3 text-mute">{p.kind === 'set' ? SET_ENTITY_ONE : (p.fits || '-')}</td>

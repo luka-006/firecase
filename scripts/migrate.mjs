@@ -1,6 +1,7 @@
 // Kreira/ažurira tablice u bazi. Pokreće se automatski prije svakog builda na Vercelu.
 import postgres from 'postgres'
 import { takeOrderNumber } from '../lib/order-number.mjs'
+import { syncProductSlugs } from '../lib/product-slug.mjs'
 import { SCHEMA as schema, databaseUrl } from '../lib/schema.mjs'
 
 const url = databaseUrl()
@@ -174,6 +175,12 @@ try {
     returning id`
   if (mjcmProducts.length || mjcmProposals.length) {
     console.log(`[migrate] EU odgovorna osoba (MJCM): proizvodi ${mjcmProducts.map((p) => p.slug).join(', ') || '—'}; prijedlozi ${mjcmProposals.length}.`)
+  }
+  const slugChanges = await syncProductSlugs(sql)
+  if (slugChanges.length) {
+    console.log(`[migrate] URL-ovi usklađeni s hrvatskim nazivom: ${slugChanges.map((c) => `#${c.id} "${c.nameHr}": ${c.from} -> ${c.to}`).join('; ')}`)
+  } else {
+    console.log('[migrate] URL-ovi već prate hrvatski naziv.')
   }
   console.log('[migrate] Baza je spremna.')
 } catch (e) {
