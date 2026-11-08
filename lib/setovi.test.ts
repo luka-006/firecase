@@ -60,8 +60,8 @@ test('a set lists three to five cases', () => {
   assert.equal(SET_ITEM_MAX, 5)
 })
 
-test('accepting a priced set makes it public, and only that hidden accepted set can be published later', () => {
-  assert.equal(setIsPublicOnAccept(1099), true)
+test('accepting a set stays hidden until the owner publishes it', () => {
+  assert.equal(setIsPublicOnAccept(1099), false)
   assert.equal(setIsPublicOnAccept(0), false)
   assert.equal(inactiveAcceptedSetCanPublish({ kind: 'set', proposalStatus: 'accepted', priceCents: 1099, active: false }), true)
   assert.equal(inactiveAcceptedSetCanPublish({ kind: 'set', proposalStatus: 'accepted', priceCents: 1099, active: true }), false)

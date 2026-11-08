@@ -35,7 +35,9 @@ export function Footer({ locale }: { locale: Locale }) {
         </div>
       </div>
       <div className="overflow-hidden px-5 sm:px-8" data-reveal>
-        <Image src="/logo-word.svg" alt="" width={6067} height={501} className="wm-rise h-auto w-full" />
+        <Link href={href(locale, 'home')} data-logo="home" aria-label="Firecase" className="block">
+          <Image src="/logo-word.svg" alt="" width={6067} height={501} className="wm-rise h-auto w-full" />
+        </Link>
       </div>
       <div className="mt-10 border-t border-line">
         <p className="container-x py-6 font-mono text-[10px] uppercase tracking-[0.2em] text-mute">

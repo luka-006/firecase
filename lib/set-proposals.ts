@@ -188,20 +188,10 @@ async function insertDraftSet(proposal: SetProposalView, slug: string) {
   return row
 }
 
-async function publishLinkedSet(existing: Product) {
-  if (existing.kind !== 'set' || !setIsPublicOnAccept(existing.priceCents) || existing.active) return false
-  const [row] = await sql<{ id: number }[]>`
-    update products set active = true, updated_at = now()
-    where id = ${existing.id} and kind = 'set' and active = false and price_cents > 0
-    returning id`
-  return !!row
-}
-
 export async function createDraftSetFromProposal(proposal: SetProposalView) {
   if (proposal.productId) {
     const [existing] = await sql<Product[]>`select * from products where id = ${proposal.productId}`
     if (existing) {
-      await publishLinkedSet(existing)
       await sql`
         update set_proposals set status = 'accepted', product_id = ${existing.id}, reject_reason = null, updated_at = now()
         where id = ${proposal.id}`
@@ -242,16 +232,15 @@ export async function setSetProposalBucket(id: number, bucket: 'pending' | 'acce
   if (proposal.productId) {
     const [existing] = await sql<Product[]>`select * from products where id = ${proposal.productId}`
     if (existing) {
-      const published = await publishLinkedSet(existing)
       await sql`
         update set_proposals set status = 'accepted', reject_reason = null, updated_at = now()
         where id = ${id}`
-      return { status: 'accepted' as const, productId: existing.id, created: false, published }
+      return { status: 'accepted' as const, productId: existing.id, created: false, published: false }
     }
   }
 
   const row = await createDraftSetFromProposal({ ...proposal, productId: null })
-  return { status: 'accepted' as const, productId: row.id, created: true, published: row.active }
+  return { status: 'accepted' as const, productId: row.id, created: true, published: false }
 }
 
 export async function listInactiveAcceptedSets() {
