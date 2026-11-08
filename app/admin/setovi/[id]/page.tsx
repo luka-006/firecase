@@ -4,12 +4,13 @@ import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { money } from '@/lib/money'
-import { PROPOSAL_STATUS_LABEL } from '@/lib/proposal-bucket'
+import { isDeletableProposalStatus, PROPOSAL_STATUS_LABEL } from '@/lib/proposal-bucket'
+import { ProposalImageEditor } from '@/components/admin/ProposalImageEditor'
 import { getSetProposal } from '@/lib/set-proposals'
 import { SET_ADMIN_HREF, SET_ENTITY_LABEL, SET_ENTITY_ONE } from '@/lib/setovi'
 import { ActionForm } from '@/components/Ui'
 import { DbError } from '@/components/admin/DbError'
-import { acceptSetProposal, publishAcceptedSetNow, rejectSetProposal, returnSetProposalToPending } from '../../actions'
+import { acceptSetProposal, publishAcceptedSetNow, rejectSetProposal, returnSetProposalToPending, saveSetProposalImages } from '../../actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -84,12 +85,14 @@ export default async function AdminSetDetail({ params }: { params: Promise<{ id:
         {proposal.rejectReason && <p className="text-sm text-red-300">Komentar: {proposal.rejectReason}</p>}
 
         <section className="card grid gap-4 p-5 md:grid-cols-2">
-          <div className="md:col-span-2 flex flex-wrap gap-3">
-            {proposal.images.map((src) => (
-              <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="relative size-32 overflow-hidden rounded border border-line">
-                <Image src={src} alt="" fill sizes="128px" className="object-cover" unoptimized />
-              </a>
-            ))}
+          <div className="md:col-span-2">
+            <ProposalImageEditor
+              id={proposal.id}
+              images={proposal.images}
+              action={saveSetProposalImages}
+              minImages={1}
+              editable={isDeletableProposalStatus(proposal.status)}
+            />
           </div>
           <p className="md:col-span-2 whitespace-pre-wrap text-sm text-bone/90">{proposal.shortHr}</p>
           <p><b>Predložena cijena:</b> {money(proposal.priceCents)}</p>
