@@ -35,7 +35,7 @@ export default async function AdminSetsPage({ searchParams }: { searchParams: Pr
     return (
       <div className="space-y-6">
         <h1 className="h-display text-2xl">{SET_ENTITY_LABEL}</h1>
-        <p className="text-sm text-mute">Prihvat objavljuje set na stranici i otvara postojeći obrazac za uređivanje. Skice, na čekanju i odbijeni se ne prikazuju kupcima.</p>
+        <p className="text-sm text-mute">Prihvat samo priprema set. Ostaje skriven dok ne kliknete Objavi. Uredi set otvara postojeći obrazac. Skice, na čekanju i odbijeni se ne prikazuju kupcima.</p>
         {published != null && <p className="text-sm text-emerald-300">Objavljeno setova: {Number(published) || 0}. Cijene, slike, sadržaj i dostava nisu dirani.</p>}
         {hidden.length > 0 && (
           <form action={publishAcceptedSetsNow} className="card space-y-3 p-4">

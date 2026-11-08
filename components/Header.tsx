@@ -21,7 +21,7 @@ export function Header({ locale, announcement }: { locale: Locale; announcement:
         <div className="container-x flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-2 md:gap-8">
             <MobileMenu locale={locale} links={[...links, { href: href(locale, 'account'), label: d.account }, { href: href(locale, 'favorites'), label: d.favorites }]} />
-            <Link href={href(locale, 'home')} className="flex items-center gap-2.5" aria-label="Firecase">
+            <Link href={href(locale, 'home')} data-logo="home" className="relative z-10 flex items-center gap-2.5" aria-label="Firecase">
               <Image src="/logo-mark.svg" alt="" width={14} height={27} priority className="h-7 w-auto" />
               <Image src="/logo-word.svg" alt="Firecase" width={120} height={10} priority className="h-[11px] w-auto" />
             </Link>

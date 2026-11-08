@@ -46,9 +46,12 @@ export function isPendingSetProposalStatus(status: string) {
   return status === 'draft' || status === 'review'
 }
 
-/** A newly accepted set is public only when it already has a selling price. */
-export function setIsPublicOnAccept(priceCents: number) {
-  return priceCents > 0
+/**
+ * Accept only prepares the set. The owner publishes it afterwards.
+ * Price does not matter: a priced set stays hidden until that separate action.
+ */
+export function setIsPublicOnAccept(_priceCents: number) {
+  return false
 }
 
 /**

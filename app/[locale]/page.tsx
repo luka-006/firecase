@@ -38,8 +38,10 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     short: loc(p, 'short', locale),
     price: money(p.priceCents, locale),
     image: p.images[0] ?? '',
-    sizes: isSetProduct(p) ? d.setBadge : p.variants.length ? d.sizes(p.variants.length) : '',
+    sizes: isSetProduct(p) ? '' : p.variants.length ? d.sizes(p.variants.length) : '',
     badge: isLowStock(p) ? d.lastPieces : '',
+    set: isSetProduct(p),
+    setLabel: isSetProduct(p) ? d.setBadge : '',
   }))
   const freeLabel = euros(s.freeThresholdCents, locale)
   const faq: [string, string][] = [...d.faq.slice(0, 2), d.freeShipFaq(freeLabel), ...d.faq.slice(2)]

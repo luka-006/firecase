@@ -2,11 +2,16 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { t } from './dict.ts'
 import { isPromoHeld, promoHoldUntil, PROMO_HOLD_SEC } from './promo.ts'
-import { switchLocale } from './routes.ts'
+import { href, switchLocale } from './routes.ts'
 import { contactMetaDescription, productMetaDescription } from './seo.ts'
 
 const colour = (n: number) => t('hr').sizes(n)
 const colours = (n: number) => t('en').sizes(n)
+
+test('the public logo returns to the localized homepage', () => {
+  assert.equal(href('hr', 'home'), '/')
+  assert.equal(href('en', 'home'), '/en')
+})
 
 test('language switch drops an internal hr prefix', () => {
   assert.equal(switchLocale('/hr/proizvod/zephyr', 'en'), '/en/product/zephyr')
