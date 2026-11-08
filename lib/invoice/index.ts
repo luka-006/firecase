@@ -24,7 +24,7 @@ function invoiceDataFromOrder(order: Order, storno?: Invoice): InvoiceData {
     ? storno.data.items.map((i) => ({ ...i, unitCents: -i.unitCents, totalCents: -i.totalCents }))
     : order.items.map((i) => ({
         name: i.name,
-        variant: i.variant || undefined,
+        variant: [i.variant, i.engraving].filter(Boolean).join(' · ') || undefined,
         qty: i.qty,
         unitCents: i.unitCents,
         totalCents: i.unitCents * i.qty,

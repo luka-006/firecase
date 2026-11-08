@@ -125,6 +125,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   const stockRaw = str(f, 'stock')
   const proposalId = Number(f.get('proposalId')) || null
   const slug = await slugFromCroatianName(nameHr, id)
+  const [kindRow] = id ? await sql<{ kind: string }[]>`select kind from products where id = ${id}` : []
   const data = {
     slug,
     nameHr, nameEn: str(f, 'nameEn'),
@@ -134,6 +135,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
     images: sql.json(images), variants: sql.json(variants as never),
     stock: stockRaw === '' ? null : Math.max(0, parseInt(stockRaw, 10) || 0),
     active: f.get('active') === 'on', featured: f.get('featured') === 'on', sort: parseInt(str(f, 'sort'), 10) || 0,
+    engrave: kindRow?.kind === 'set' ? false : f.get('engrave') === 'on',
     sku: str(f, 'sku'), materialHr: str(f, 'materialHr'), materialEn: str(f, 'materialEn'),
     manufacturer: str(f, 'manufacturer'), euResponsible: str(f, 'euResponsible'),
     supplierUrl: str(f, 'supplierUrl'), costCents: str(f, 'cost') ? cents(str(f, 'cost')) : null,

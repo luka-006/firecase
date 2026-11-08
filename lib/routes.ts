@@ -7,6 +7,7 @@ export const ROUTES = {
   home: { internal: '', hr: '', en: '' },
   shop: { internal: 'shop', hr: 'trgovina', en: 'shop' },
   sets: { internal: 'sets', hr: 'setovi', en: 'sets' },
+  engraver: { internal: 'engraver', hr: 'engraver', en: 'engraver' },
   product: { internal: 'product', hr: 'proizvod', en: 'product' },
   cart: { internal: 'cart', hr: 'kosarica', en: 'cart' },
   checkout: { internal: 'checkout', hr: 'blagajna', en: 'checkout' },

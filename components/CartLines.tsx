@@ -39,6 +39,7 @@ export function CartLines({ locale, compact }: { locale: Locale; compact?: boole
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{locale === 'en' && i.nameEn ? i.nameEn : i.nameHr}</p>
                 {i.vi >= 0 && <p className="text-xs text-mute">{locale === 'en' && i.variantEn ? i.variantEn : i.variantHr}</p>}
+                {i.engraving && <p className="text-xs text-mute">{i.engraving}</p>}
               </div>
               <button onClick={() => remove(i.key)} aria-label={d.remove} className="text-mute transition hover:text-bone"><XIcon className="size-4" /></button>
             </div>

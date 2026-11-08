@@ -205,6 +205,9 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
         <div className="flex flex-wrap gap-6 text-sm md:col-span-2">
           <label className="flex items-center gap-3"><input type="checkbox" name="active" defaultChecked={base?.active ?? false} className="size-4 accent-[#d08a2e]" /> Vidljiv na stranici</label>
           <label className="flex items-center gap-3"><input type="checkbox" name="featured" defaultChecked={base?.featured ?? false} className="size-4 accent-[#d08a2e]" /> Istaknut na naslovnici</label>
+          {base?.kind !== 'set' && (
+            <label className="flex items-center gap-3"><input type="checkbox" name="engrave" defaultChecked={!!base?.engrave} className="size-4 accent-[#d08a2e]" /> Gravura (Engraver)</label>
+          )}
         </div>
       </Section>
 
