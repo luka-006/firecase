@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { CookieSettingsButton } from './Ui'
 import { href, type Locale } from '@/lib/routes'
+import { publicShopLinks } from '@/lib/shop-nav'
 import { t } from '@/lib/dict'
 
 export function Footer({ locale }: { locale: Locale }) {
@@ -15,8 +16,9 @@ export function Footer({ locale }: { locale: Locale }) {
         <div className="md:col-span-3">
           <p className="eyebrow mb-5">{d.footerShop}</p>
           <ul className={ul}>
-            <li><Link className={a} href={href(locale, 'shop')}>{d.allCases}</Link></li>
-            <li><Link className={a} href={href(locale, 'sets')}>{d.sets}</Link></li>
+            {publicShopLinks(locale).filter((link) => link.href !== href(locale, 'contact')).map((link) => (
+              <li key={link.href}><Link className={a} href={link.href}>{link.label}</Link></li>
+            ))}
             <li><Link className={a} href={href(locale, 'account')}>{d.account}</Link></li>
             <li><Link className={a} href={href(locale, 'favorites')}>{d.favorites}</Link></li>
             <li><Link className={a} href={href(locale, 'contact')}>{d.contact}</Link></li>

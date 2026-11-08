@@ -3,15 +3,12 @@ import Link from 'next/link'
 import { CartButton, HeaderShell, LangSwitch, MobileMenu, NavLinks } from './HeaderClient'
 import { HeartIcon, UserIcon } from './icons'
 import { href, type Locale } from '@/lib/routes'
+import { publicShopLinks } from '@/lib/shop-nav'
 import { t } from '@/lib/dict'
 
 export function Header({ locale, announcement }: { locale: Locale; announcement: string }) {
   const d = t(locale)
-  const links = [
-    { href: href(locale, 'shop'), label: d.allCases },
-    { href: href(locale, 'sets'), label: d.sets },
-    { href: href(locale, 'contact'), label: d.contact },
-  ]
+  const links = publicShopLinks(locale)
   return (
     <>
       {announcement && (

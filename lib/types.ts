@@ -78,6 +78,8 @@ export type Product = {
   lowest30?: number | null
   /** product = a single case. set = a bundle of existing cases. */
   kind?: 'product' | 'set'
+  /** Case can be engraved. Independent of the display name. */
+  engrave?: boolean
   setItems?: { productId: number; slug: string }[]
   freeShipping?: boolean
   sizeMix?: string
@@ -124,6 +126,7 @@ export type OrderItem = {
   /** Included cases, snapshotted when a set is ordered. */
   components?: OrderComponent[]
   sizeMix?: string
+  engraving?: string
 }
 
 export type Order = {

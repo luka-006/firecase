@@ -38,7 +38,9 @@ export function ProductCard({ p, locale, priority, delay = 0 }: { p: Product; lo
       </div>
       {p.kind === 'set'
         ? <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{SET_ENTITY_ONE}</p>
-        : p.variants.length > 0 && <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.sizes(p.variants.length)}</p>}
+        : p.engrave
+          ? <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-flame">{d.engraver}</p>
+          : p.variants.length > 0 && <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.sizes(p.variants.length)}</p>}
     </Link>
   )
 }

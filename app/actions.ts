@@ -16,6 +16,7 @@ import { checkRateLimit, hitRateLimit } from '@/lib/auth/rate-limit'
 import { promoHoldUntil } from '@/lib/promo'
 import { isOrderNumberConflict, randomOrderNumber } from '@/lib/order-number.mjs'
 import { getProductsByIds, getProductsByIdsAll } from '@/lib/products'
+import { engravingText } from '@/lib/engrave'
 import { componentSnapshots } from '@/lib/set-order'
 import { orderStockGroups, quoteSet } from '@/lib/setovi'
 import { getSettingsFresh } from '@/lib/settings'
@@ -53,7 +54,12 @@ function promoError(locale: Locale, reason: 'invalid' | 'used' | 'expired' | 're
 }
 
 // ---------- Blagajna ----------
-const cartSchema = z.array(z.object({ id: z.number().int(), vi: z.number().int(), qty: z.number().int().min(1).max(99) })).min(1).max(50)
+const cartSchema = z.array(z.object({
+  id: z.number().int(),
+  vi: z.number().int(),
+  qty: z.number().int().min(1).max(99),
+  engraving: z.string().max(40).optional(),
+})).min(1).max(50)
 
 export async function startCheckout(_: State, f: FormData): Promise<State> {
   const locale = localeOf(f)
@@ -102,6 +108,12 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       sizeMix = p.sizeMix || ''
       costCents = quoteSet(p.priceCents, snap.components.map((part) => ({ priceCents: part.unitCents, costCents: part.costCents ?? null }))).costCents
     }
+    let engraving: string | undefined
+    if (p.engrave && p.kind !== 'set') {
+      const parsed = engravingText(line.engraving || '')
+      if (!parsed.ok) return { error: d.engravingError }
+      engraving = parsed.text || undefined
+    }
     items.push({
       productId: p.id, slug: p.slug,
       name: locale === 'en' && p.nameEn ? p.nameEn : p.nameHr,
@@ -113,6 +125,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       costCents,
       components,
       sizeMix,
+      ...(engraving ? { engraving } : {}),
     })
   }
   for (const group of orderStockGroups(items)) {
@@ -189,7 +202,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       },
       line_items: items.map((i) => ({
         quantity: i.qty,
-        price_data: { currency: 'eur', unit_amount: i.unitCents, product_data: { name: i.variant ? `${i.name} (${i.variant})` : i.name } },
+        price_data: { currency: 'eur', unit_amount: i.unitCents, product_data: { name: [i.variant ? `${i.name} (${i.variant})` : i.name, i.engraving].filter(Boolean).join(' · ') } },
       })),
       ...(discount > 0
         ? {

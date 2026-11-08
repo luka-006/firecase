@@ -39,7 +39,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
   const activePromo = promo && promo.code === promoInput.trim().toUpperCase().replace(/\s+/g, '') ? promo : null
   const priced = priceOrder(subtotal, count, upsell, country, ship, activePromo?.percent ?? 0, cartHasFreeShipping(items))
   const shipping = priced.shippingCents
-  const cart = JSON.stringify(items.map((i) => ({ id: i.id, vi: i.vi, qty: i.qty })))
+  const cart = JSON.stringify(items.map((i) => ({ id: i.id, vi: i.vi, qty: i.qty, ...(i.engraving ? { engraving: i.engraving } : {}) })))
   const offers = (() => {
     const others = upsellProducts.filter((p) => !items.some((i) => i.id === p.id))
     const same = upsellProducts.filter((p) => items.some((i) => i.id === p.id))
@@ -115,6 +115,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
               <span className="min-w-0 flex-1">
                 <span className="block truncate">{locale === 'en' && i.nameEn ? i.nameEn : i.nameHr}</span>
                 {i.vi >= 0 && <span className="block text-xs text-mute">{locale === 'en' && i.variantEn ? i.variantEn : i.variantHr}</span>}
+                {i.engraving && <span className="block text-xs text-mute">{i.engraving}</span>}
               </span>
               <span className="tabular-nums">{money(i.priceCents * i.qty, locale)}</span>
             </li>

@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom'
 import { useCart } from './CartProvider'
 import { ArrowIcon, CheckIcon, HeartIcon, MinusIcon, PlusIcon, XIcon } from './icons'
 import { favoriteState, toggleFavorite } from '@/app/actions'
+import { ENGRAVING_MAX, engravingText } from '@/lib/engrave'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import { isOptionSoldOut, optionStock } from '@/lib/stock'
@@ -160,7 +161,7 @@ function Lightbox({ images, index, go, onClose, alt }: { images: string[]; index
 
 type BuyProps = {
   locale: Locale
-  product: { id: number; slug: string; nameHr: string; nameEn: string; image: string; priceCents: number; variants: Variant[]; stock: number | null; freeShipping?: boolean }
+  product: { id: number; slug: string; nameHr: string; nameEn: string; image: string; priceCents: number; variants: Variant[]; stock: number | null; freeShipping?: boolean; engrave?: boolean }
 }
 
 export function BuyBox({ locale, product }: BuyProps) {
@@ -171,8 +172,10 @@ export function BuyBox({ locale, product }: BuyProps) {
   const [vi, setVi] = useState(product.variants.length ? (firstOpen >= 0 ? firstOpen : 0) : -1)
   const [qty, setQty] = useState(1)
   const [done, setDone] = useState(false)
+  const [engraving, setEngraving] = useState('')
+  const [engravingBad, setEngravingBad] = useState(false)
   const tracked = optionStock(stocked, vi)
-  const inCart = items.find((i) => i.id === product.id && i.vi === vi)?.qty ?? 0
+  const inCart = items.filter((i) => i.id === product.id && i.vi === vi).reduce((sum, i) => sum + i.qty, 0)
   const room = tracked === null ? null : Math.max(0, tracked - inCart)
   const cap = room === null ? 99 : room
   const soldOut = tracked !== null && cap <= 0
@@ -183,8 +186,13 @@ export function BuyBox({ locale, product }: BuyProps) {
   }, [cap])
   const onAdd = () => {
     if (soldOut || qty < 1 || qty > cap) return
+    const parsed = product.engrave ? engravingText(engraving) : { ok: true as const, text: '' }
+    if (!parsed.ok) {
+      setEngravingBad(true)
+      return
+    }
     const v = product.variants[vi]
-    add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '', freeShipping: product.freeShipping }, qty)
+    add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '', freeShipping: product.freeShipping, ...(parsed.text ? { engraving: parsed.text } : {}) }, qty)
     setDone(true)
     setTimeout(() => setDone(false), 1800)
   }
@@ -208,6 +216,22 @@ export function BuyBox({ locale, product }: BuyProps) {
             })}
           </div>
         </div>
+      )}
+      {product.engrave && (
+        <label className="block">
+          <span className="label">{d.engraving}</span>
+          <input
+            value={engraving}
+            maxLength={ENGRAVING_MAX}
+            spellCheck={false}
+            autoCapitalize="off"
+            aria-label={d.engraving}
+            onChange={(e) => { setEngraving(e.target.value); setEngravingBad(false) }}
+            className="input"
+          />
+          <span className="mt-1 block text-xs text-mute">{d.engravingHint}</span>
+          {engravingBad && <span className="mt-1 block text-sm text-red-300">{d.engravingError}</span>}
+        </label>
       )}
       <div className="flex gap-3">
         <div className="flex items-center rounded-none border border-line">

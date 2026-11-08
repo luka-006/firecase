@@ -46,6 +46,9 @@ export function OrderItemsTable({
               {item.variant ? (
                 <Text style={{ margin: '4px 0 0', fontSize: 13, color: '#a8a29e' }}>{item.variant}</Text>
               ) : null}
+              {item.engraving ? (
+                <Text style={{ margin: '4px 0 0', fontSize: 13, color: '#a8a29e' }}>{item.engraving}</Text>
+              ) : null}
               {item.components?.length ? (
                 <Text style={{ margin: '4px 0 0', fontSize: 13, color: '#a8a29e' }}>
                   {item.components.map((part) => part.name).join(' · ')}

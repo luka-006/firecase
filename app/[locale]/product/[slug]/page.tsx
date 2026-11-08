@@ -172,7 +172,7 @@ export default async function ProductPage({ params }: Props) {
             </div>
           )}
           <div className="mt-8">
-            <BuyBox locale={locale} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: soldOut ? 0 : p.stock, freeShipping: p.freeShipping }} />
+            <BuyBox locale={locale} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: soldOut ? 0 : p.stock, freeShipping: p.freeShipping, engrave: p.engrave === true && p.kind !== 'set' }} />
           </div>
           <div className="mt-8 border-t border-line">
             {desc && <Row title={d.description} open>{desc}</Row>}

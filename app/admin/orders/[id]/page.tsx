@@ -118,6 +118,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                     </ul>
                   ) : null}
                   {i.sizeMix ? <p className="mt-1 text-xs text-mute">Veličine: {i.sizeMix}</p> : null}
+                  {i.engraving ? <p className="mt-1 text-xs text-mute">Gravura: {i.engraving}</p> : null}
                 </li>
               ))}
               {(o.upsellDiscountCents || 0) > 0 && <li className="flex justify-between py-2.5 text-mute"><span>Popust 10%</span><span className="font-mono">{money(-(o.upsellDiscountCents || 0))}</span></li>}
