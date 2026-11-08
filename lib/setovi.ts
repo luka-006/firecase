@@ -46,6 +46,25 @@ export function isPendingSetProposalStatus(status: string) {
   return status === 'draft' || status === 'review'
 }
 
+/** A newly accepted set is public only when it already has a selling price. */
+export function setIsPublicOnAccept(priceCents: number) {
+  return priceCents > 0
+}
+
+/**
+ * The later correction for sets that were accepted while still hidden.
+ * Draft, review, rejected, classic products, free rows and already visible sets do not match.
+ */
+export function inactiveAcceptedSetCanPublish(row: { kind?: string | null; proposalStatus?: string; priceCents: number; active?: boolean }) {
+  return row.kind === 'set' && row.proposalStatus === 'accepted' && row.priceCents > 0 && row.active === false
+}
+
+/** Existing product editor. Only an accepted set with a linked product gets this shortcut. */
+export function acceptedSetEditHref(productId: number | null | undefined, status: string) {
+  if (!productId || status !== 'accepted') return null
+  return `/admin/products/${productId}`
+}
+
 /** A published set is a product row with kind set. Proposals are a different table. */
 export function isSetProduct(p: { kind?: string | null }) {
   return p.kind === 'set'

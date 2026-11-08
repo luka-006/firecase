@@ -13,7 +13,8 @@ import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
 import { deleteOpenProposal, getProposal, setProposalBucket } from '@/lib/proposals'
-import { deleteOpenSetProposal, getSetProposal, setSetProposalBucket } from '@/lib/set-proposals'
+import { chooseSlug, ensureSlugAliases, syncProductSlugs } from '@/lib/product-slug.mjs'
+import { deleteOpenSetProposal, getSetProposal, publishInactiveAcceptedSet, publishInactiveAcceptedSets, setSetProposalBucket } from '@/lib/set-proposals'
 import { SET_ADMIN_HREF } from '@/lib/setovi'
 import { isProposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
 import type { Invoice, Order, ProposalStatus } from '@/lib/types'
@@ -25,9 +26,26 @@ const cents = (v: string) => {
   const n = parseFloat(v.replace(/\s/g, '').replace(',', '.'))
   return Number.isFinite(n) ? Math.round(n * 100) : null
 }
-const slugify = (s: string) =>
-  s.toLowerCase().replace(/[čć]/g, 'c').replace(/đ/g, 'd').replace(/š/g, 's').replace(/ž/g, 'z')
-    .normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)
+async function slugFromCroatianName(nameHr: string, selfId: number | null) {
+  await ensureSlugAliases(sql)
+  const products = selfId
+    ? await sql<{ slug: string }[]>`select slug from products where id <> ${selfId}`
+    : await sql<{ slug: string }[]>`select slug from products`
+  const aliases = selfId
+    ? await sql<{ slug: string }[]>`select slug from product_slug_aliases where product_id <> ${selfId}`
+    : await sql<{ slug: string }[]>`select slug from product_slug_aliases`
+  const taken = new Set([...products, ...aliases].map((row) => row.slug).filter(Boolean))
+  return chooseSlug(nameHr, selfId, taken)
+}
+
+async function rememberPreviousSlug(productId: number, previous: string, next: string) {
+  if (!previous || previous === next) return
+  await sql`delete from product_slug_aliases where slug = ${next} and product_id = ${productId}`
+  await sql`
+    insert into product_slug_aliases (slug, product_id) values (${previous}, ${productId})
+    on conflict (slug) do update set product_id = excluded.product_id
+    where product_slug_aliases.product_id = ${productId}`
+}
 
 function refresh() {
   updateTag('products')
@@ -106,8 +124,9 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   }
   const stockRaw = str(f, 'stock')
   const proposalId = Number(f.get('proposalId')) || null
+  const slug = await slugFromCroatianName(nameHr, id)
   const data = {
-    slug: slugify(str(f, 'slug') || nameHr),
+    slug,
     nameHr, nameEn: str(f, 'nameEn'),
     shortHr: str(f, 'shortHr'), shortEn: str(f, 'shortEn'),
     descHr: str(f, 'descHr'), descEn: str(f, 'descEn'),
@@ -124,7 +143,8 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   if (!data.slug) return { error: 'Neispravan URL (slug).' }
   try {
     if (id) {
-      const [old] = await sql<{ priceCents: number }[]>`select price_cents from products where id = ${id}`
+      const [old] = await sql<{ priceCents: number; slug: string }[]>`select price_cents, slug from products where id = ${id}`
+      if (old) await rememberPreviousSlug(id, old.slug, data.slug)
       await sql`update products set ${sql(data)}, updated_at = now() where id = ${id}`
       if (old && old.priceCents !== price) await sql`insert into price_history (product_id, price_cents) values (${id}, ${price})`
     } else {
@@ -204,7 +224,7 @@ export async function moveSetProposalStatus(id: number, bucket: ProposalListBuck
   if (!Number.isInteger(id) || id <= 0 || !isProposalListBucket(bucket)) return { ok: false, error: 'Prijedlog ne postoji.' }
   try {
     const result = await setSetProposalBucket(id, bucket, reason)
-    if (result.created) refresh()
+    if (result.created || result.published) refresh()
     revalidateSetProposal(id)
     if (result.productId) revalidatePath(`/admin/products/${result.productId}`)
     return { ok: true, status: result.status, productId: result.productId }
@@ -250,10 +270,44 @@ export async function acceptSetProposal(f: FormData) {
   const proposal = await getSetProposal(id)
   if (!proposal) redirect(SET_ADMIN_HREF)
   const result = await setSetProposalBucket(id, 'accepted')
-  if (result.created) refresh()
+  if (result.created || result.published) refresh()
   revalidateSetProposal(id)
-  if (result.productId) revalidatePath(`/admin/products/${result.productId}`)
+  if (result.productId) {
+    revalidatePath(`/admin/products/${result.productId}`)
+    redirect(`/admin/products/${result.productId}`)
+  }
   redirect(`${SET_ADMIN_HREF}/${id}`)
+}
+
+type SlugSyncState = { ok: true; changes: { id: number; nameHr: string; from: string; to: string }[] } | { ok: false; error: string } | null
+
+export async function syncCatalogueSlugs(_prev: SlugSyncState, _form: FormData): Promise<SlugSyncState> {
+  await requireAdmin()
+  try {
+    const changes = await syncProductSlugs(sql)
+    if (changes.length) refresh()
+    return { ok: true, changes }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
+export async function publishAcceptedSetsNow() {
+  await requireAdmin()
+  const rows = await publishInactiveAcceptedSets()
+  if (rows.length) refresh()
+  revalidatePath('/admin/setovi')
+  redirect(`/admin/setovi?published=${rows.length}`)
+}
+
+export async function publishAcceptedSetNow(f: FormData) {
+  await requireAdmin()
+  const productId = Number(f.get('productId'))
+  const proposalId = Number(f.get('id'))
+  const row = await publishInactiveAcceptedSet(productId)
+  if (row) refresh()
+  revalidateSetProposal(proposalId)
+  redirect(proposalId ? `${SET_ADMIN_HREF}/${proposalId}` : SET_ADMIN_HREF)
 }
 
 export async function rejectProposal(_: State, f: FormData): Promise<State> {

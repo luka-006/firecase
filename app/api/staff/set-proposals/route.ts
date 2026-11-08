@@ -1,3 +1,4 @@
+import { revalidatePath, updateTag } from 'next/cache'
 import { staffApiAuthorized } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { handleSetImageReplace } from '@/lib/set-proposal-image-http'
@@ -39,7 +40,13 @@ export async function POST(req: Request) {
       sizeMix: (data.sizeMix ?? '').trim(),
       notes: (data.notes ?? '').trim(),
     })} returning *`
-  if (status === 'review') await maybeAutoAcceptSetProposal(row.id)
+  if (status === 'review') {
+    const created = await maybeAutoAcceptSetProposal(row.id)
+    if (created) {
+      updateTag('products')
+      revalidatePath('/[locale]', 'layout')
+    }
+  }
   const [fresh] = await sql<SetProposal[]>`select * from set_proposals where id = ${row.id}`
   return Response.json({ proposal: await presentSetProposal(fresh ?? row) }, { status: 201 })
 }

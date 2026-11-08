@@ -2,13 +2,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
+import { sql } from '@/lib/db'
 import { money } from '@/lib/money'
 import { PROPOSAL_STATUS_LABEL } from '@/lib/proposal-bucket'
 import { getSetProposal } from '@/lib/set-proposals'
 import { SET_ADMIN_HREF, SET_ENTITY_LABEL, SET_ENTITY_ONE } from '@/lib/setovi'
 import { ActionForm } from '@/components/Ui'
 import { DbError } from '@/components/admin/DbError'
-import { acceptSetProposal, rejectSetProposal, returnSetProposalToPending } from '../../actions'
+import { acceptSetProposal, publishAcceptedSetNow, rejectSetProposal, returnSetProposalToPending } from '../../actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +23,9 @@ export default async function AdminSetDetail({ params }: { params: Promise<{ id:
   try {
     const proposal = await getSetProposal(Number(id))
     if (!proposal) notFound()
+    const [linked] = proposal.productId
+      ? await sql<{ active: boolean; slug: string; priceCents: number }[]>`select active, slug, price_cents from products where id = ${proposal.productId}`
+      : []
     const margin = proposal.marginCents != null && proposal.priceCents > 0
       ? `${money(proposal.marginCents)} (${Math.round(proposal.marginCents / proposal.priceCents * 100)}%)`
       : '—'
@@ -60,9 +64,22 @@ export default async function AdminSetDetail({ params }: { params: Promise<{ id:
         </div>
 
         {proposal.productId && (
-          <p className="text-sm">
-            Neobjavljeni proizvod: <Link href={`/admin/products/${proposal.productId}`} className="link">#{proposal.productId}</Link>
-          </p>
+          <div className="card flex flex-col gap-3 p-5">
+            <p className="text-sm">
+              {linked?.active ? 'Set je vidljiv na stranici.' : 'Set još nije vidljiv na stranici.'}
+              {linked?.slug ? <span className="mt-1 block text-xs text-mute">URL: {linked.slug}</span> : null}
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Link href={`/admin/products/${proposal.productId}`} className="btn btn-sm min-h-11 w-full touch-manipulation sm:w-auto">Uredi set</Link>
+              {proposal.status === 'accepted' && linked && !linked.active && linked.priceCents > 0 && (
+                <form action={publishAcceptedSetNow}>
+                  <input type="hidden" name="id" value={proposal.id} />
+                  <input type="hidden" name="productId" value={proposal.productId} />
+                  <button className="btn-ghost btn-sm min-h-11 w-full touch-manipulation sm:w-auto">Objavi na stranici</button>
+                </form>
+              )}
+            </div>
+          </div>
         )}
         {proposal.rejectReason && <p className="text-sm text-red-300">Komentar: {proposal.rejectReason}</p>}
 

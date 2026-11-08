@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -6,7 +6,7 @@ import { BuyBox, Gallery } from '@/components/ProductClient'
 import { ProductReviews } from '@/components/ProductReviews'
 import { Stars, formatRating } from '@/components/Stars'
 import { ChevronIcon } from '@/components/icons'
-import { getActiveProducts, getProductBySlug, getProductsByIdsAll } from '@/lib/products'
+import { canonicalSlugForAlias, getActiveProducts, getProductBySlug, getProductsByIdsAll } from '@/lib/products'
 import { setPartsBlocked } from '@/lib/set-order'
 import { quoteSet } from '@/lib/setovi'
 import { getProductReviewBundle } from '@/lib/reviews'
@@ -28,9 +28,17 @@ export function generateStaticParams() {
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
 
+async function productOrRedirect(locale: Locale, slug: string) {
+  const product = await getProductBySlug(slug)
+  if (product) return product
+  const next = await canonicalSlugForAlias(slug)
+  if (next) permanentRedirect(href(locale, 'product', next))
+  return null
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params
-  const [p, s] = await Promise.all([getProductBySlug(slug), getSettings()])
+  const [p, s] = await Promise.all([productOrRedirect(locale as Locale, slug), getSettings()])
   if (!p) return {}
   const l = locale as Locale
   return {
@@ -51,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   const { locale: l, slug } = await params
   const locale = l as Locale
-  const [p, s, all] = await Promise.all([getProductBySlug(slug), getSettings(), getActiveProducts()])
+  const [p, s, all] = await Promise.all([productOrRedirect(locale, slug), getSettings(), getActiveProducts()])
   if (!p) notFound()
   const setRefs = p.kind === 'set' ? (p.setItems ?? []) : []
   const setParts = setRefs.length ? await getProductsByIdsAll([...new Set(setRefs.map((item) => item.productId))]) : []
