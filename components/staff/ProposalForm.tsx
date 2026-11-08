@@ -56,10 +56,12 @@ export function ProposalForm({ p }: { p: ProductProposal | null }) {
       <section className="card space-y-4 p-5">
         <h2 className="font-medium">Slike</h2>
         <div className="flex flex-wrap gap-3">
-          {images.map((src) => (
-            <div key={src} className="relative size-24 overflow-hidden rounded border border-line">
-              <Image src={src} alt="" fill sizes="96px" className="object-cover" unoptimized={src.startsWith('http') && !src.includes('vercel-storage')} />
-              <button type="button" className="absolute inset-x-0 bottom-0 bg-black/70 text-xs" onClick={() => setImages((a) => a.filter((x) => x !== src))}>Ukloni</button>
+          {images.map((src, index) => (
+            <div key={`${src}-${index}`} className="w-32">
+              <div className="relative size-32 overflow-hidden rounded border border-line">
+                <Image src={src} alt="" fill sizes="128px" className="object-cover" unoptimized={src.startsWith('http') && !src.includes('vercel-storage')} />
+              </div>
+              <button type="button" className="btn-ghost btn-sm mt-2 min-h-11 w-full touch-manipulation px-2" onClick={() => setImages((list) => list.filter((_, i) => i !== index))}>Ukloni sliku</button>
             </div>
           ))}
           <label className="grid size-24 cursor-pointer place-items-center border border-dashed border-line text-xs text-mute">

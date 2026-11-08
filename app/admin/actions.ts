@@ -12,9 +12,10 @@ import { deliverReviewRequest } from '@/lib/review-mail'
 import { logShippedEmail } from '@/lib/mail/order-email-log'
 import { saveSettings, type Settings } from '@/lib/settings'
 import { SCHEMA } from '@/lib/schema.mjs'
-import { deleteOpenProposal, getProposal, setProposalBucket } from '@/lib/proposals'
+import { parseProposalImageList } from '@/lib/proposal-images'
+import { deleteOpenProposal, getProposal, replacePendingProposalImages, setProposalBucket } from '@/lib/proposals'
 import { chooseSlug, ensureSlugAliases, syncProductSlugs } from '@/lib/product-slug.mjs'
-import { deleteOpenSetProposal, getSetProposal, publishInactiveAcceptedSet, publishInactiveAcceptedSets, setSetProposalBucket } from '@/lib/set-proposals'
+import { deleteOpenSetProposal, getSetProposal, publishInactiveAcceptedSet, publishInactiveAcceptedSets, replacePendingSetProposalImages, setSetProposalBucket } from '@/lib/set-proposals'
 import { SET_ADMIN_HREF } from '@/lib/setovi'
 import { isProposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
 import type { Invoice, Order, ProposalStatus } from '@/lib/types'
@@ -175,6 +176,30 @@ export async function deleteProduct(f: FormData) {
 }
 
 // ---------- Prijedlozi proizvoda ----------
+type ImageState = { error?: string; ok?: string } | null
+
+export async function saveProposalImages(_prev: ImageState, f: FormData): Promise<ImageState> {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  const parsed = parseProposalImageList(String(f.get('images') || '[]'), 0, 20)
+  if (!parsed.ok) return { error: parsed.error }
+  const result = await replacePendingProposalImages(id, parsed.images)
+  if (!result.ok) return { error: 'Slike se mogu mijenjati samo dok je prijedlog na čekanju.' }
+  revalidateProposal(id)
+  return { ok: 'Slike su spremljene.' }
+}
+
+export async function saveSetProposalImages(_prev: ImageState, f: FormData): Promise<ImageState> {
+  await requireAdmin()
+  const id = Number(f.get('id'))
+  const parsed = parseProposalImageList(String(f.get('images') || '[]'), 1, 12)
+  if (!parsed.ok) return { error: parsed.error }
+  const result = await replacePendingSetProposalImages(id, parsed.images)
+  if (!result.ok) return { error: 'Slike se mogu mijenjati samo dok je prijedlog na čekanju.' }
+  revalidateSetProposal(id)
+  return { ok: 'Slike su spremljene.' }
+}
+
 function revalidateProposal(id: number) {
   revalidatePath('/admin/prijedlozi')
   revalidatePath(`/admin/prijedlozi/${id}`)

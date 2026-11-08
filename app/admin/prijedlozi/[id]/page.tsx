@@ -1,12 +1,12 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth'
 import { getProposal } from '@/lib/proposals'
 import { money } from '@/lib/money'
 import { ActionForm } from '@/components/Ui'
-import { PROPOSAL_STATUS_LABEL } from '@/lib/proposal-bucket'
-import { acceptProposal, rejectProposal, returnProposalToPending } from '../../actions'
+import { isDeletableProposalStatus, PROPOSAL_STATUS_LABEL } from '@/lib/proposal-bucket'
+import { ProposalImageEditor } from '@/components/admin/ProposalImageEditor'
+import { acceptProposal, rejectProposal, returnProposalToPending, saveProposalImages } from '../../actions'
 import { DbError } from '@/components/admin/DbError'
 import { SupplierLink } from '@/components/SupplierLink'
 
@@ -60,12 +60,14 @@ export default async function AdminProposalDetail({ params }: { params: Promise<
         {p.rejectReason && <p className="text-sm text-red-300">Razlog odbijanja: {p.rejectReason}</p>}
 
         <section className="card grid gap-4 p-5 md:grid-cols-2">
-          <div className="md:col-span-2 flex flex-wrap gap-3">
-            {p.images.map((src) => (
-              <a key={src} href={src} target="_blank" rel="noopener noreferrer" className="relative size-32 overflow-hidden rounded border border-line">
-                <Image src={src} alt="" fill sizes="128px" className="object-cover" unoptimized />
-              </a>
-            ))}
+          <div className="md:col-span-2">
+            <ProposalImageEditor
+              id={p.id}
+              images={p.images}
+              action={saveProposalImages}
+              minImages={0}
+              editable={isDeletableProposalStatus(p.status)}
+            />
           </div>
           <p><b>Naziv EN:</b> {p.nameEn || '—'}</p>
           <p><b>Nabava:</b> {p.costCents != null ? money(p.costCents) : '—'}</p>

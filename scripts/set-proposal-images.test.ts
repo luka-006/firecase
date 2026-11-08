@@ -185,3 +185,64 @@ test('pending proposals replace images only; closed ones and missing ids do not'
     if (productIds.length) await sql`delete from products where id in ${sql(productIds)}`
   }
 })
+
+test('removing one image keeps order and leaves the product and other fields alone', { skip: hasDb ? false : 'DATABASE_URL unset' }, async () => {
+  const { sql } = await import('../lib/db.ts')
+  const { replacePendingProposalImages } = await import('../lib/proposals.ts')
+  const { replacePendingSetProposalImages } = await import('../lib/set-proposals.ts')
+  const stamp = Date.now()
+  const setIds: number[] = []
+  const proposalIds: number[] = []
+  const productIds: number[] = []
+  try {
+    const [product] = await sql<{ id: number; images: string[] }[]>`
+      insert into products (slug, name_hr, price_cents, images, active, kind)
+      values (${`image-unlink-${stamp}`}, 'Ne diraj slike', 1599, ${sql.json(['/products/sample-j6.svg', '/products/sample-j3.svg'])}, false, 'product')
+      returning id, images`
+    productIds.push(product.id)
+    const [proposal] = await sql<{ id: number }[]>`
+      insert into product_proposals (status, name_hr, images, cost_cents, notes)
+      values ('review', 'image-unlink-test', ${sql.json(['/products/sample-j6.svg', '/products/sample-j3.svg', '/products/sample-j6.svg'])}, 420, 'ostaje')
+      returning id`
+    proposalIds.push(proposal.id)
+    const removed = await replacePendingProposalImages(proposal.id, ['/products/sample-j3.svg', '/products/sample-j6.svg'])
+    assert.equal(removed.ok, true)
+    if (removed.ok) {
+      assert.deepEqual(removed.proposal.images, ['/products/sample-j3.svg', '/products/sample-j6.svg'])
+      assert.equal(removed.proposal.status, 'review')
+      assert.equal(removed.proposal.nameHr, 'image-unlink-test')
+      assert.equal(removed.proposal.costCents, 420)
+      assert.equal(removed.proposal.notes, 'ostaje')
+    }
+    const locked = await replacePendingProposalImages(proposal.id, [])
+    assert.equal(locked.ok, true)
+    const [acceptedProposal] = await sql<{ id: number }[]>`
+      insert into product_proposals (status, name_hr, images) values ('accepted', 'zatvoreno', ${sql.json(['/products/sample-j6.svg'])}) returning id`
+    proposalIds.push(acceptedProposal.id)
+    const closed = await replacePendingProposalImages(acceptedProposal.id, [])
+    assert.equal(closed.ok, false)
+
+    const [setRow] = await sql<{ id: number }[]>`
+      insert into set_proposals (status, name_hr, short_hr, images, items, price_cents, free_shipping, product_id)
+      values ('review', 'set-unlink', 'kratko', ${sql.json(['/products/sample-j6.svg', '/products/sample-j3.svg'])}, ${sql.json([{ productId: product.id, slug: 'zephyr' }])}, 2999, true, ${product.id})
+      returning id`
+    setIds.push(setRow.id)
+    const setRemoved = await replacePendingSetProposalImages(setRow.id, ['/products/sample-j3.svg'])
+    assert.equal(setRemoved.ok, true)
+    if (setRemoved.ok) {
+      assert.deepEqual(setRemoved.proposal.images, ['/products/sample-j3.svg'])
+      assert.equal(setRemoved.proposal.status, 'review')
+      assert.equal(setRemoved.proposal.priceCents, 2999)
+      assert.equal(setRemoved.proposal.productId, product.id)
+    }
+    const [storedProduct] = await sql<{ images: string[]; priceCents: number; active: boolean }[]>`
+      select images, price_cents, active from products where id = ${product.id}`
+    assert.deepEqual(storedProduct.images, ['/products/sample-j6.svg', '/products/sample-j3.svg'])
+    assert.equal(storedProduct.priceCents, 1599)
+    assert.equal(storedProduct.active, false)
+  } finally {
+    if (setIds.length) await sql`delete from set_proposals where id in ${sql(setIds)}`
+    if (proposalIds.length) await sql`delete from product_proposals where id in ${sql(proposalIds)}`
+    if (productIds.length) await sql`delete from products where id in ${sql(productIds)}`
+  }
+})

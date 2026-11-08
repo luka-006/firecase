@@ -199,6 +199,23 @@ export async function deleteOpenProposal(id: number): Promise<DeleteOpenProposal
   return { ok: false, error: 'locked' }
 }
 
+/**
+ * Replaces images on a draft or review product proposal.
+ * Status, prices and the linked product are not written. Blob files stay.
+ */
+export async function replacePendingProposalImages(id: number, images: string[]) {
+  if (!Number.isInteger(id) || id <= 0 || images.length > 20) return { ok: false as const, error: 'invalid' as const }
+  const [updated] = await sql<ProductProposal[]>`
+    update product_proposals
+    set images = ${sql.json(images)}, updated_at = now()
+    where id = ${id} and status in ('draft', 'review')
+    returning *`
+  if (updated) return { ok: true as const, proposal: updated }
+  const [cur] = await sql<{ id: number }[]>`select id from product_proposals where id = ${id}`
+  if (!cur) return { ok: false as const, error: 'not_found' as const }
+  return { ok: false as const, error: 'not_pending' as const }
+}
+
 export async function maybeAutoAcceptProposal(proposalId: number) {
   const s = await getSettingsFresh()
   if (!s.autoAcceptProposals) return null
