@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = href('hr', 'contest')
   return {
     title: TITLE,
-    description: 'Pravila Firecase nagradnog natječaja „Komu biste ga poklonili?“. Sudjelovanje je besplatno, bez obveze kupnje.',
+    description: 'Firecase giveaway (nagradni natječaj) „Komu biste ga poklonili?“. Sudjelovanje je besplatno, bez obveze kupnje.',
     alternates: { canonical, languages: { hr: canonical, 'x-default': canonical } },
   }
 }
@@ -39,7 +39,7 @@ export default async function ContestRulesPage({ params }: Props) {
       <PageHead
         eyebrow={t('hr').footerInfo}
         title={TITLE}
-        intro="Firecase natječaj „Komu biste ga poklonili?“. Dobitnike organizator bira prema kvaliteti odgovora. Ovo nije nagradna igra."
+        intro="Firecase giveaway (nagradni natječaj) „Komu biste ga poklonili?“. Dobitnike organizator bira prema kvaliteti odgovora. Ovo nije nagradna igra."
       />
       <div className="container-x grid gap-16 pt-12 lg:grid-cols-[1fr_15rem]">
         <div>
@@ -56,11 +56,11 @@ export default async function ContestRulesPage({ params }: Props) {
             </p>
 
             <h2>2. Naziv i narav natječaja</h2>
-            <p>Naziv natječaja je: Firecase natječaj „Komu biste ga poklonili?“.</p>
+            <p>Naziv natječaja je: Firecase giveaway (nagradni natječaj) „Komu biste ga poklonili?“.</p>
             <p>Riječ je o nagradnom natječaju. Organizator bira dobitnike prema kvaliteti odgovora, na temelju mjerila iz ovih Pravila. Ovo nije nagradna igra.</p>
 
             <h2>3. Trajanje</h2>
-            <p>Natječaj traje od 18. 11. 2026. u 10:00 sati do 2. 12. 2026. u 21:00 sati (vrijeme u Republici Hrvatskoj).</p>
+            <p>Natječaj traje od 15. 11. 2026. (od trenutka objave) do 2. 12. 2026. u 21:00 sati (vrijeme u Republici Hrvatskoj).</p>
             <p>Dobitnici se objavljuju 4. 12. 2026. na Instagramu <Instagram /> i na TikToku <TikTok />.</p>
 
             <h2>4. Tko može sudjelovati</h2>
