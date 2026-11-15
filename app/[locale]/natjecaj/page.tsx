@@ -9,10 +9,6 @@ import { href } from '@/lib/routes'
 
 const TITLE = 'Pravila nagradnog natječaja'
 
-function Upisati() {
-  return <strong className="whitespace-nowrap font-mono font-medium text-flame">[UPISATI]</strong>
-}
-
 function Instagram() {
   return <a href="https://www.instagram.com/firecase2026/" target="_blank" rel="noopener noreferrer">@firecase2026</a>
 }
@@ -90,8 +86,8 @@ export default async function ContestRulesPage({ params }: Props) {
             <h2>7. Nagrade</h2>
             <ol>
               <li><b>1. mjesto:</b> Set Trio J5 (tri metalne futrole Ornament, Tiger i Sorbet za BIC J5), u vrijednosti 32,99 €. Dostava je besplatna.</li>
-              <li><b>2. mjesto:</b> kod za popust od 50 % na sljedeću narudžbu na <Link href={home}>firecase.net</Link>. Kod se može iskoristiti samo jednom i vrijedi do <Upisati />.</li>
-              <li><b>3. mjesto:</b> kod za popust od 30 % na sljedeću narudžbu na <Link href={home}>firecase.net</Link>. Kod se može iskoristiti samo jednom i vrijedi do <Upisati />.</li>
+              <li><b>2. mjesto:</b> kod za popust od 50 % na sljedeću narudžbu na <Link href={home}>firecase.net</Link>. Kod se može iskoristiti samo jednom i vrijedi do 31. 12. 2026.</li>
+              <li><b>3. mjesto:</b> kod za popust od 30 % na sljedeću narudžbu na <Link href={home}>firecase.net</Link>. Kod se može iskoristiti samo jednom i vrijedi do 31. 12. 2026.</li>
             </ol>
             <p>Nagrade se ne mogu zamijeniti za novac.</p>
 
