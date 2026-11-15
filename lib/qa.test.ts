@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { t } from './dict.ts'
 import { isPromoHeld, promoHoldUntil, PROMO_HOLD_SEC } from './promo.ts'
 import { href, switchLocale } from './routes.ts'
@@ -22,6 +25,29 @@ test('language switch drops an internal hr prefix', () => {
   assert.equal(switchLocale('/setovi', 'en'), '/en/sets')
   assert.equal(switchLocale('/en/sets', 'hr'), '/setovi')
   assert.equal(switchLocale('/en/product/zephyr', 'hr'), '/proizvod/zephyr')
+  assert.equal(href('hr', 'contest'), '/natjecaj')
+  assert.equal(switchLocale('/natjecaj', 'hr'), '/natjecaj')
+  assert.equal(switchLocale('/en/natjecaj', 'hr'), '/natjecaj')
+})
+
+test('contest rules stay a quality contest in Croatian', () => {
+  const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../app/[locale]/natjecaj/page.tsx'), 'utf8')
+  assert.equal(/izvlačenje|slučajn|random/i.test(page), false)
+  assert.match(page, /nagradnom natječaju/)
+  assert.match(page, /nije nagradna igra/)
+  assert.equal(page.includes('[UPISATI]'), false)
+  assert.equal(page.match(/31\. 12\. 2026\./g)?.length, 2)
+  assert.equal(page.includes('18. 11.'), false)
+  assert.match(page, /15\. 11\. 2026\. \(od trenutka objave\)/)
+  assert.match(page, /Firecase giveaway \(nagradni natječaj\)/)
+  assert.match(page, /2\. 12\. 2026\./)
+  assert.match(page, /4\. 12\. 2026\./)
+  assert.match(page, /@firecase2026/)
+  assert.match(page, /@firecase1/)
+  assert.match(page, /32,99/)
+  assert.match(page, /SELLER\.oib/)
+  assert.match(page, /SELLER\.email/)
+  assert.match(page, /ni na koji način nije sponzoriran, podržan ni organiziran od strane Instagrama/)
 })
 
 test('colour labels use the Croatian plural', () => {

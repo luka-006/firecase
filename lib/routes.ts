@@ -26,6 +26,8 @@ export const ROUTES = {
   returns: { internal: 'legal/returns', hr: 'povrat-i-reklamacije', en: 'returns' },
   withdrawal: { internal: 'legal/withdrawal', hr: 'obrazac-za-odustanak', en: 'withdrawal-form' },
   contact: { internal: 'legal/contact', hr: 'kontakt', en: 'contact' },
+  // Samo hrvatski tekst. /en/natjecaj namjerno nema prijevod.
+  contest: { internal: 'natjecaj', hr: 'natjecaj', en: 'natjecaj' },
 } as const
 export type RouteKey = keyof typeof ROUTES
 
