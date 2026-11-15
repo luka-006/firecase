@@ -32,6 +32,7 @@ export function Footer({ locale }: { locale: Locale }) {
             <li><Link className={a} href={href(locale, 'terms')}>{d.terms}</Link></li>
             <li><Link className={a} href={href(locale, 'privacy')}>{d.privacy}</Link></li>
             <li><Link className={a} href={href(locale, 'cookies')}>{d.cookies}</Link></li>
+            {locale === 'hr' && <li><Link className={a} href={href(locale, 'contest')}>Pravila nagradnog natječaja</Link></li>}
             <li><CookieSettingsButton label={d.cookieSettings} /></li>
           </ul>
         </div>
