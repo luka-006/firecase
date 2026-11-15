@@ -17,7 +17,7 @@ import { href, type Locale } from '@/lib/routes'
 import { loc } from '@/lib/types'
 import { t } from '@/lib/dict'
 import { SITE_URL } from '@/lib/config'
-import { productMetaDescription } from '@/lib/seo'
+import { baseOpenGraph, lighterModels, productMetaDescription, productSeoTitle } from '@/lib/seo'
 import { isSoldOut } from '@/lib/stock'
 import { publicVariants } from '@/lib/variants'
 
@@ -41,17 +41,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [p, s] = await Promise.all([productOrRedirect(locale as Locale, slug), getSettings()])
   if (!p) return {}
   const l = locale as Locale
+  const name = loc(p, 'name', l)
+  const models = p.kind === 'set' ? [] : lighterModels([...p.variants.map((v) => `${v.hr || ''} ${v.en || ''}`), p.fits, p.nameHr, p.shortHr])
+  const title = productSeoTitle(name, models, l)
+  const description = productMetaDescription({
+    locale: l,
+    name,
+    short: loc(p, 'short', l),
+    material: loc(p, 'material', l),
+    variants: p.variants,
+    fits: p.fits,
+    delivery: l === 'en' ? s.deliveryEn : s.deliveryHr,
+  })
   return {
-    title: `${loc(p, 'name', l)} – ${l === 'en' ? 'lighter case' : 'futrola za upaljač'}`,
-    description: productMetaDescription({
-      locale: l,
-      name: loc(p, 'name', l),
-      short: loc(p, 'short', l),
-      material: loc(p, 'material', l),
-      variants: p.variants,
-      delivery: l === 'en' ? s.deliveryEn : s.deliveryHr,
-    }),
-    openGraph: { images: p.images[0] ? [{ url: p.images[0] }] : undefined },
+    title,
+    description,
+    // A child openGraph replaces the layout's one, so the shared fields are repeated here.
+    openGraph: {
+      ...baseOpenGraph(l),
+      title: `${title} | Firecase`,
+      description,
+      url: href(l, 'product', p.slug),
+      images: p.images[0] ? [{ url: p.images[0], alt: name }] : undefined,
+    },
     alternates: { canonical: href(l, 'product', slug), languages: { hr: href('hr', 'product', slug), en: href('en', 'product', slug), 'x-default': href('hr', 'product', slug) } },
   }
 }

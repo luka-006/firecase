@@ -3,15 +3,14 @@ import { ShopCatalogue } from '@/components/ShopCatalogue'
 import { getActiveProducts } from '@/lib/products'
 import { href, type Locale } from '@/lib/routes'
 import { catalogueCases } from '@/lib/setovi'
-import { t } from '@/lib/dict'
+import { listingMeta } from '@/lib/seo'
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ sort?: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   return {
-    title: locale === 'en' ? 'Lighter cases – Collection' : 'Futrole za upaljače – Kolekcija',
-    description: t(locale as Locale).shopIntro,
+    ...listingMeta('shop', locale as Locale),
     alternates: { canonical: href(locale as Locale, 'shop'), languages: { hr: href('hr', 'shop'), en: href('en', 'shop'), 'x-default': href('hr', 'shop') } },
   }
 }

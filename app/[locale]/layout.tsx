@@ -12,6 +12,7 @@ import { getSettings } from '@/lib/settings'
 import { SITE_URL } from '@/lib/config'
 import { euros } from '@/lib/money'
 import { t } from '@/lib/dict'
+import { baseOpenGraph, siteDescription } from '@/lib/seo'
 
 export const viewport: Viewport = { themeColor: '#0a0a0a', colorScheme: 'dark' }
 
@@ -27,11 +28,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     metadataBase: new URL(SITE_URL),
     title: { default: en ? 'Firecase – Lighter cases' : 'Firecase – Futrole za upaljače', template: '%s | Firecase' },
-    description: en
-      ? `Lighter cases with delivery across Croatia. Free shipping from ${amount} and 14 days to return.`
-      : `Futrole za upaljače s dostavom po cijeloj Hrvatskoj. Besplatna dostava od ${amount} i 14 dana za povrat.`,
+    description: siteDescription(en ? 'en' : 'hr', amount),
     keywords: en ? ['lighter case', 'lighter cover', 'BIC lighter case', 'Firecase'] : ['futrola za upaljač', 'futrole za upaljače', 'navlaka za upaljač', 'futrola za BIC upaljač', 'Firecase'],
-    openGraph: { type: 'website', siteName: 'Firecase', locale: en ? 'en_US' : 'hr_HR', alternateLocale: en ? 'hr_HR' : 'en_US', images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Firecase' }] },
+    openGraph: { ...baseOpenGraph(en ? 'en' : 'hr'), images: [{ url: '/og.jpg', width: 1200, height: 630, alt: 'Firecase' }] },
     verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } : undefined,
     twitter: { card: 'summary_large_image' },
     manifest: '/site.webmanifest',

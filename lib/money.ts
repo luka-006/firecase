@@ -5,7 +5,8 @@ const fmt = {
   en: new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }),
 }
 
-export const money = (cents: number, locale: Locale = 'hr') => fmt[locale].format(cents / 100)
+// An unknown locale falls back to hr, so a bad URL can never crash price formatting.
+export const money = (cents: number, locale: Locale = 'hr') => (fmt[locale] ?? fmt.hr).format(cents / 100)
 
 const whole = {
   hr: new Intl.NumberFormat('hr-HR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 }),
@@ -14,7 +15,7 @@ const whole = {
 
 /** Round euro amounts, for thresholds such as 40 €. */
 export function euros(cents: number, locale: Locale = 'hr') {
-  if (cents % 100 === 0) return whole[locale].format(cents / 100)
+  if (cents % 100 === 0) return (whole[locale] ?? whole.hr).format(cents / 100)
   return money(cents, locale)
 }
 

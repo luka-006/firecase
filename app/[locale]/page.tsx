@@ -10,11 +10,13 @@ import { ReviewsStrip } from '@/components/ProductReviews'
 import { getSettings } from '@/lib/settings'
 import { SELLER, SITE_URL } from '@/lib/config'
 import { euros, money } from '@/lib/money'
-import { href, type Locale } from '@/lib/routes'
+import { notFound } from 'next/navigation'
+import { href, isLocale, type Locale } from '@/lib/routes'
 import { loc } from '@/lib/types'
 import { t } from '@/lib/dict'
 import { isSetProduct, mixHomeCollection } from '@/lib/setovi'
 import { isLowStock, withLowStockFirst } from '@/lib/stock'
+import { SOCIAL_PROFILES } from '@/lib/seo'
 
 export const revalidate = 300
 
@@ -28,7 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
-  const locale = (await params).locale as Locale
+  const raw = (await params).locale
+  // /index.php, /.env etc. skip proxy.ts and land here with a junk locale: answer 404, not 500.
+  if (!isLocale(raw)) notFound()
+  const locale: Locale = raw
   const d = t(locale)
   const [products, s, homeReviews] = await Promise.all([getActiveProducts(), getSettings(), getHomepageReviews()])
   const items: IndexItem[] = mixHomeCollection(withLowStockFirst(products)).map((p) => ({
@@ -46,7 +51,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const freeLabel = euros(s.freeThresholdCents, locale)
   const faq: [string, string][] = [...d.faq.slice(0, 2), d.freeShipFaq(freeLabel), ...d.faq.slice(2)]
   const ld = [
-    { '@context': 'https://schema.org', '@type': 'Organization', name: 'Firecase', url: SITE_URL, logo: `${SITE_URL}/icon-512.png`, email: SELLER.email },
+    { '@context': 'https://schema.org', '@type': 'Organization', name: 'Firecase', url: SITE_URL, logo: `${SITE_URL}/icon-512.png`, email: SELLER.email, sameAs: SOCIAL_PROFILES },
     { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Firecase', url: SITE_URL, inLanguage: locale === 'en' ? 'en' : 'hr' },
     {
       '@context': 'https://schema.org', '@type': 'FAQPage',

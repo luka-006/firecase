@@ -13,14 +13,75 @@ function sentence(s: string) {
   return t ? `${t}.` : ''
 }
 
-function fitsLine(variants: Variant[], locale: Locale) {
-  const labels: string[] = []
-  for (const v of variants) {
-    const m = `${v.hr || ''} ${v.en || ''}`.match(/BIC\s*J\s*(\d+)/i)
-    if (!m) continue
-    const label = `BIC J${m[1]}`
-    if (!labels.includes(label)) labels.push(label)
+/** Open Graph fields every page shares. Pages that set their own openGraph must spread this. */
+export function baseOpenGraph(locale: Locale) {
+  const en = locale === 'en'
+  return {
+    type: 'website' as const,
+    siteName: 'Firecase',
+    locale: en ? 'en_US' : 'hr_HR',
+    alternateLocale: en ? 'hr_HR' : 'en_US',
   }
+}
+
+/** Default site description, also used on the homepage. */
+export function siteDescription(locale: Locale, freeFrom: string) {
+  return locale === 'en'
+    ? `Metal and leather cases for BIC, Clipper, Cricket and Zippo lighters. Delivery across Croatia, free from ${freeFrom}, and 14 days to return.`
+    : `Metalne i kožne futrole za upaljače BIC, Clipper, Cricket i Zippo. Dostava po cijeloj Hrvatskoj, besplatna od ${freeFrom}, i 14 dana za povrat.`
+}
+
+/** Titles and meta descriptions for the listing pages (shop, sets, engraver). */
+export function listingMeta(page: 'shop' | 'sets' | 'engraver', locale: Locale) {
+  const en = locale === 'en'
+  if (page === 'shop') {
+    return en
+      ? { title: 'Lighter cases – Collection', description: 'All our lighter cases in one place: metal and leather cases for BIC J5, BIC J6, Clipper, Cricket and Zippo lighters. Delivery across Croatia.' }
+      : { title: 'Futrole za upaljače – Kolekcija', description: 'Sve futrole za upaljače na jednom mjestu: metalne i kožne futrole za BIC J5, BIC J6, Clipper, Cricket i Zippo. Dostava po cijeloj Hrvatskoj.' }
+  }
+  if (page === 'sets') {
+    return en
+      ? { title: 'Lighter case sets', description: 'Sets of lighter cases that cost less than buying each case on its own, and always ship free within Croatia. A good gift for him.' }
+      : { title: 'Setovi futrola za upaljače', description: 'Setovi futrola za upaljače, povoljniji nego kad futrole kupujete pojedinačno, i uvijek s besplatnom dostavom po Hrvatskoj. Dobar poklon za njega.' }
+  }
+  return en
+    ? { title: 'Engraved lighter cases', description: 'Lighter cases engraved with a name or initials. A personal gift for him. Engraving supports the letters A to Z, without accents.' }
+    : { title: 'Futrole za upaljače s gravurom imena', description: 'Futrole za upaljače s ugraviranim imenom ili inicijalima. Osoban poklon za njega. Gravura podržava slova A-Z, bez kvačica.' }
+}
+
+/** Public profiles for Organization.sameAs (helps Google tie the brand to its socials). */
+export const SOCIAL_PROFILES = ['https://www.instagram.com/firecase2026/', 'https://www.tiktok.com/@firecase1']
+
+const MODEL_PATTERNS: [RegExp, (m: RegExpMatchArray) => string][] = [
+  [/BIC\s*J\s*(\d+)/gi, (m) => `BIC J${m[1]}`],
+  [/\bClipper\b/gi, () => 'Clipper'],
+  [/\bCricket\b/gi, () => 'Cricket'],
+  [/\bZippo\b/gi, () => 'Zippo'],
+]
+
+/** Lighter models a product fits, in the order they first appear in the given texts. */
+export function lighterModels(texts: string[]): string[] {
+  const found: { label: string; at: number }[] = []
+  const all = texts.filter(Boolean).join(' \n ')
+  for (const [re, label] of MODEL_PATTERNS) {
+    for (const m of all.matchAll(re)) {
+      const l = label(m)
+      if (!found.some((f) => f.label === l)) found.push({ label: l, at: m.index ?? 0 })
+    }
+  }
+  return found.sort((a, b) => a.at - b.at).map((f) => f.label)
+}
+
+/** Product page title: "Engraver – futrola za upaljač BIC J6". Falls back to the generic phrase. */
+export function productSeoTitle(name: string, models: string[], locale: Locale) {
+  const en = locale === 'en'
+  const fit = models.slice(0, 2).join(' / ')
+  if (en) return fit ? `${name} – lighter case for ${fit}` : `${name} – lighter case`
+  return fit ? `${name} – futrola za upaljač ${fit}` : `${name} – futrola za upaljač`
+}
+
+function fitsLine(variants: Variant[], locale: Locale, fits = '') {
+  const labels = lighterModels([...variants.map((v) => `${v.hr || ''} ${v.en || ''}`), fits])
   if (!labels.length) return ''
   if (locale === 'en') return labels.length === 1 ? `Fits ${labels[0]}.` : `Fits ${labels.slice(0, -1).join(', ')} and ${labels.at(-1)}.`
   return labels.length === 1 ? `Za ${labels[0]}.` : `Za ${labels.slice(0, -1).join(', ')} i ${labels.at(-1)}.`
@@ -46,16 +107,19 @@ export function productMetaDescription(input: {
   material: string
   variants: Variant[]
   delivery?: string
+  fits?: string
 }) {
   const en = input.locale === 'en'
   const delivery = tidy(input.delivery || (en ? '8–16 days' : '8–16 dana'))
   const tail = en ? `Delivery in ${delivery}.` : `Dostava ${delivery}.`
   const name = tidy(input.name) || 'Firecase'
   const lead = `${name}, ${en ? 'lighter case' : 'futrola za upaljač'}.`
+  // Order matters: when the text is too long, extras are dropped from the end, so the fit
+  // line (what people search for) is kept before the material line.
   const extras = [
     sentence(input.short),
+    fitsLine(input.variants, input.locale, input.fits),
     input.material ? (en ? `Material: ${sentence(input.material)}` : `Materijal: ${sentence(input.material)}`) : '',
-    fitsLine(input.variants, input.locale),
   ].filter(Boolean)
   const pads = en
     ? ['It slides onto your lighter in a few seconds.', 'It keeps the lighter free of scratches.', 'Ships across Croatia.']
