@@ -52,7 +52,7 @@ export function CookieNotice({ locale }: { locale: Locale }) {
   }
   if (!show) return null
   return (
-    <div role="dialog" aria-label={d.cookieSettings} className="sheet-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink px-5 py-4 sm:inset-x-auto sm:bottom-6 sm:left-6 sm:max-w-sm sm:border sm:p-5">
+    <div role="dialog" aria-label={d.cookieSettings} data-cookie-notice className="sheet-in fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink px-5 py-4 sm:inset-x-auto sm:bottom-6 sm:left-6 sm:max-w-sm sm:border sm:p-5">
       <p className="text-xs leading-relaxed text-bone/70">
         {GA_ID ? d.cookieText : d.cookieTextBasic} <Link href={href(locale, 'cookies')} className="link">{d.more}</Link>
       </p>

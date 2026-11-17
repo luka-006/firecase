@@ -2,9 +2,11 @@ import { Fragment } from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { CollectionIndex, type IndexItem } from '@/components/CollectionIndex'
+import { SaleStrip, type SaleItem } from '@/components/SaleStrip'
+import { ScrollCta } from '@/components/ScrollCta'
 import { Mark } from '@/components/Mark'
 import { ArrowIcon, PlusIcon } from '@/components/icons'
-import { getActiveProducts } from '@/lib/products'
+import { getActiveProducts, getProductBySlug } from '@/lib/products'
 import { getHomepageReviews } from '@/lib/reviews'
 import { ReviewsStrip } from '@/components/ProductReviews'
 import { getSettings } from '@/lib/settings'
@@ -14,7 +16,8 @@ import { notFound } from 'next/navigation'
 import { href, isLocale, type Locale } from '@/lib/routes'
 import { loc } from '@/lib/types'
 import { t } from '@/lib/dict'
-import { isSetProduct, mixHomeCollection } from '@/lib/setovi'
+import { catalogueCases, catalogueSets, isSetProduct } from '@/lib/setovi'
+import { hourSeed, interleaveSets, isOnSale, salePercent, seededRandom, shuffle } from '@/lib/home-order'
 import { isLowStock, withLowStockFirst } from '@/lib/stock'
 import { SOCIAL_PROFILES } from '@/lib/seo'
 
@@ -36,18 +39,43 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const locale: Locale = raw
   const d = t(locale)
   const [products, s, homeReviews] = await Promise.all([getActiveProducts(), getSettings(), getHomepageReviews()])
-  const items: IndexItem[] = mixHomeCollection(withLowStockFirst(products)).map((p) => ({
+  const toItem = (p: (typeof products)[number]): IndexItem => ({
     slug: p.slug,
     href: href(locale, 'product', p.slug),
     name: loc(p, 'name', locale),
     short: loc(p, 'short', locale),
     price: money(p.priceCents, locale),
+    compare: isOnSale(p) && p.compareCents ? money(p.compareCents, locale) : undefined,
     image: p.images[0] ?? '',
     sizes: isSetProduct(p) ? '' : p.variants.length ? d.sizes(p.variants.length) : '',
     badge: isLowStock(p) ? d.lastPieces : '',
     set: isSetProduct(p),
     setLabel: isSetProduct(p) ? d.setBadge : '',
-  }))
+  })
+  // The collection order rotates every hour (same order for everyone inside the hour, so the page
+  // stays cacheable). Last pieces still come first; Promiješaj draws a new selection in the browser.
+  const order = withLowStockFirst(shuffle([...catalogueCases(products), ...catalogueSets(products)], seededRandom(hourSeed())))
+  const pool = interleaveSets(order.map(toItem))
+  const items = pool.slice(0, 8)
+
+  // Discounted products, with the Omnibus 30-day lowest price from the product query.
+  const saleProducts = catalogueCases(products).filter(isOnSale)
+  const saleRows = await Promise.all(saleProducts.map((p) => getProductBySlug(p.slug)))
+  const sale: SaleItem[] = saleProducts.map((p, i) => {
+    const lowest = saleRows[i]?.lowest30 ?? p.priceCents
+    return {
+      slug: p.slug,
+      href: href(locale, 'product', p.slug),
+      name: loc(p, 'name', locale),
+      short: loc(p, 'short', locale),
+      image: p.images[0] ?? '',
+      price: money(p.priceCents, locale),
+      compare: money(p.compareCents ?? p.priceCents, locale),
+      lowestLine: `${d.lowest30}: ${money(lowest, locale)}`,
+      percent: salePercent(p.priceCents, saleRows[i]?.lowest30),
+    }
+  })
+  const n = (k: number) => String(k + (sale.length ? 1 : 0)).padStart(2, '0')
   const freeLabel = euros(s.freeThresholdCents, locale)
   const faq: [string, string][] = [...d.faq.slice(0, 2), d.freeShipFaq(freeLabel), ...d.faq.slice(2)]
   const ld = [
@@ -79,19 +107,33 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <span aria-hidden="true" className="rule-draw mt-12 block h-px bg-line" />
           <div className="rise flex flex-col gap-8 pt-8 md:flex-row md:items-end md:justify-between" style={{ ['--d' as string]: '420ms' }}>
             <p className="max-w-md text-[15px] leading-relaxed text-bone/65">{d.heroSub}</p>
-            <Link href={href(locale, 'shop')} className="btn group self-start">{d.heroCta}<ArrowIcon className="size-4 transition duration-500 group-hover:translate-x-1" /></Link>
+            <Link id="hero-cta" href={href(locale, 'shop')} className="btn group self-start">{d.heroCta}<ArrowIcon className="size-4 transition duration-500 group-hover:translate-x-1" /></Link>
           </div>
         </div>
       </section>
 
+      <SaleStrip items={sale} title={d.saleT} badge={d.saleBadge} index="01" />
+
       <section className="container-x pt-24 md:pt-40" aria-labelledby="kolekcija">
-        <div className="mb-10 flex items-end justify-between gap-4" data-reveal>
-          <h2 id="kolekcija" className="h-display text-4xl leading-none sm:text-6xl"><span className={idx}>01</span>{d.allCases}</h2>
-          <Link href={href(locale, 'shop')} className="hidden items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-bone/70 transition hover:text-bone sm:inline-flex">
-            {d.viewAll} <ArrowIcon className="size-4" />
-          </Link>
-        </div>
-        {items.length ? <CollectionIndex items={items} /> : <p className="text-mute">{d.noProducts}</p>}
+        {items.length ? (
+          <CollectionIndex
+            items={items}
+            pool={pool}
+            shuffleLabel={d.shuffle}
+            shuffledLabel={d.shuffled}
+            heading={<h2 id="kolekcija" className="h-display text-4xl leading-none sm:text-6xl"><span className={idx}>{n(1)}</span>{d.allCases}</h2>}
+            viewAll={
+              <Link href={href(locale, 'shop')} className="hidden items-center gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-bone/70 transition hover:text-bone sm:inline-flex">
+                {d.viewAll} <ArrowIcon className="size-4" />
+              </Link>
+            }
+          />
+        ) : (
+          <>
+            <h2 id="kolekcija" className="h-display mb-10 text-4xl leading-none sm:text-6xl"><span className={idx}>{n(1)}</span>{d.allCases}</h2>
+            <p className="text-mute">{d.noProducts}</p>
+          </>
+        )}
       </section>
 
       <section className="sweep-host mt-28 bg-flame text-ink md:mt-44">
@@ -111,7 +153,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <section className="container-x pt-24 md:pt-40" aria-labelledby="faq">
         <div className="grid gap-10 md:grid-cols-12 md:gap-16">
           <h2 id="faq" className="h-display text-3xl leading-none sm:text-5xl md:col-span-4 md:sticky md:top-28 md:self-start" data-reveal>
-            <span className={idx}>02</span>{d.faqT}
+            <span className={idx}>{n(2)}</span>{d.faqT}
           </h2>
           <div className="divide-y divide-line border-y border-line md:col-span-8">
             {faq.map(([q, a], i) => (
@@ -127,6 +169,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           </div>
         </div>
       </section>
+
+      <ScrollCta href={href(locale, 'shop')} label={d.heroCta} anchorId="hero-cta" />
     </>
   )
 }

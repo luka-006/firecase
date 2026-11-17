@@ -13,4 +13,5 @@ export const MinusIcon = ({ className }: P) => (<svg {...base(className)}><path 
 export const ArrowIcon = ({ className }: P) => (<svg {...base(className)}><path d="M5 12h14M13 6l6 6-6 6" /></svg>)
 export const CheckIcon = ({ className }: P) => (<svg {...base(className)}><path d="m5 12 5 5 9-10" /></svg>)
 export const ShieldIcon = ({ className }: P) => (<svg {...base(className)}><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>)
-export const ChevronIcon = ({ className }: P) => (<svg {...base(className)}><path d="m6 9 6 6 6-6" /></svg>)
+export const ShuffleIcon = ({ className }: P) => (<svg {...base(className)}><path d="M4 17h2.6c1.5 0 2.9-.8 3.7-2l3.4-6c.8-1.2 2.2-2 3.7-2H20" /><path d="M4 7h2.6c1.5 0 2.9.8 3.7 2l.6 1" /><path d="m13.1 14 .6 1c.8 1.2 2.2 2 3.7 2H20" /><path d="m17 4 3 3-3 3" /><path d="m17 14 3 3-3 3" /></svg>)
+export const ChevronIcon =({ className }: P) => (<svg {...base(className)}><path d="m6 9 6 6 6-6" /></svg>)
