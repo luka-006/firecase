@@ -14,6 +14,7 @@ export type CartItem = {
   variantHr: string
   variantEn: string
   engraving?: string
+  engravingFont?: number
   qty: number
   freeShipping?: boolean
 }
@@ -88,7 +89,7 @@ export function CartProvider({ children, shipping }: { children: React.ReactNode
   }, [items, upsell, ready])
 
   const add: Ctx['add'] = useCallback((item, qty = 1, opts) => {
-    const key = item.engraving ? `${item.id}:${item.vi}:${item.engraving}` : `${item.id}:${item.vi}`
+    const key = item.engraving ? `${item.id}:${item.vi}:${item.engraving}:${item.engravingFont ?? ''}` : `${item.id}:${item.vi}`
     setItems((prev) => {
       const found = prev.find((i) => i.key === key)
       if (found) return prev.map((i) => (i.key === key ? { ...i, ...item, qty: Math.min(99, i.qty + qty) } : i))

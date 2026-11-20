@@ -7,6 +7,8 @@ import { useCart } from './CartProvider'
 import { ArrowIcon, CheckIcon, HeartIcon, MinusIcon, PlusIcon, XIcon } from './icons'
 import { favoriteState, toggleFavorite } from '@/app/actions'
 import { ENGRAVING_MAX, engravingText } from '@/lib/engrave'
+import { DEFAULT_ENGRAVE_FONT, engraveMetal } from '@/lib/engrave-fonts'
+import { EngravingFontPicker, EngravingPreview } from './EngravingStudio'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import { isOptionSoldOut, optionStock } from '@/lib/stock'
@@ -174,6 +176,8 @@ export function BuyBox({ locale, product }: BuyProps) {
   const [done, setDone] = useState(false)
   const [engraving, setEngraving] = useState('')
   const [engravingBad, setEngravingBad] = useState(false)
+  const [engravingFont, setEngravingFont] = useState<number>(DEFAULT_ENGRAVE_FONT)
+  const engravingLive = engravingText(engraving).ok
   const tracked = optionStock(stocked, vi)
   const inCart = items.filter((i) => i.id === product.id && i.vi === vi).reduce((sum, i) => sum + i.qty, 0)
   const room = tracked === null ? null : Math.max(0, tracked - inCart)
@@ -192,7 +196,7 @@ export function BuyBox({ locale, product }: BuyProps) {
       return
     }
     const v = product.variants[vi]
-    add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '', freeShipping: product.freeShipping, ...(parsed.text ? { engraving: parsed.text } : {}) }, qty)
+    add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '', freeShipping: product.freeShipping, ...(parsed.text ? { engraving: parsed.text, engravingFont } : {}) }, qty)
     setDone(true)
     setTimeout(() => setDone(false), 1800)
   }
@@ -218,20 +222,30 @@ export function BuyBox({ locale, product }: BuyProps) {
         </div>
       )}
       {product.engrave && (
+        <div className="space-y-5 border border-line p-4 sm:p-5">
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-flame">{d.engravingYours}</p>
+        <div className="engrave-stage -mx-4 px-3 py-5 sm:-mx-5 sm:px-6">
+          <EngravingPreview locale={locale} metal={engraveMetal(product.variants[vi])} text={engravingLive ? engraving : ''} font={engravingFont} />
+        </div>
         <label className="block">
-          <span className="label">{d.engraving}</span>
+          <span className="label flex items-baseline justify-between gap-3">{d.engraving}<span className="font-mono text-[10px] tabular-nums text-mute">{engraving.length}/{ENGRAVING_MAX}</span></span>
           <input
             value={engraving}
             maxLength={ENGRAVING_MAX}
             spellCheck={false}
             autoCapitalize="off"
+            autoComplete="off"
+            placeholder={d.engravingPlaceholder}
             aria-label={d.engraving}
+            aria-invalid={engravingBad || !engravingLive}
             onChange={(e) => { setEngraving(e.target.value); setEngravingBad(false) }}
             className="input"
           />
           <span className="mt-1 block text-xs text-mute">{d.engravingHint}</span>
-          {engravingBad && <span className="mt-1 block text-sm text-red-300">{d.engravingError}</span>}
+          {(engravingBad || !engravingLive) && <span className="mt-1 block text-sm text-red-300">{d.engravingError}</span>}
         </label>
+        <EngravingFontPicker locale={locale} text={engravingLive ? engraving : ''} value={engravingFont} onChange={setEngravingFont} />
+        </div>
       )}
       <div className="flex gap-3">
         <div className="flex items-center rounded-none border border-line">

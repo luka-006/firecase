@@ -17,6 +17,7 @@ import { promoHoldUntil } from '@/lib/promo'
 import { isOrderNumberConflict, randomOrderNumber } from '@/lib/order-number.mjs'
 import { getProductsByIds, getProductsByIdsAll } from '@/lib/products'
 import { engravingText } from '@/lib/engrave'
+import { DEFAULT_ENGRAVE_FONT, engraveFont } from '@/lib/engrave-fonts'
 import { componentSnapshots } from '@/lib/set-order'
 import { orderStockGroups, quoteSet } from '@/lib/setovi'
 import { getSettingsFresh } from '@/lib/settings'
@@ -59,6 +60,7 @@ const cartSchema = z.array(z.object({
   vi: z.number().int(),
   qty: z.number().int().min(1).max(99),
   engraving: z.string().max(40).optional(),
+  engravingFont: z.number().int().min(1).max(99).optional(),
 })).min(1).max(50)
 
 export async function startCheckout(_: State, f: FormData): Promise<State> {
@@ -109,10 +111,12 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       costCents = quoteSet(p.priceCents, snap.components.map((part) => ({ priceCents: part.unitCents, costCents: part.costCents ?? null }))).costCents
     }
     let engraving: string | undefined
+    let engravingFont: number | undefined
     if (p.engrave && p.kind !== 'set') {
       const parsed = engravingText(line.engraving || '')
       if (!parsed.ok) return { error: d.engravingError }
       engraving = parsed.text || undefined
+      if (engraving) engravingFont = (engraveFont(line.engravingFont) ?? engraveFont(DEFAULT_ENGRAVE_FONT))?.id
     }
     items.push({
       productId: p.id, slug: p.slug,
@@ -125,7 +129,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       costCents,
       components,
       sizeMix,
-      ...(engraving ? { engraving } : {}),
+      ...(engraving ? { engraving, ...(engravingFont ? { engravingFont } : {}) } : {}),
     })
   }
   for (const group of orderStockGroups(items)) {
@@ -202,7 +206,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       },
       line_items: items.map((i) => ({
         quantity: i.qty,
-        price_data: { currency: 'eur', unit_amount: i.unitCents, product_data: { name: [i.variant ? `${i.name} (${i.variant})` : i.name, i.engraving].filter(Boolean).join(' · ') } },
+        price_data: { currency: 'eur', unit_amount: i.unitCents, product_data: { name: [i.variant ? `${i.name} (${i.variant})` : i.name, i.engraving, i.engraving && i.engravingFont ? `Font ${i.engravingFont}` : ''].filter(Boolean).join(' · ') } },
       })),
       ...(discount > 0
         ? {

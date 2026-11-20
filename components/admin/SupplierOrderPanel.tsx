@@ -65,6 +65,9 @@ export function SupplierOrderPanel({
                 {line.option ? <p>Opcija: {line.option}</p> : null}
                 {line.sku ? <p className="text-mute">SKU: {line.sku}</p> : null}
                 {line.note ? <p className="text-mute">{line.note}</p> : null}
+                {line.engraving ? (
+                  <p className="mt-1 flex items-center gap-2">Gravura: <span className="font-mono">{line.engraving}</span> <CopyButton value={line.engraving} /></p>
+                ) : null}
                 {problem ? (
                   <p className="mt-1 text-amber-300">
                     {problem}{' '}
