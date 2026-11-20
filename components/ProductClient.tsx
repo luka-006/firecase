@@ -161,12 +161,17 @@ function Lightbox({ images, index, go, onClose, alt }: { images: string[]; index
   )
 }
 
+export type EngravingState = { text: string; font: number; metal: 'gold' | 'silver' }
+
 type BuyProps = {
   locale: Locale
   product: { id: number; slug: string; nameHr: string; nameEn: string; image: string; priceCents: number; variants: Variant[]; stock: number | null; freeShipping?: boolean; engrave?: boolean }
+  /** The page shows the big engraving preview beside the buy box on desktop, so the inline one is for phones only. */
+  previewAside?: boolean
+  onEngraving?: (state: EngravingState) => void
 }
 
-export function BuyBox({ locale, product }: BuyProps) {
+export function BuyBox({ locale, product, previewAside, onEngraving }: BuyProps) {
   const { add, items } = useCart()
   const d = t(locale)
   const stocked = { stock: product.stock, variants: product.variants }
@@ -178,6 +183,11 @@ export function BuyBox({ locale, product }: BuyProps) {
   const [engravingBad, setEngravingBad] = useState(false)
   const [engravingFont, setEngravingFont] = useState<number>(DEFAULT_ENGRAVE_FONT)
   const engravingLive = engravingText(engraving).ok
+  const engravingMetal = engraveMetal(product.variants[vi])
+  const engravingShown = engravingLive ? engraving : ''
+  useEffect(() => {
+    onEngraving?.({ text: engravingShown, font: engravingFont, metal: engravingMetal })
+  }, [onEngraving, engravingShown, engravingFont, engravingMetal])
   const tracked = optionStock(stocked, vi)
   const inCart = items.filter((i) => i.id === product.id && i.vi === vi).reduce((sum, i) => sum + i.qty, 0)
   const room = tracked === null ? null : Math.max(0, tracked - inCart)
@@ -224,8 +234,9 @@ export function BuyBox({ locale, product }: BuyProps) {
       {product.engrave && (
         <div className="space-y-5 border border-line p-4 sm:p-5">
         <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-flame">{d.engravingYours}</p>
-        <div className="engrave-stage -mx-4 px-3 py-5 sm:-mx-5 sm:px-6">
-          <EngravingPreview locale={locale} metal={engraveMetal(product.variants[vi])} text={engravingLive ? engraving : ''} font={engravingFont} />
+        {/* Stays in view on phones while the name is typed and the font picked. */}
+        <div className={`engrave-stage sticky top-16 z-10 -mx-4 px-3 py-5 sm:-mx-5 sm:px-6 ${previewAside ? 'lg:hidden' : ''}`}>
+          <EngravingPreview locale={locale} metal={engravingMetal} text={engravingShown} font={engravingFont} />
         </div>
         <label className="block">
           <span className="label flex items-baseline justify-between gap-3">{d.engraving}<span className="font-mono text-[10px] tabular-nums text-mute">{engraving.length}/{ENGRAVING_MAX}</span></span>
@@ -244,7 +255,7 @@ export function BuyBox({ locale, product }: BuyProps) {
           <span className="mt-1 block text-xs text-mute">{d.engravingHint}</span>
           {(engravingBad || !engravingLive) && <span className="mt-1 block text-sm text-red-300">{d.engravingError}</span>}
         </label>
-        <EngravingFontPicker locale={locale} text={engravingLive ? engraving : ''} value={engravingFont} onChange={setEngravingFont} />
+        <EngravingFontPicker locale={locale} text={engravingShown} value={engravingFont} onChange={setEngravingFont} />
         </div>
       )}
       <div className="flex gap-3">

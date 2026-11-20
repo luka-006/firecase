@@ -55,7 +55,7 @@ export function EngravingPreview({ locale, metal, text, font }: { locale: Locale
           </span>
         </div>
       </div>
-      <figcaption className="mt-2 text-xs text-mute">{d.engravingPreviewNote}</figcaption>
+      <figcaption className="mt-2 text-[10px] leading-snug text-ink/45">{d.engravingPreviewNote}</figcaption>
     </figure>
   )
 }

@@ -2,7 +2,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { BuyBox } from './ProductClient'
+import { EngravingPreview } from './EngravingStudio'
+import { BuyBox, type EngravingState } from './ProductClient'
 import { ArrowIcon, CheckIcon } from './icons'
 import { t } from '@/lib/dict'
 import type { Locale } from '@/lib/routes'
@@ -22,6 +23,7 @@ export function EngraverShop({ locale, cases, banner }: { locale: Locale; cases:
   const [slug, setSlug] = useState<string | null>(null)
   const panel = useRef<HTMLElement>(null)
   const sel = cases.find((c) => c.slug === slug) ?? null
+  const [eng, setEng] = useState<EngravingState>({ text: '', font: 1, metal: 'gold' })
 
   useEffect(() => {
     if (sel) panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -30,11 +32,20 @@ export function EngraverShop({ locale, cases, banner }: { locale: Locale; cases:
   return (
     <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
       <div className="lg:sticky lg:top-24 lg:self-start">
+        {/* Once a case is picked, desktop swaps the banner for the case lying flat with the engraving drawn live. */}
+        <div className={sel ? 'lg:hidden' : ''}>
         <div className="frame aspect-square w-full">
           <div className="frame-in">
             <Image src={banner} alt={`${d.engraver}: ${d.engraverIntro}`} fill priority sizes="(min-width:1024px) 40vw, 100vw" className="object-cover" />
           </div>
         </div>
+        </div>
+        {sel && (
+          <div className="engrave-stage pop-in hidden px-6 py-10 lg:block">
+            <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.18em] text-ink/60">{d.engravingYours}</p>
+            <EngravingPreview locale={locale} metal={eng.metal} text={eng.text} font={eng.font} />
+          </div>
+        )}
       </div>
       <div className="min-w-0">
         <p className="eyebrow">{d.engravingStep(1)}</p>
@@ -69,7 +80,7 @@ export function EngraverShop({ locale, cases, banner }: { locale: Locale; cases:
               <span className="font-mono text-lg tabular-nums">{sel.price}</span>
             </div>
             <div className="mt-6">
-              <BuyBox locale={locale} product={sel.buy} />
+              <BuyBox locale={locale} product={sel.buy} previewAside onEngraving={setEng} />
             </div>
             <Link href={sel.href} className="mt-6 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-mute transition hover:text-bone">
               {d.engravingDetails} <ArrowIcon className="size-3.5" />
