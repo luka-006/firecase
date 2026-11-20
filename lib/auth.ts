@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { staffTokenMatches } from './staff-token'
 
 const USER_COOKIE = 'fc_session'
 const ADMIN_COOKIE = 'fc_admin'
@@ -92,16 +93,5 @@ export async function clearStaffSession() {
 }
 
 export function staffApiAuthorized(req: Request) {
-  const expected = process.env.STAFF_API_TOKEN
-  if (!expected) return false
-  const h = req.headers.get('authorization') || ''
-  const m = /^Bearer\s+(.+)$/i.exec(h)
-  if (!m) return false
-  const given = m[1]
-  if (given.length !== expected.length) return false
-  try {
-    return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(expected))
-  } catch {
-    return false
-  }
+  return staffTokenMatches(req.headers.get('authorization'))
 }
