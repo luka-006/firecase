@@ -6,8 +6,8 @@ import { ENGRAVE_FONTS } from '@/lib/engrave-fonts'
 import { t } from '@/lib/dict'
 import type { Locale } from '@/lib/routes'
 
-// Text area on the blank case renders in public/engrave (1377 x 482, hood on the right).
-const TEXT_BOX = { left: '7.5%', width: '70.5%', top: '22%', height: '56%' }
+// Text area on the top face of the blank cases in public/engrave (real photo, 1092 x 352, lighter top on the right).
+const TEXT_BOX = { left: '11%', width: '64%', top: '9%', height: '39%' }
 
 // The supplier's laser engraving comes out white on every colour.
 const INK = {
@@ -42,7 +42,7 @@ export function EngravingPreview({ locale, metal, text, font }: { locale: Locale
 
   return (
     <figure className="relative">
-      <div className="relative w-full [container-type:inline-size]" style={{ aspectRatio: '1377 / 482' }}>
+      <div className="relative w-full [container-type:inline-size]" style={{ aspectRatio: '1092 / 352' }}>
         {(['gold', 'silver'] as const).map((m) => (
           <Image key={m} src={`/engrave/case-${m}.webp`} alt="" fill sizes="(min-width:1024px) 40vw, 92vw" priority={m === metal}
             className={`object-contain transition-opacity duration-500 ${m === metal ? 'opacity-100' : 'opacity-0'}`} />
