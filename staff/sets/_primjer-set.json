@@ -1,0 +1,8 @@
+{
+  "nameHr": "Primjer seta",
+  "shortHr": "Tri futrole u jednom setu. Besplatna dostava.",
+  "items": [{ "slug": "atelier" }, { "slug": "atelier" }, { "slug": "atelier" }],
+  "images": ["https://example.com/set.jpg"],
+  "priceCents": 2999,
+  "freeShipping": true
+}

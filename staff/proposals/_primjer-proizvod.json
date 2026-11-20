@@ -1,0 +1,15 @@
+{
+  "nameHr": "Primjer futrole",
+  "nameEn": "Example case",
+  "shortHr": "Kratki opis za karticu proizvoda.",
+  "descHr": "Duži opis za stranicu proizvoda.",
+  "images": ["https://example.com/slika-1.jpg", "./primjer/slika-2.jpg"],
+  "variants": [{ "hr": "Crna", "en": "Black", "sup": "Black" }],
+  "supplierUrl": "https://example.com/proizvod",
+  "costCents": 1630,
+  "estDeliveryHr": "8–16 dana",
+  "estDeliveryEn": "8–16 days",
+  "materialHr": "Metal i PU koža",
+  "materialEn": "Metal and PU leather",
+  "notes": "Za BIC J6."
+}

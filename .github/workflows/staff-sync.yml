@@ -1,0 +1,38 @@
+name: Staff proposals
+
+# Pull requests only check the files. A merge to main sends new proposals to the shop.
+on:
+  pull_request:
+    paths: ['staff/**', 'scripts/staff-sync.ts', 'lib/staff/**']
+  push:
+    branches: [main]
+    paths: ['staff/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staff-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Check proposals
+        if: github.event_name == 'pull_request'
+        run: npx --yes tsx scripts/staff-sync.ts --dry-run
+      - name: Send proposals to the shop
+        if: github.event_name != 'pull_request'
+        env:
+          STAFF_API_TOKEN: ${{ secrets.STAFF_API_TOKEN }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://firecase.net' }}
+        run: npx --yes tsx scripts/staff-sync.ts
