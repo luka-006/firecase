@@ -16,7 +16,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <html lang="hr">
       <body className="min-h-svh">
         {admin && (
-          <header className="sticky top-0 z-30 border-b border-line bg-ink/90 backdrop-blur">
+          <header className="sticky top-0 z-30 border-b border-line bg-ink md:bg-ink/90 md:backdrop-blur">
+            {/* No blur on phones: the menu there drops out of the header, and a blurred header let page content paint over it. */}
             <div className="container-x flex h-14 min-w-0 items-center gap-2 md:gap-6">
               <Link href="/admin" className="flex shrink-0 items-center gap-2"><Image src="/logo-mark.svg" alt="" width={11} height={21} className="h-5 w-auto" /><span className="text-xs tracking-widest text-mute">ADMIN</span></Link>
               <AdminNav />
