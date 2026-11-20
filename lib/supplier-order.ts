@@ -137,6 +137,8 @@ export type SupplierLine = {
   productId: number
   missingUrl: boolean
   missingOption: boolean
+  /** "LUKA, Font 3" when the case is engraved. The number matches the supplier's font list. */
+  engraving: string
 }
 
 export function resolveSupplierLine(item: OrderItem, product?: Pick<Product, 'supplierUrl' | 'variants'> | null): SupplierLine {
@@ -157,5 +159,6 @@ export function resolveSupplierLine(item: OrderItem, product?: Pick<Product, 'su
     productId: item.productId,
     missingUrl: !url,
     missingOption: needsOption && !option,
+    engraving: item.engraving ? [item.engraving, item.engravingFont ? `Font ${item.engravingFont}` : ''].filter(Boolean).join(', ') : '',
   }
 }

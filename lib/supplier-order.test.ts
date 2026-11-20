@@ -129,3 +129,9 @@ test('supplier note is the dropshipping sentence and missing mapping is flagged'
   assert.equal(single.missingUrl, false)
   assert.equal(single.missingOption, false)
 })
+
+test('an engraved case tells the supplier the name and the font number', () => {
+  assert.equal(resolveSupplierLine(item({ engraving: 'LUKA', engravingFont: 3 })).engraving, 'LUKA, Font 3')
+  assert.equal(resolveSupplierLine(item({ engraving: 'LUKA' })).engraving, 'LUKA')
+  assert.equal(resolveSupplierLine(item()).engraving, '')
+})

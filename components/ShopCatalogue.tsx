@@ -10,11 +10,14 @@ export function ShopCatalogue({
   products,
   sort,
   mode,
+  engraver,
 }: {
   locale: Locale
   products: Product[]
   sort?: string
   mode: 'cases' | 'sets' | 'engraver'
+  /** Engraver tab body: case picker with the live engraving menu, shown instead of the grid. */
+  engraver?: React.ReactNode
 }) {
   const d = t(locale)
   let list = [...products]
@@ -53,6 +56,7 @@ export function ShopCatalogue({
           </Link>
         ))}
       </div>
+      {engraver && list.length ? engraver : (<>
       <div className="mt-5 flex items-center justify-between gap-4 pb-5 font-mono text-[11px] uppercase tracking-[0.18em]">
         <span className="text-mute">{list.length} {countLabel}</span>
         <div className="flex gap-4">
@@ -66,6 +70,7 @@ export function ShopCatalogue({
           {list.map((p, i) => <ProductCard key={p.id} p={p} locale={locale} priority={i < 4} delay={(i % 4) * 70} />)}
         </div>
       ) : <p className="mt-16 text-center text-mute">{mode === 'sets' ? d.noSets : mode === 'engraver' ? d.noEngravers : d.noProducts}</p>}
+      </>)}
     </div>
   )
 }

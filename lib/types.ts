@@ -127,6 +127,8 @@ export type OrderItem = {
   components?: OrderComponent[]
   sizeMix?: string
   engraving?: string
+  /** Font id from lib/engrave-fonts.ts, set whenever engraving is. */
+  engravingFont?: number
 }
 
 export type Order = {
