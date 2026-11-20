@@ -1,18 +1,19 @@
 import localFont from 'next/font/local'
 
 // Loaded only where the engraving preview renders (preload off), latin subset only.
-const f1 = localFont({ src: './great-vibes.woff2', display: 'swap', preload: false })
-const f2 = localFont({ src: './dancing-script.woff2', display: 'swap', preload: false })
-const f3 = localFont({ src: './pacifico.woff2', display: 'swap', preload: false })
-const f4 = localFont({ src: './allura.woff2', display: 'swap', preload: false })
-const f5 = localFont({ src: './satisfy.woff2', display: 'swap', preload: false })
-const f6 = localFont({ src: './lobster.woff2', display: 'swap', preload: false })
-const f7 = localFont({ src: './playfair-display.woff2', display: 'swap', preload: false })
-const f8 = localFont({ src: './cinzel.woff2', display: 'swap', preload: false })
-const f9 = localFont({ src: './abril-fatface.woff2', display: 'swap', preload: false })
-const f10 = localFont({ src: './bebas-neue.woff2', display: 'swap', preload: false })
-const f11 = localFont({ src: './montserrat.woff2', display: 'swap', preload: false })
-const f12 = localFont({ src: './courier-prime.woff2', display: 'swap', preload: false })
+// Closest free matches to the supplier's 12 engraving fonts, same order.
+const f1 = localFont({ src: './courgette.woff2', display: 'swap', preload: false })
+const f2 = localFont({ src: './unifrakturmaguntia.woff2', display: 'swap', preload: false })
+const f3 = localFont({ src: './arimo-bold.woff2', display: 'swap', preload: false })
+const f4 = localFont({ src: './charm-bold.woff2', display: 'swap', preload: false })
+const f5 = localFont({ src: './charm.woff2', display: 'swap', preload: false })
+const f6 = localFont({ src: './playfair-display-italic.woff2', display: 'swap', preload: false })
+const f7 = localFont({ src: './cormorant-garamond-italic.woff2', display: 'swap', preload: false })
+const f8 = localFont({ src: './herr-von-muellerhoff.woff2', display: 'swap', preload: false })
+const f9 = localFont({ src: './playball.woff2', display: 'swap', preload: false })
+const f10 = localFont({ src: './dancing-script.woff2', display: 'swap', preload: false })
+const f11 = localFont({ src: './allura.woff2', display: 'swap', preload: false })
+const f12 = localFont({ src: './sacramento.woff2', display: 'swap', preload: false })
 
 /** Font id (see lib/engrave-fonts.ts) to the CSS font-family that renders it. */
 export const ENGRAVE_FONT_FAMILY: Record<number, string> = {

@@ -1,21 +1,22 @@
 /**
- * Engraving fonts the customer can pick. The id is the number written on the
- * supplier order, so keep ids stable and change only the order of display.
- * Provisional set until the supplier's font sheet is matched.
+ * Engraving fonts the customer can pick. The id is the number on the
+ * supplier's font sheet and goes on the supplier order, so keep ids stable.
+ * Each one is the closest free font to the supplier's; 6 and 7 have heart
+ * and crown capitals on the sheet that the preview does not draw.
  */
 export const ENGRAVE_FONTS = [
-  { id: 1, name: 'Great Vibes' },
-  { id: 2, name: 'Dancing Script' },
-  { id: 3, name: 'Pacifico' },
-  { id: 4, name: 'Allura' },
-  { id: 5, name: 'Satisfy' },
-  { id: 6, name: 'Lobster' },
-  { id: 7, name: 'Playfair Display' },
-  { id: 8, name: 'Cinzel' },
-  { id: 9, name: 'Abril Fatface' },
-  { id: 10, name: 'Bebas Neue' },
-  { id: 11, name: 'Montserrat' },
-  { id: 12, name: 'Courier Prime' },
+  { id: 1, name: 'Courgette' },
+  { id: 2, name: 'UnifrakturMaguntia' },
+  { id: 3, name: 'Arimo Bold' },
+  { id: 4, name: 'Charm Bold' },
+  { id: 5, name: 'Charm' },
+  { id: 6, name: 'Playfair Display Italic' },
+  { id: 7, name: 'Cormorant Garamond Italic' },
+  { id: 8, name: 'Herr Von Muellerhoff' },
+  { id: 9, name: 'Playball' },
+  { id: 10, name: 'Dancing Script' },
+  { id: 11, name: 'Allura' },
+  { id: 12, name: 'Sacramento' },
 ] as const
 
 export type EngraveFontId = (typeof ENGRAVE_FONTS)[number]['id']

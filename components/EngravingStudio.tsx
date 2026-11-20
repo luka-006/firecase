@@ -9,9 +9,10 @@ import type { Locale } from '@/lib/routes'
 // Text area on the blank case renders in public/engrave (1377 x 482, hood on the right).
 const TEXT_BOX = { left: '7.5%', width: '70.5%', top: '22%', height: '56%' }
 
+// The supplier's laser engraving comes out white on every colour.
 const INK = {
-  gold: { color: 'rgba(88,60,18,.82)', textShadow: '0 1px 0 rgba(255,238,196,.6), 0 -1px 0 rgba(40,24,4,.28)' },
-  silver: { color: 'rgba(52,53,56,.8)', textShadow: '0 1px 0 rgba(255,255,255,.65), 0 -1px 0 rgba(0,0,0,.25)' },
+  gold: { color: 'rgba(255,251,240,.96)', textShadow: '0 0 1px rgba(92,62,14,.55), 0 1px 2px rgba(92,62,14,.4)' },
+  silver: { color: 'rgba(255,255,255,.97)', textShadow: '0 0 1px rgba(30,30,34,.6), 0 1px 2px rgba(30,30,34,.45)' },
 }
 
 /** Blank case with the typed name drawn on it, shrunk to fit the engraving area. */

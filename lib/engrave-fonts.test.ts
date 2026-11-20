@@ -12,7 +12,7 @@ test('unknown font ids are not accepted', () => {
   assert.equal(engraveFont(13), undefined)
   assert.equal(engraveFont('3'), undefined)
   assert.equal(engraveFontLabel(99), '')
-  assert.equal(engraveFontLabel(3), 'Font 3 (Pacifico)')
+  assert.equal(engraveFontLabel(3), 'Font 3 (Arimo Bold)')
 })
 
 test('the preview metal follows the colour option', () => {
