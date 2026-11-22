@@ -18,7 +18,7 @@ import { deleteOpenSetProposal, getSetProposal, publishInactiveAcceptedSet, publ
 import { SET_ADMIN_HREF } from '@/lib/setovi'
 import { isProposalListBucket, type ProposalListBucket } from '@/lib/proposal-bucket'
 import type { Invoice, Order, ProposalStatus } from '@/lib/types'
-import { variantsFromAdminForm } from '@/lib/variants'
+import { keepVariantImages, variantsFromAdminForm } from '@/lib/variants'
 
 type State = { error?: string; ok?: string } | null
 const str = (f: FormData, k: string, max = 5000) => String(f.get(k) ?? '').trim().slice(0, max)
@@ -118,7 +118,7 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
   if (variantsRaw.length > 100_000) return { error: 'Previše veličina.' }
   let variants
   try {
-    variants = variantsFromAdminForm(variantsRaw)
+    variants = keepVariantImages(variantsFromAdminForm(variantsRaw), images)
   } catch {
     return { error: 'Neispravne veličine.' }
   }

@@ -64,7 +64,31 @@ export function cleanVariant(raw: unknown): Variant | null {
     const n = Number.parseInt(String(o.stock), 10)
     if (Number.isFinite(n)) variant.stock = Math.max(0, n)
   }
+  const image = variantImage(o.image)
+  if (image) variant.image = image
   return variant
+}
+
+/** A colour photo must be a site path or an https link. Anything else is dropped. */
+export function variantImage(raw: unknown): string {
+  const s = typeof raw === 'string' ? raw.trim().slice(0, 1000) : ''
+  return s.startsWith('/') || s.startsWith('https://') ? s : ''
+}
+
+/** Colour photos must still be among the product photos; a removed photo leaves the colour without one. */
+export function keepVariantImages(variants: Variant[], images: string[]): Variant[] {
+  return variants.map((v) => {
+    if (!v.image || images.includes(v.image)) return v
+    const next = { ...v }
+    delete next.image
+    return next
+  })
+}
+
+/** Photo to show for a picked colour: its own photo, otherwise the product's first photo. */
+export function photoForVariant(p: { images?: string[]; image?: string; variants: Variant[] }, vi: number) {
+  const own = vi >= 0 ? p.variants[vi]?.image : undefined
+  return own || p.image || p.images?.[0] || ''
 }
 
 /** Admin forma šalje JSON. Stari redak HR | EN | opcija | zaliha i dalje prolazi. */
@@ -89,6 +113,7 @@ export function publicVariants(variants: Variant[]): Variant[] {
   return variants.map((v) => {
     const out: Variant = { hr: v.hr, en: v.en }
     if (typeof v.stock === 'number') out.stock = v.stock
+    if (v.image) out.image = v.image
     return out
   })
 }

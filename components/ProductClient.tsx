@@ -16,9 +16,13 @@ import { EngravingFontPicker, EngravingPreview } from './EngravingStudio'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import { isOptionSoldOut, optionStock } from '@/lib/stock'
+import { photoForVariant } from '@/lib/variants'
 import type { Variant } from '@/lib/types'
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
+
+// Picking a colour in the buy box shows that colour's photo in the gallery beside it.
+const VARIANT_PHOTO_EVENT = 'fc:variant-photo'
 
 // Povlačenje prstom/mišem lijevo-desno za promjenu slike
 function useSwipe(go: (d: number) => void, enabled = true) {
@@ -75,6 +79,14 @@ export function Gallery({ images, alt, portrait }: { images: string[]; alt: stri
   const n = images.length
   const go = useCallback((d: number) => setI((x) => (x + d + n) % n), [n])
   const swipe = useSwipe(go, n > 1)
+  useEffect(() => {
+    const onPhoto = (e: Event) => {
+      const at = images.indexOf((e as CustomEvent<string>).detail)
+      if (at >= 0) setI(at)
+    }
+    window.addEventListener(VARIANT_PHOTO_EVENT, onPhoto)
+    return () => window.removeEventListener(VARIANT_PHOTO_EVENT, onPhoto)
+  }, [images])
   const aspect = portrait ? 'aspect-[4/5]' : 'aspect-square'
   if (!n) return <div className={`frame ${aspect} w-full min-w-0`}><div className="frame-in" /></div>
   return (
@@ -213,7 +225,7 @@ export function BuyBox({ locale, product, previewAside, onEngraving, setOnly }: 
     if (setOnly) {
       if (soldOut) return
       const v = product.variants[vi]
-      addToSetDraft({ id: product.id, vi, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' })
+      addToSetDraft({ id: product.id, vi, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: photoForVariant(product, vi), priceCents: product.priceCents, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' })
       router.push(href(locale, 'build'))
       return
     }
@@ -224,7 +236,7 @@ export function BuyBox({ locale, product, previewAside, onEngraving, setOnly }: 
       return
     }
     const v = product.variants[vi]
-    add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '', freeShipping: product.freeShipping, ...(parsed.text ? { engraving: parsed.text, engravingFont } : {}) }, qty)
+    add({ id: product.id, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: photoForVariant(product, vi), priceCents: product.priceCents, vi, variantHr: v?.hr ?? '', variantEn: v?.en ?? '', freeShipping: product.freeShipping, ...(parsed.text ? { engraving: parsed.text, engravingFont } : {}) }, qty)
     setDone(true)
     setTimeout(() => setDone(false), 1800)
   }
@@ -240,7 +252,10 @@ export function BuyBox({ locale, product, previewAside, onEngraving, setOnly }: 
             {product.variants.map((v, idx) => {
               const gone = isOptionSoldOut(stocked, idx)
               return (
-                <button key={idx} onClick={() => setVi(idx)}
+                <button key={idx} onClick={() => {
+                  setVi(idx)
+                  if (v.image) window.dispatchEvent(new CustomEvent(VARIANT_PHOTO_EVENT, { detail: v.image }))
+                }}
                   className={`border px-4 py-3 font-mono text-xs uppercase tracking-[0.1em] transition ${idx === vi ? 'border-flame bg-flame text-ink' : gone ? 'border-line text-mute line-through' : 'border-line text-bone/80 hover:border-bone/50'}`}>
                   {locale === 'en' && v.en ? v.en : v.hr}
                 </button>
