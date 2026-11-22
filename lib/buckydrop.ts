@@ -88,3 +88,28 @@ export const buckydropShipping = (countryCode: string, weightKg: number, count: 
     size: 20,
     item: { countryCode, lang: 'en', orderBy: 'price', productList: [{ weight: weightKg, count, goodsPrice: goodsPriceCny }] },
   })
+
+export type BdSearchItem = {
+  spuCode?: string
+  productName?: string
+  productLink?: string
+  platform?: string
+  picUrl?: string
+  shop?: { shopName?: string } | null
+  price?: Money
+  proPrice?: Money
+  freight?: Money
+}
+
+/** Catalogue search (Taobao TB, 1688 ALIBABA). Read-only. */
+export const buckydropSearch = (keyword: string, opts: { platform?: string; page?: number; size?: number; sort?: 'sales' | 'price_asc' } = {}) =>
+  buckydropPost<{ total?: number; pages?: number; records?: BdSearchItem[] }>('/api/rest/v2/adapt/openapi/product/search', {
+    current: Math.max(1, opts.page ?? 1),
+    size: Math.min(40, Math.max(1, opts.size ?? 20)),
+    item: {
+      keyword,
+      lang: 'en',
+      ...(opts.platform ? { platform: opts.platform } : {}),
+      ...(opts.sort === 'sales' ? { sortType: '9' } : opts.sort === 'price_asc' ? { sortType: '4' } : {}),
+    },
+  })

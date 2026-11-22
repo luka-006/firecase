@@ -1,6 +1,6 @@
 import { requireAdmin } from '@/lib/auth'
 import { buckydropBalance, buckydropConfig } from '@/lib/buckydrop'
-import { BuckydropProductLookup, BuckydropShippingEstimate } from '@/components/admin/BuckydropTools'
+import { BuckydropProductLookup, BuckydropSearch, BuckydropShippingEstimate } from '@/components/admin/BuckydropTools'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +24,11 @@ export default async function BuckydropPage() {
           <p className="text-red-400">{balance.error}</p>
         )}
         <p className="text-mute">Ključevi se čitaju iz Vercela (<code className="text-flame-2">BUCKYDROP_APP_CODE</code>, <code className="text-flame-2">BUCKYDROP_APP_SECRET</code>).</p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-mono text-xs uppercase tracking-[0.16em] text-mute">Pretraga (1688 / Taobao)</h2>
+        <BuckydropSearch />
       </section>
 
       <section className="space-y-3">

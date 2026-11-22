@@ -1,6 +1,6 @@
 'use client'
 import { useActionState } from 'react'
-import { estimateBuckydropShipping, lookupBuckydropProduct, type ProductState, type ShippingState } from '@/app/admin/buckydrop/actions'
+import { estimateBuckydropShipping, lookupBuckydropProduct, searchBuckydrop, type ProductState, type SearchState, type ShippingState } from '@/app/admin/buckydrop/actions'
 
 const cny = (m?: { price?: number } | null) => (m?.price != null ? `${m.price.toFixed(2)} CNY` : '—')
 
@@ -67,6 +67,37 @@ export function BuckydropShippingEstimate() {
           ))}
         </ul>
       ) : <p className="text-sm text-mute">Nema dostupnih linija za te podatke.</p>)}
+    </div>
+  )
+}
+
+export function BuckydropSearch() {
+  const [state, action, pending] = useActionState<SearchState, FormData>(searchBuckydrop, null)
+  return (
+    <div className="space-y-4">
+      <form action={action} className="flex flex-col gap-3 sm:flex-row">
+        <input name="keyword" className="input" placeholder="npr. lighter case J6 ili 打火机壳" required />
+        <select name="platform" className="input sm:w-40" defaultValue="ALIBABA">
+          <option value="ALIBABA">1688</option>
+          <option value="TB">Taobao</option>
+        </select>
+        <button className="btn shrink-0" disabled={pending}>{pending ? '…' : 'Traži'}</button>
+      </form>
+      {state?.error && <p role="alert" className="text-sm text-red-400">{state.error}</p>}
+      {state?.items && (state.items.length ? (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {state.items.map((it, i) => (
+            <li key={it.spuCode || i} className="card flex gap-3 p-3 text-sm">
+              {it.picUrl ? <img src={it.picUrl} alt="" className="size-20 shrink-0 object-cover" loading="lazy" referrerPolicy="no-referrer" /> : null}
+              <div className="min-w-0">
+                <p className="line-clamp-2">{it.productName || '—'}</p>
+                <p className="mt-1 font-mono text-xs text-mute">{cny(it.proPrice ?? it.price)} · {it.platform || '—'}{it.shop?.shopName ? ` · ${it.shop.shopName}` : ''}</p>
+                {it.productLink && <a href={it.productLink} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-flame-2 underline">Otvori</a>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : <p className="text-sm text-mute">Nema rezultata.</p>)}
     </div>
   )
 }

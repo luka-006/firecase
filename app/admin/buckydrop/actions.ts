@@ -1,9 +1,10 @@
 'use server'
 import { requireAdmin } from '@/lib/auth'
-import { buckydropProduct, buckydropShipping, type BdChannel, type BdProduct } from '@/lib/buckydrop'
+import { buckydropProduct, buckydropSearch, buckydropShipping, type BdChannel, type BdProduct, type BdSearchItem } from '@/lib/buckydrop'
 
 export type ProductState = { error?: string; product?: BdProduct } | null
 export type ShippingState = { error?: string; channels?: BdChannel[] } | null
+export type SearchState = { error?: string; items?: BdSearchItem[]; total?: number } | null
 
 const num = (v: FormDataEntryValue | null) => {
   const n = parseFloat(String(v ?? '').replace(',', '.'))
@@ -31,4 +32,15 @@ export async function estimateBuckydropShipping(_: ShippingState, f: FormData): 
   const r = await buckydropShipping(country, Math.round(grams) / 1000, count, Math.round(cny * 100) / 100)
   if (!r.ok) return { error: r.error }
   return { channels: (r.data?.records ?? []).slice(0, 12) }
+}
+
+/** Read-only: catalogue search on Taobao / 1688 through BuckyDrop. Nothing is ordered. */
+export async function searchBuckydrop(_: SearchState, f: FormData): Promise<SearchState> {
+  await requireAdmin()
+  const keyword = String(f.get('keyword') ?? '').trim().slice(0, 120)
+  const platform = String(f.get('platform') ?? '')
+  if (!keyword) return { error: 'Upišite pojam za pretragu.' }
+  const r = await buckydropSearch(keyword, { platform: platform === 'TB' || platform === 'ALIBABA' ? platform : undefined, sort: 'sales' })
+  if (!r.ok) return { error: r.error }
+  return { items: r.data?.records ?? [], total: r.data?.total }
 }
