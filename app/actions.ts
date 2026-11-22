@@ -19,13 +19,14 @@ import { getProductsByIds, getProductsByIdsAll } from '@/lib/products'
 import { engravingText } from '@/lib/engrave'
 import { DEFAULT_ENGRAVE_FONT, engraveFont } from '@/lib/engrave-fonts'
 import { componentSnapshots } from '@/lib/set-order'
+import { BUILD_SET_MAX, BUILD_SET_MIN, buildableCase, builtSetSizeOk, priceBuiltSet, soldOnlyInSet } from '@/lib/set-builder'
 import { orderStockGroups, quoteSet } from '@/lib/setovi'
 import { getSettingsFresh } from '@/lib/settings'
 import { stripe } from '@/lib/stripe'
 import { newPublicId } from '@/lib/orders'
 import { sendPasswordReset } from '@/lib/mail'
 import { EU_COUNTRIES, SITE_URL, STRIPE_STATEMENT_DESCRIPTOR } from '@/lib/config'
-import type { OrderItem } from '@/lib/types'
+import type { OrderComponent, OrderItem } from '@/lib/types'
 
 type State = { error?: string; ok?: string } | null
 
@@ -61,7 +62,18 @@ const cartSchema = z.array(z.object({
   qty: z.number().int().min(1).max(99),
   engraving: z.string().max(40).optional(),
   engravingFont: z.number().int().min(1).max(99).optional(),
+  /** Cases of a set the customer built. The line's own id is 0. */
+  parts: z.array(z.object({ id: z.number().int().positive(), vi: z.number().int() })).max(BUILD_SET_MAX).optional(),
 })).min(1).max(50)
+
+/** Stripe shows one name per line; a built set lists its cases there too. */
+function stripeLineName(i: OrderItem) {
+  const base = i.variant ? `${i.name} (${i.variant})` : i.name
+  const parts = !i.productId && i.components?.length
+    ? i.components.map((c) => (c.variant ? `${c.name} ${c.variant}` : c.name)).join(', ')
+    : ''
+  return [base, parts, i.engraving, i.engraving && i.engravingFont ? `Font ${i.engravingFont}` : ''].filter(Boolean).join(' · ').slice(0, 250)
+}
 
 export async function startCheckout(_: State, f: FormData): Promise<State> {
   const locale = localeOf(f)
@@ -84,12 +96,16 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   const allowed = s.shipEu ? EU_COUNTRIES : ['HR']
   if (!allowed.includes(c.country)) return { error: d.errors.country }
 
-  const products = await getProductsByIds([...new Set(cart.map((i) => i.id))])
+  const plain = cart.filter((line) => !line.parts?.length)
+  const partIds = cart.flatMap((line) => (line.parts ?? []).map((part) => part.id))
+  const products = await getProductsByIds([...new Set([...plain.map((i) => i.id), ...partIds])])
   const items: OrderItem[] = []
-  for (const id of new Set(cart.map((line) => line.id))) {
+  for (const id of new Set(plain.map((line) => line.id))) {
     const p = products.find((x) => x.id === id)
     if (!p) return { error: d.errors.stock }
-    const lines = cart.filter((line) => line.id === id)
+    // Plain cases are sold only inside a set now ("Napravi svoj set").
+    if (soldOnlyInSet(p)) return { error: d.errors.setOnly }
+    const lines = plain.filter((line) => line.id === id)
     if (lines.some((line) => line.vi >= 0 && !p.variants[line.vi])) return { error: d.errors.stock }
     if (exceedsStock(p, lines)) return { error: d.errors.stockQty }
   }
@@ -97,6 +113,38 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   const extras = await getProductsByIdsAll(componentIds.filter((id) => !products.some((p) => p.id === id)))
   const catalog = [...products, ...extras]
   for (const line of cart) {
+    if (line.parts?.length) {
+      if (!builtSetSizeOk(line.parts.length)) return { error: d.errors.setSize(BUILD_SET_MIN, BUILD_SET_MAX) }
+      const components: OrderComponent[] = []
+      for (const ref of line.parts) {
+        const part = products.find((x) => x.id === ref.id)
+        if (!part || !buildableCase(part)) return { error: d.errors.stock }
+        const pv = ref.vi >= 0 ? part.variants[ref.vi] : undefined
+        if (part.variants.length ? !pv : ref.vi >= 0) return { error: d.errors.stock }
+        components.push({
+          productId: part.id, slug: part.slug,
+          name: locale === 'en' && part.nameEn ? part.nameEn : part.nameHr,
+          qty: 1, image: part.images[0], unitCents: part.priceCents,
+          supplierUrl: part.supplierUrl || '', supplierOption: pv?.sup ?? '',
+          supplierSku: pv?.supplierSku ?? '', supplierNote: pv?.supplierNote ?? '',
+          costCents: part.costCents ?? null,
+          variant: pv ? (locale === 'en' && pv.en ? pv.en : pv.hr) : '',
+          variantIndex: ref.vi >= 0 ? ref.vi : undefined,
+        })
+      }
+      // Price comes from the database, never from the browser.
+      const quote = priceBuiltSet(components.map((part) => part.unitCents))
+      const costKnown = components.every((part) => part.costCents != null)
+      items.push({
+        productId: 0, slug: '',
+        name: `${d.buildName} (${d.buildCount(quote.count)})`,
+        variant: '', qty: line.qty, unitCents: quote.totalCents, image: components[0]?.image,
+        supplierUrl: '', supplierOption: '', supplierSku: '', supplierNote: '',
+        costCents: costKnown ? components.reduce((sum, part) => sum + (part.costCents ?? 0), 0) : null,
+        components,
+      })
+      continue
+    }
     const p = products.find((x) => x.id === line.id)
     if (!p) return { error: d.errors.stock }
     const v = line.vi >= 0 ? p.variants[line.vi] : undefined
@@ -206,7 +254,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
       },
       line_items: items.map((i) => ({
         quantity: i.qty,
-        price_data: { currency: 'eur', unit_amount: i.unitCents, product_data: { name: [i.variant ? `${i.name} (${i.variant})` : i.name, i.engraving, i.engraving && i.engravingFont ? `Font ${i.engravingFont}` : ''].filter(Boolean).join(' · ') } },
+        price_data: { currency: 'eur', unit_amount: i.unitCents, product_data: { name: stripeLineName(i) } },
       })),
       ...(discount > 0
         ? {

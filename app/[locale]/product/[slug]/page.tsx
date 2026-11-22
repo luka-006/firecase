@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { BuyBox, Gallery } from '@/components/ProductClient'
+import { soldOnlyInSet } from '@/lib/set-builder'
 import { ProductReviews } from '@/components/ProductReviews'
 import { Stars, formatRating } from '@/components/Stars'
 import { ChevronIcon } from '@/components/icons'
@@ -84,6 +85,13 @@ export default async function ProductPage({ params }: Props) {
   const setBlocked = p.kind === 'set' && (included.some((item) => !item) || setPartsBlocked(included.filter((item): item is NonNullable<typeof item> => !!item)))
   const reviewBundle = await getProductReviewBundle(p.id)
   const d = t(locale)
+  // Plain cases are bought inside "Napravi svoj set"; sets and engraved cases keep their own button.
+  const setOnly = soldOnlyInSet(p)
+  const crumb = p.kind === 'set'
+    ? { href: href(locale, 'shop'), label: d.sets }
+    : setOnly
+      ? { href: href(locale, 'build'), label: d.buildSet }
+      : { href: href(locale, 'shop'), label: d.allCases }
   const related = all.filter((x) => x.id !== p.id).slice(0, 3)
   const name = loc(p, 'name', locale)
   const soldOut = isSoldOut(p) || setBlocked
@@ -124,7 +132,7 @@ export default async function ProductPage({ params }: Props) {
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Firecase', item: SITE_URL + href(locale, 'home') },
-      { '@type': 'ListItem', position: 2, name: p.kind === 'set' ? d.sets : d.allCases, item: SITE_URL + href(locale, p.kind === 'set' ? 'sets' : 'shop') },
+      { '@type': 'ListItem', position: 2, name: crumb.label, item: SITE_URL + crumb.href },
       { '@type': 'ListItem', position: 3, name, item: SITE_URL + href(locale, 'product', p.slug) },
     ],
   }]
@@ -138,7 +146,7 @@ export default async function ProductPage({ params }: Props) {
   return (
     <div className="container-x pt-10">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
-      <nav className="mb-8 text-xs text-mute"><Link href={href(locale, p.kind === 'set' ? 'sets' : 'shop')} className="hover:text-bone">{p.kind === 'set' ? d.sets : d.allCases}</Link> <span className="mx-1.5">/</span> {name}</nav>
+      <nav className="mb-8 text-xs text-mute"><Link href={crumb.href} className="hover:text-bone">{crumb.label}</Link> <span className="mx-1.5">/</span> {name}</nav>
       <div className="grid min-w-0 grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
         <Gallery images={p.images} alt={name} />
         <div className="lg:sticky lg:top-24 lg:self-start">
@@ -184,7 +192,7 @@ export default async function ProductPage({ params }: Props) {
             </div>
           )}
           <div className="mt-8">
-            <BuyBox locale={locale} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: soldOut ? 0 : p.stock, freeShipping: p.freeShipping, engrave: p.engrave === true && p.kind !== 'set' }} />
+            <BuyBox locale={locale} setOnly={setOnly} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: soldOut ? 0 : p.stock, freeShipping: p.freeShipping, engrave: p.engrave === true && p.kind !== 'set' }} />
           </div>
           <div className="mt-8 border-t border-line">
             {desc && <Row title={d.description} open>{desc}</Row>}

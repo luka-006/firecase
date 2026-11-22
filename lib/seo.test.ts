@@ -33,7 +33,7 @@ test('the product meta description keeps the fit line when the text is long', ()
 
 test('listing and site descriptions stay within the 160-character snippet limit', () => {
   for (const l of ['hr', 'en'] as const) {
-    for (const page of ['shop', 'sets', 'engraver'] as const) {
+    for (const page of ['shop', 'sets', 'engraver', 'build'] as const) {
       const m = listingMeta(page, l)
       assert.ok(m.description.length <= 160, `${page}/${l}: ${m.description.length}`)
       assert.ok(m.description.length >= 110, `${page}/${l} too short: ${m.description.length}`)

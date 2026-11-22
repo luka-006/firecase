@@ -4,6 +4,12 @@ export const FREE_SHIPPING_THRESHOLD_CENTS = 4000
 /** 10% applies only while the product subtotal is strictly under 40 €. */
 export const UPSELL_SUBTOTAL_LIMIT_CENTS = FREE_SHIPPING_THRESHOLD_CENTS
 
+/**
+ * The checkout popup offers single cases with 10% off. Single cases are now sold only in sets
+ * ("Napravi svoj set"), so the popup is off. Set to true to bring it back.
+ */
+export const CHECKOUT_UPSELL = false
+
 export const CART_STORAGE_KEY = 'fc_cart'
 export const UPSELL_SEEN_KEY = 'fc_upsell_shown'
 

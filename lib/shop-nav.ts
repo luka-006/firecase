@@ -6,7 +6,7 @@ export function publicShopLinks(locale: Locale) {
   const d = t(locale)
   return [
     { href: href(locale, 'shop'), label: d.allCases },
-    { href: href(locale, 'sets'), label: d.sets },
+    { href: href(locale, 'build'), label: d.buildSet },
     { href: href(locale, 'engraver'), label: d.engraver },
     { href: href(locale, 'contact'), label: d.contact },
   ]
