@@ -7,7 +7,7 @@ const casesHr = (n: number) => `${n} ${hrOne(n) ? 'futrola' : hrFew(n) ? 'futrol
 const casesHrAcc = (n: number) => `${n} ${hrOne(n) ? 'futrolu' : hrFew(n) ? 'futrole' : 'futrola'}`
 const casesEn = (n: number) => `${n} ${n === 1 ? 'case' : 'cases'}`
 // Set-builder copy takes its numbers from lib/set-builder.ts at the call site, so this file stays import-free.
-type Tier = { min: number; percent: number }
+type Tier = { min: number; percent: number; freeShipping?: boolean }
 const sortTiers = (tiers: readonly Tier[]) => [...tiers].sort((a, b) => a.min - b.min)
 
 const hr = {
@@ -19,14 +19,15 @@ const hr = {
   buildSet: 'Napravi svoj set',
   buildTitle: 'Složite svoj set',
   buildIntro: (min: number) => `Odaberite najmanje ${casesHrAcc(min)} i kombinirajte po svom.`,
-  buildTiers: (tiers: readonly Tier[]) => sortTiers(tiers).map((tier, i) => (i === 0 ? `Za ${casesHrAcc(tier.min)} ${tier.percent}% popusta` : `za ${tier.min} i više ${tier.percent}%`)).join(', ') + '.',
+  buildTiers: (tiers: readonly Tier[]) => sortTiers(tiers).map((tier, i) => (i === 0 ? `Za ${casesHrAcc(tier.min)} ${tier.percent}% popusta` : `za ${tier.min} i više ${tier.percent}%${tier.freeShipping ? ' i besplatna dostava' : ''}`)).join(', ') + '.',
   buildFilterAll: 'Sve',
   buildAdd: 'Dodajte',
   buildYourSet: 'Vaš set',
   buildEmpty: 'Set je prazan. Dodajte prvu futrolu.',
   buildNeed: (n: number) => `Dodajte još ${casesHrAcc(n)}`,
-  buildNext: (n: number, percent: number) => `Još ${casesHr(n)} do ${percent}% popusta`,
-  buildTop: (percent: number) => `Imate najveći popust, ${percent}%`,
+  buildNext: (n: number, percent: number, free?: boolean) => `Još ${casesHr(n)} do ${percent}% popusta${free ? ' i besplatne dostave' : ''}`,
+  buildTop: (percent: number, free?: boolean) => `Imate najveći popust, ${percent}%${free ? ' i besplatnu dostavu' : ''}`,
+  buildFreeShip: 'Besplatna dostava',
   buildDiscount: (percent: number) => `Popust ${percent}%`,
   buildSeparately: 'Zasebno',
   buildToCart: 'Dodajte set u košaricu',
@@ -309,14 +310,15 @@ const en: Dict = {
   buildSet: 'Build your set',
   buildTitle: 'Build your set',
   buildIntro: (min: number) => `Pick at least ${casesEn(min)} and mix them any way you like.`,
-  buildTiers: (tiers: readonly Tier[]) => sortTiers(tiers).map((tier, i) => (i === 0 ? `${casesEn(tier.min)} get ${tier.percent}% off` : `${tier.min} or more get ${tier.percent}%`)).join(', ') + '.',
+  buildTiers: (tiers: readonly Tier[]) => sortTiers(tiers).map((tier, i) => (i === 0 ? `${casesEn(tier.min)} get ${tier.percent}% off` : `${tier.min} or more get ${tier.percent}%${tier.freeShipping ? ' and free shipping' : ''}`)).join(', ') + '.',
   buildFilterAll: 'All',
   buildAdd: 'Add',
   buildYourSet: 'Your set',
   buildEmpty: 'Your set is empty. Add the first case.',
   buildNeed: (n: number) => `Add ${n} more ${n === 1 ? 'case' : 'cases'}`,
-  buildNext: (n: number, percent: number) => `${n} more ${n === 1 ? 'case' : 'cases'} to ${percent}% off`,
-  buildTop: (percent: number) => `You have the top discount, ${percent}%`,
+  buildNext: (n: number, percent: number, free?: boolean) => `${n} more ${n === 1 ? 'case' : 'cases'} to ${percent}% off${free ? ' and free shipping' : ''}`,
+  buildTop: (percent: number, free?: boolean) => `You have the top discount, ${percent}%${free ? ' and free shipping' : ''}`,
+  buildFreeShip: 'Free shipping',
   buildDiscount: (percent: number) => `${percent}% off`,
   buildSeparately: 'Separately',
   buildToCart: 'Add set to cart',

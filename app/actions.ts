@@ -19,7 +19,7 @@ import { getProductsByIds, getProductsByIdsAll } from '@/lib/products'
 import { engravingText } from '@/lib/engrave'
 import { DEFAULT_ENGRAVE_FONT, engraveFont } from '@/lib/engrave-fonts'
 import { componentSnapshots } from '@/lib/set-order'
-import { BUILD_SET_MAX, BUILD_SET_MIN, buildableCase, builtSetSizeOk, priceBuiltSet, soldOnlyInSet } from '@/lib/set-builder'
+import { BUILD_SET_MAX, BUILD_SET_MIN, buildableCase, builtSetFreeShipping, builtSetSizeOk, priceBuiltSet, soldOnlyInSet } from '@/lib/set-builder'
 import { orderStockGroups, quoteSet } from '@/lib/setovi'
 import { getSettingsFresh } from '@/lib/settings'
 import { stripe } from '@/lib/stripe'
@@ -193,7 +193,8 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   }
   const promo = promoRaw ? await findPromo(promoRaw) : null
   if (promo && !promo.ok) return { error: promoError(locale, promo.reason) }
-  const freeShip = cart.some((line) => products.find((p) => p.id === line.id)?.freeShipping)
+  // A ready set with free delivery, or a built set big enough for it (8 cases and more).
+  const freeShip = cart.some((line) => (line.parts?.length ? builtSetFreeShipping(line.parts.length) : products.find((p) => p.id === line.id)?.freeShipping))
   const priced = priceOrder(subtotal, qty, f.get('upsell') === '1', c.country, s, promo?.ok ? promo.percent : 0, freeShip)
   const discount = priced.discountCents
   const shipping = priced.shippingCents

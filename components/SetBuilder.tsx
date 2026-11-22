@@ -75,7 +75,7 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
     cart.add({
       id: 0, slug: '', nameHr: t('hr').buildName, nameEn: t('en').buildName, image: parts[0]?.image ?? '',
       priceCents: quote.totalCents, vi: -1, variantHr: t('hr').buildCount(quote.count), variantEn: t('en').buildCount(quote.count),
-      parts: parts.map((p) => ({ ...p })), setPercent: quote.percent,
+      parts: parts.map((p) => ({ ...p })), setPercent: quote.percent, freeShipping: quote.freeShipping,
     }, 1)
     clear()
     setSheet(false)
@@ -86,8 +86,8 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
     : !ready
       ? d.buildNeed(BUILD_SET_MIN - quote.count)
       : next
-        ? d.buildNext(next.need, next.percent)
-        : d.buildTop(quote.percent)
+        ? d.buildNext(next.need, next.percent, next.freeShipping)
+        : d.buildTop(quote.percent, quote.freeShipping)
 
   const steps = (
     <div className="flex gap-1.5" aria-hidden>

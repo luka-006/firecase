@@ -4,10 +4,13 @@
 export const BUILD_SET_MIN = 2
 export const BUILD_SET_MAX = 10
 
+export type BuildSetTier = { min: number; percent: number; freeShipping?: boolean }
+
 /** Discount by number of cases in a set the customer builds. The highest tier reached applies. */
-export const BUILD_SET_TIERS: readonly { min: number; percent: number }[] = [
+export const BUILD_SET_TIERS: readonly BuildSetTier[] = [
   { min: 3, percent: 10 },
   { min: 5, percent: 20 },
+  { min: 8, percent: 30, freeShipping: true },
 ]
 
 export type BuiltSetPart = { id: number; vi: number }
@@ -18,19 +21,24 @@ export function builtSetPercent(count: number) {
   return percent
 }
 
-/** Set price from the single-case prices, in cents. */
+/** A tier can also make delivery free (8 cases and more). */
+export function builtSetFreeShipping(count: number) {
+  return BUILD_SET_TIERS.some((tier) => tier.freeShipping && count >= tier.min)
+}
+
+/** Set price from the single-case prices, in cents. The percent comes off the final set price. */
 export function priceBuiltSet(partCents: number[]) {
   const count = partCents.length
   const fullCents = partCents.reduce((sum, cents) => sum + cents, 0)
   const percent = builtSetPercent(count)
   const totalCents = Math.round((fullCents * (100 - percent)) / 100)
-  return { count, fullCents, percent, savedCents: fullCents - totalCents, totalCents }
+  return { count, fullCents, percent, savedCents: fullCents - totalCents, totalCents, freeShipping: builtSetFreeShipping(count) }
 }
 
 /** How many more cases unlock the next tier, or null at the top tier. */
-export function nextBuiltSetTier(count: number): { need: number; percent: number } | null {
+export function nextBuiltSetTier(count: number): { need: number; percent: number; freeShipping: boolean } | null {
   const next = [...BUILD_SET_TIERS].sort((a, b) => a.min - b.min).find((tier) => tier.min > count)
-  return next ? { need: next.min - count, percent: next.percent } : null
+  return next ? { need: next.min - count, percent: next.percent, freeShipping: !!next.freeShipping } : null
 }
 
 export function builtSetSizeOk(count: number) {

@@ -46,8 +46,8 @@ export function listingMeta(page: 'shop' | 'sets' | 'engraver' | 'build', locale
   }
   if (page === 'sets') {
     return en
-      ? { title: 'Lighter case sets', description: 'Sets of lighter cases that cost less than buying each case on its own, and always ship free within Croatia. A good gift for him.' }
-      : { title: 'Setovi futrola za upaljače', description: 'Setovi futrola za upaljače, povoljniji nego kad futrole kupujete pojedinačno, i uvijek s besplatnom dostavom po Hrvatskoj. Dobar poklon za njega.' }
+      ? { title: 'Lighter case sets', description: 'Sets of lighter cases that cost less than buying each case on its own. Ready made or built by you, for BIC J5, BIC J6, Clipper and Cricket.' }
+      : { title: 'Setovi futrola za upaljače', description: 'Setovi futrola za upaljače, povoljniji nego kad futrole kupujete pojedinačno. Gotovi ili po vašem izboru, za BIC J5, BIC J6, Clipper i Cricket.' }
   }
   return en
     ? { title: 'Engraved lighter cases', description: 'Lighter cases engraved with a name or initials. A personal gift for him. Engraving supports the letters A to Z, without accents.' }
