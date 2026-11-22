@@ -182,7 +182,7 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
         <div className="space-y-3 md:col-span-2">
           <span className="label">Veličine</span>
           {variants.map((v, i) => (
-            <div key={i} className="grid gap-2 md:grid-cols-[1fr_1fr_7rem_auto]">
+            <div key={i} className="grid gap-2 md:grid-cols-[1fr_1fr_7rem_9rem_auto]">
               <input value={v.hr} placeholder="Naziv (HR)" aria-label={`Veličina ${i + 1} HR`} onChange={(e) => setVariants((list) => setAt(list, i, { hr: e.target.value }))} className="input" />
               <input value={v.en} placeholder="Naziv (EN)" aria-label={`Veličina ${i + 1} EN`} onChange={(e) => setVariants((list) => setAt(list, i, { en: e.target.value }))} className="input" />
               <input value={v.stock ?? ''} placeholder="Zaliha" inputMode="numeric" aria-label={`Veličina ${i + 1} zaliha`} onChange={(e) => {
@@ -197,6 +197,20 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
                   return Number.isFinite(n) ? { ...cur, stock: Math.max(0, n) } : cur
                 }))
               }} className="input" />
+              {/* Photo for this colour: the shop switches to it when the customer picks the colour. */}
+              <div className="flex items-center gap-2">
+                <select value={v.image && images.includes(v.image) ? v.image : ''} aria-label={`Veličina ${i + 1} slika`} title="Slika za ovu boju"
+                  onChange={(e) => setVariants((list) => setAt(list, i, (cur) => {
+                    const next = { ...cur }
+                    if (e.target.value) next.image = e.target.value
+                    else delete next.image
+                    return next
+                  }))} className="input min-w-0 flex-1">
+                  <option value="">Slika: prva</option>
+                  {images.map((src, n) => <option key={src} value={src}>Slika {n + 1}</option>)}
+                </select>
+                {v.image && images.includes(v.image) && <img src={v.image} alt="" className="size-9 shrink-0 bg-ink-3 object-contain" />}
+              </div>
               <button type="button" onClick={() => setVariants((list) => list.filter((_, idx) => idx !== i))} className="px-2 text-sm text-red-300 hover:text-red-200">Ukloni</button>
             </div>
           ))}

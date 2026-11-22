@@ -9,6 +9,8 @@ export type Variant = {
   supplierSku?: string
   supplierNote?: string
   stock?: number | null
+  /** One of the product photos that shows this colour. The shop switches to it when the colour is picked. */
+  image?: string
 }
 
 export type ProposalStatus = 'draft' | 'review' | 'rejected' | 'accepted'

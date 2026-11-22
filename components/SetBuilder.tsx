@@ -8,6 +8,7 @@ import { SET_STEPS, SetLadder } from './SetLadder'
 import { CheckIcon, ChevronIcon, MinusIcon, PlusIcon, TruckIcon, XIcon } from './icons'
 import { BUILD_SET_MAX, BUILD_SET_MIN, nextBuiltSetTier, priceBuiltSet } from '@/lib/set-builder'
 import { isOptionSoldOut, isSoldOut, optionStock } from '@/lib/stock'
+import { photoForVariant } from '@/lib/variants'
 import { money } from '@/lib/money'
 import { href, type Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
@@ -102,7 +103,7 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
     const left = optionStock(c, vi)
     if (full || (left !== null && inSet(c.id, vi) >= left)) return
     const at = parts.length
-    const ok = add({ id: c.id, vi, slug: c.slug, nameHr: c.nameHr, nameEn: c.nameEn, image: c.image, priceCents: c.priceCents, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' })
+    const ok = add({ id: c.id, vi, slug: c.slug, nameHr: c.nameHr, nameEn: c.nameEn, image: photoForVariant(c, vi), priceCents: c.priceCents, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' })
     if (ok) {
       setFlash(c.id)
       setTimeout(() => setFlash((f) => (f === c.id ? null : f)), 900)
@@ -247,12 +248,14 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
             const left = optionStock(c, vi)
             const capped = left !== null && inSet(c.id, vi) >= left
             const count = inSet(c.id)
+            // The photo follows the picked colour when that colour has its own photo.
+            const photo = photoForVariant(c, vi)
             return (
               <div key={c.id} data-case className="min-w-0">
                 {/* Case photos are square, so a square frame shows the whole case without cropping. */}
                 <div className="frame relative aspect-square">
                   <div className="frame-in bg-[radial-gradient(75%_65%_at_50%_45%,#1d1d1d_0%,#111_72%)]">
-                    {c.image && <Image src={c.image} alt={name(c)} fill loading={idx < 4 ? 'eager' : 'lazy'} sizes="(min-width:1280px) 22vw, (min-width:1024px) 30vw, 50vw" className="object-contain" />}
+                    {photo && <Image src={photo} alt={name(c)} fill loading={idx < 4 ? 'eager' : 'lazy'} sizes="(min-width:1280px) 22vw, (min-width:1024px) 30vw, 50vw" className="object-contain" />}
                     {count > 0 && (
                       <span className="absolute right-2 top-2 grid min-w-7 place-items-center bg-flame px-1.5 py-1 font-mono text-[11px] tabular-nums text-ink">×{count}</span>
                     )}
