@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 
 import { SET_ADMIN_HREF, SET_ENTITY_LABEL } from '@/lib/setovi'
 
-const LINKS: [string, string][] = [['/admin', 'Pregled'], ['/admin/prijedlozi', 'Prijedlozi'], [SET_ADMIN_HREF, SET_ENTITY_LABEL], ['/admin/orders', 'Narudžbe'], ['/admin/reviews', 'Recenzije'], ['/admin/products', 'Proizvodi'], ['/admin/invoices', 'Računi'], ['/admin/settings', 'Postavke']]
+const LINKS: [string, string][] = [['/admin', 'Pregled'], ['/admin/prijedlozi', 'Prijedlozi'], [SET_ADMIN_HREF, SET_ENTITY_LABEL], ['/admin/orders', 'Narudžbe'], ['/admin/reviews', 'Recenzije'], ['/admin/products', 'Proizvodi'], ['/admin/invoices', 'Računi'], ['/admin/settings', 'Postavke'], ['/admin/buckydrop', 'BuckyDrop']]
 
 // Glavni izbornik: na računalu tabovi, na mobitelu padajući izbornik
 export function AdminNav() {
