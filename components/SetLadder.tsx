@@ -19,11 +19,8 @@ export function ladderFill(count: number) {
   return 1
 }
 
-/**
- * Rail with the set steps (2 / 3 / 5 / 8) and their discounts. `burst` lights a ring on the step that was
- * just reached; change `burstKey` to play it again.
- */
-export function SetLadder({ locale, count, compact, burst, burstKey }: { locale: Locale; count: number; compact?: boolean; burst?: number | null; burstKey?: number }) {
+/** Rail with the set steps (2 / 3 / 5 / 8) and their discounts. The fill slides when the count changes. */
+export function SetLadder({ locale, count, compact }: { locale: Locale; count: number; compact?: boolean }) {
   const d = t(locale)
   const fill = ladderFill(count)
   const free = SET_STEPS.find((s) => s.freeShipping)
@@ -32,10 +29,9 @@ export function SetLadder({ locale, count, compact, burst, burstKey }: { locale:
       <div className="grid grid-cols-4">
         {SET_STEPS.map((step) => {
           const on = count >= step.min
-          const hit = burst === step.min
           return (
             <div key={step.min} className={`flex items-baseline justify-end gap-1.5 text-right ${compact ? 'pb-1.5' : 'pb-2.5'}`}>
-              <span key={hit ? `n${burstKey}` : 'n'} className={`font-mono tabular-nums transition-colors duration-500 ${compact ? 'text-[10px]' : 'text-sm'} ${on ? 'text-bone' : 'text-mute'} ${hit ? 'tier-pop' : ''}`}>{step.min}</span>
+              <span className={`font-mono tabular-nums transition-colors duration-500 ${compact ? 'text-[10px]' : 'text-sm'} ${on ? 'text-bone' : 'text-mute'}`}>{step.min}</span>
               <span className={`font-mono uppercase tracking-[0.08em] transition-colors duration-500 ${compact ? 'text-[10px]' : 'text-[11px]'} ${on ? 'text-flame-2' : 'text-mute/70'}`}>
                 {step.percent ? `−${step.percent}%` : d.buildStepSet}
               </span>
@@ -51,7 +47,6 @@ export function SetLadder({ locale, count, compact, burst, burstKey }: { locale:
           return (
             <span key={step.min} className="absolute top-1/2" style={{ left: `${((i + 1) / SET_STEPS.length) * 100}%` }}>
               <span className={`absolute left-0 top-0 block -translate-x-1/2 -translate-y-1/2 rotate-45 border transition-[background-color,border-color,box-shadow] duration-500 ${compact ? 'size-[7px]' : 'size-[9px]'} ${on ? 'border-flame-2 bg-flame shadow-[0_0_0_3px_rgb(208_138_46/0.22)]' : 'border-mute/50 bg-ink'}`} />
-              {burst === step.min && <span key={burstKey} className="tier-burst" aria-hidden />}
             </span>
           )
         })}

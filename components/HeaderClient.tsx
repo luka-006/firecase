@@ -38,7 +38,7 @@ export function NavLinks({ links }: { links: ShopLink[] }) {
         if (l.highlight) return (
           <Link key={l.href} href={l.href} aria-current={active ? 'page' : undefined}
             className={`nav-hot group/hot inline-flex items-center gap-2 whitespace-nowrap px-3 py-[7px] font-mono text-[11px] uppercase tracking-[0.16em] transition-colors duration-300 ${active ? 'bg-flame text-ink' : 'bg-flame/15 text-flame-2 hover:bg-flame hover:text-ink'}`}>
-            <span aria-hidden className={`nav-spark size-[5px] rotate-45 transition-colors ${active ? 'bg-ink' : 'bg-flame-2 group-hover/hot:bg-ink'}`} />
+            <span aria-hidden className={`size-[5px] rotate-45 transition-colors ${active ? 'bg-ink' : 'bg-flame-2 group-hover/hot:bg-ink'}`} />
             {l.label}
             <span className={`hidden text-[10px] tracking-[0.06em] lg:inline ${active ? 'text-ink/70' : 'text-bone/70 group-hover/hot:text-ink/70'}`}>{l.highlight}</span>
           </Link>

@@ -27,9 +27,9 @@ export type BuilderCase = {
 }
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
-/** How long the photo flies from the card into the set; the slot fills just before it lands. */
-const FLIGHT_MS = 620
-const LAND_DELAY = '470ms'
+/** How long the photo flies from the card into the set; the new thumbnail shows as it lands. */
+const FLIGHT_MS = 420
+const LAND_DELAY = '340ms'
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -41,27 +41,21 @@ function flyToSet(from: HTMLImageElement | null, slot: number) {
   const a = from.getBoundingClientRect()
   const b = target.getBoundingClientRect()
   if (!a.width || !b.width) return false
-  const box = document.createElement('div')
-  box.setAttribute('aria-hidden', 'true')
-  box.style.cssText = `position:fixed;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;z-index:70;pointer-events:none;`
   const img = document.createElement('img')
   img.src = from.currentSrc || from.src
   img.alt = ''
-  img.style.cssText = 'width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 14px 22px rgb(0 0 0 / 0.65));'
-  box.appendChild(img)
-  document.body.appendChild(box)
+  img.setAttribute('aria-hidden', 'true')
+  img.style.cssText = `position:fixed;left:${a.left}px;top:${a.top}px;width:${a.width}px;height:${a.height}px;object-fit:contain;z-index:70;pointer-events:none;`
+  document.body.appendChild(img)
   const dx = b.left + b.width / 2 - (a.left + a.width / 2)
   const dy = b.top + b.height / 2 - (a.top + a.height / 2)
   const s = Math.max(0.08, Math.min(b.width / a.width, b.height / a.height))
-  const lift = Math.min(120, 48 + Math.abs(dy) * 0.18)
-  // Sideways at an even pace, up then down on its own curve: together they draw an arc.
-  box.animate([{ transform: 'translate3d(0,0,0)' }, { transform: `translate3d(${dx}px,0,0)` }], { duration: FLIGHT_MS, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'forwards' })
+  // A straight, short move into the set: no lift, no turn, no bounce.
   const flight = img.animate([
-    { transform: 'translate3d(0,0,0) scale(1) rotate(0deg)', opacity: 1, easing: 'cubic-bezier(.2,.7,.4,1)' },
-    { transform: `translate3d(0,${-lift}px,0) scale(${(1 + s) / 2}) rotate(-7deg)`, opacity: 1, offset: 0.32, easing: 'cubic-bezier(.6,0,.9,.55)' },
-    { transform: `translate3d(0,${dy}px,0) scale(${s}) rotate(0deg)`, opacity: 0.85 },
-  ], { duration: FLIGHT_MS, fill: 'forwards' })
-  const done = () => box.remove()
+    { transform: 'translate3d(0,0,0) scale(1)', opacity: 1 },
+    { transform: `translate3d(${dx}px,${dy}px,0) scale(${s})`, opacity: 0.7 },
+  ], { duration: FLIGHT_MS, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'forwards' })
+  const done = () => img.remove()
   flight.onfinish = done
   flight.oncancel = done
   return true
@@ -75,9 +69,9 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
   const [picked, setPicked] = useState<Record<number, number>>({})
   const [sheet, setSheet] = useState(false)
   const [flash, setFlash] = useState<number | null>(null)
-  // The slot that just got a case (it pops in), and the step that was just reached (it lights up).
+  // The slot that just got a case (its thumbnail waits for the flying photo), and the text for a step just reached.
   const [landing, setLanding] = useState<{ at: number; key: number; flown: boolean } | null>(null)
-  const [burst, setBurst] = useState<{ min: number; key: number; text: string } | null>(null)
+  const [unlocked, setUnlocked] = useState<{ key: number; text: string } | null>(null)
   const seq = useRef(0)
 
   const models = useMemo(() => {
@@ -119,13 +113,13 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
       const after = priceBuiltSet([...parts.map((p) => p.priceCents), c.priceCents])
       const step = SET_STEPS.find((s) => s.min === after.count)
       if (step) {
-        setBurst({ min: step.min, key, text: d.buildUnlocked(after.percent, after.freeShipping) })
-        setTimeout(() => setBurst((b) => (b?.key === key ? null : b)), 2800)
+        setUnlocked({ key, text: d.buildUnlocked(after.percent, after.freeShipping) })
+        setTimeout(() => setUnlocked((b) => (b?.key === key ? null : b)), 2800)
       }
     }
   }
   const dropAt = (i: number) => {
-    setBurst(null)
+    setUnlocked(null)
     setLanding(null)
     removeAt(i)
   }
@@ -139,7 +133,7 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
     }, 1)
     clear()
     setSheet(false)
-    setBurst(null)
+    setUnlocked(null)
     setLanding(null)
   }
 
@@ -150,8 +144,8 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
       : next
         ? d.buildNext(next.need, next.percent, next.freeShipping)
         : d.buildTop(quote.percent, quote.freeShipping)
-  const statusLine = burst
-    ? <span key={burst.key} className="pop-in block truncate text-flame-2">{burst.text}</span>
+  const statusLine = unlocked
+    ? <span className="block truncate text-flame-2">{unlocked.text}</span>
     : <span className="block truncate text-bone/80">{status}</span>
 
   const totals = (
@@ -159,7 +153,7 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
       <span className="text-sm text-bone/80">{quote.count ? d.buildCount(quote.count) : d.buildYourSet}</span>
       <span className="flex items-baseline gap-2 font-mono tabular-nums">
         {quote.percent > 0 && <span className="text-xs text-mute line-through">{money(quote.fullCents, locale)}</span>}
-        <span key={quote.totalCents} className={`tick text-lg ${quote.percent > 0 ? 'text-flame-2' : ''}`}>{money(quote.totalCents, locale)}</span>
+        <span className={`text-lg ${quote.percent > 0 ? 'text-flame-2' : ''}`}>{money(quote.totalCents, locale)}</span>
       </span>
     </div>
   )
@@ -193,7 +187,7 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
         return (
           <li key={i} data-set-slot={i} className="relative aspect-square">
             {p ? (
-              <div className={`frame group/slot absolute inset-0 ${fresh ? 'slot-in' : ''}`} style={{ ['--c' as string]: '8px', ['--d' as string]: delay }}>
+              <div className={`frame group/slot absolute inset-0 ${fresh && landing.flown ? 'slot-land' : ''}`} style={{ ['--c' as string]: '8px', ['--d' as string]: delay }}>
                 <div className="frame-in bg-ink-3">
                   {p.image && <Image src={p.image} alt="" fill sizes="64px" className="object-contain p-0.5" />}
                   <button onClick={() => dropAt(i)} aria-label={`${d.remove}: ${name(p)}`}
@@ -205,7 +199,6 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
             ) : (
               <div className={`absolute inset-0 grid place-items-center border border-dashed font-mono text-[10px] tabular-nums ${step ? 'border-flame/40 text-flame/70' : 'border-line text-mute/40'}`}>{i + 1}</div>
             )}
-            {fresh && <span key={landing.key} className="slot-ring" style={{ ['--d' as string]: delay }} />}
           </li>
         )
       })}
@@ -219,15 +212,14 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
       <span className="relative flex items-center">
         {parts.length ? parts.slice(-3).map((p, i, arr) => (
           <span key={`${p.id}-${p.vi}-${parts.length - arr.length + i}`}
-            className={`frame relative block size-10 ${i ? '-ml-5' : ''} ${i === arr.length - 1 && landing ? 'slot-in' : ''}`}
+            className={`frame relative block size-10 ${i ? '-ml-5' : ''} ${i === arr.length - 1 && landing?.flown ? 'slot-land' : ''}`}
             style={{ ['--c' as string]: '6px', ['--d' as string]: i === arr.length - 1 && landing?.flown ? LAND_DELAY : '0ms', zIndex: i }}>
             <span className="frame-in bg-ink-3">{p.image && <Image src={p.image} alt="" fill sizes="40px" className="object-contain" />}</span>
           </span>
         )) : (
           <span className="grid size-10 place-items-center border border-dashed border-line text-mute"><PlusIcon className="size-4" /></span>
         )}
-        <span key={`c${parts.length}`} className={`absolute -right-2 -top-1.5 z-10 grid min-w-[18px] place-items-center bg-flame px-1 font-mono text-[10px] font-medium leading-[18px] tabular-nums text-ink ${parts.length ? 'bump' : ''}`}
-          style={{ animationDelay: landing?.flown ? LAND_DELAY : '0ms' }}>
+        <span className="absolute -right-2 -top-1.5 z-10 grid min-w-[18px] place-items-center bg-flame px-1 font-mono text-[10px] font-medium leading-[18px] tabular-nums text-ink">
           {parts.length}
         </span>
       </span>
@@ -258,11 +250,11 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
             return (
               <div key={c.id} data-case className="min-w-0">
                 {/* Case photos are square, so a square frame shows the whole case without cropping. */}
-                <div className={`frame relative aspect-square ${flash === c.id ? 'frame-hit' : ''}`}>
+                <div className="frame relative aspect-square">
                   <div className="frame-in bg-[radial-gradient(75%_65%_at_50%_45%,#1d1d1d_0%,#111_72%)]">
                     {c.image && <Image src={c.image} alt={name(c)} fill loading={idx < 4 ? 'eager' : 'lazy'} sizes="(min-width:1280px) 22vw, (min-width:1024px) 30vw, 50vw" className="object-contain" />}
                     {count > 0 && (
-                      <span key={count} className="pop-in absolute right-2 top-2 grid min-w-7 place-items-center bg-flame px-1.5 py-1 font-mono text-[11px] tabular-nums text-ink">×{count}</span>
+                      <span className="absolute right-2 top-2 grid min-w-7 place-items-center bg-flame px-1.5 py-1 font-mono text-[11px] tabular-nums text-ink">×{count}</span>
                     )}
                     {gone && <span className="absolute left-2 top-2 bg-black/80 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.14em] text-mute">{d.outOfStock}</span>}
                   </div>
@@ -287,14 +279,14 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
                 )}
                 <div className="mt-3 flex gap-2">
                   {count > 0 && (
-                    <button onClick={() => { setBurst(null); setLanding(null); removeOne(c.id, vi) }} disabled={!inSet(c.id, vi)} aria-label={d.remove}
+                    <button onClick={() => { setUnlocked(null); setLanding(null); removeOne(c.id, vi) }} disabled={!inSet(c.id, vi)} aria-label={d.remove}
                       className="grid w-11 shrink-0 place-items-center border border-line text-mute transition hover:text-bone disabled:opacity-40">
                       <MinusIcon className="size-4" />
                     </button>
                   )}
                   <button data-build-add onClick={(e) => addCase(c, e.currentTarget.closest('[data-case]')?.querySelector('img') ?? null)} disabled={gone || full || capped}
                     className={`flex flex-1 items-center justify-center gap-2 border py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] transition hover:border-flame hover:text-flame disabled:opacity-40 ${flash === c.id ? 'border-flame text-flame' : 'border-bone/30'}`}>
-                    {flash === c.id ? <span className="pop-in inline-flex items-center gap-2"><CheckIcon className="size-4" /> {d.added}</span> : <><PlusIcon className="size-3.5" /> {d.buildAdd}</>}
+                    {flash === c.id ? <><CheckIcon className="size-4" /> {d.added}</> : <><PlusIcon className="size-3.5" /> {d.buildAdd}</>}
                   </button>
                 </div>
               </div>
@@ -310,10 +302,10 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
             <div className="frame-in relative inset-auto m-px space-y-6 p-5">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="eyebrow">{d.buildYourSet}</p>
-                <p className="font-mono text-xs tabular-nums text-mute"><span key={quote.count} className="tick text-bone">{pad2(quote.count)}</span> / {pad2(BUILD_SET_MAX)}</p>
+                <p className="font-mono text-xs tabular-nums text-mute"><span className="text-bone">{pad2(quote.count)}</span> / {pad2(BUILD_SET_MAX)}</p>
               </div>
               {tray}
-              <SetLadder locale={locale} count={quote.count} burst={burst?.min ?? null} burstKey={burst?.key} />
+              <SetLadder locale={locale} count={quote.count} />
               <p className="text-sm" aria-live="polite">{statusLine}</p>
               {parts.length > 0 && <div className={`-mt-2 max-h-48 overflow-y-auto pr-1 ${parts.length > 4 ? '[mask-image:linear-gradient(to_bottom,#000_78%,transparent)]' : ''}`}>{list}</div>}
               {full && <p className="text-xs text-mute">{d.buildMax(BUILD_SET_MAX)}</p>}
@@ -328,7 +320,7 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
                 <button data-build-tocart onClick={toCart} disabled={!ready} className="btn w-full py-4">
                   {ready ? d.buildToCart : d.buildNeed(BUILD_SET_MIN - quote.count)}
                 </button>
-                {parts.length > 0 && <button onClick={() => { clear(); setBurst(null); setLanding(null) }} className="w-full text-center font-mono text-[10px] uppercase tracking-[0.16em] text-mute hover:text-bone">{d.buildClear}</button>}
+                {parts.length > 0 && <button onClick={() => { clear(); setUnlocked(null); setLanding(null) }} className="w-full text-center font-mono text-[10px] uppercase tracking-[0.16em] text-mute hover:text-bone">{d.buildClear}</button>}
               </div>
             </div>
           </div>
@@ -338,18 +330,18 @@ export function SetBuilder({ locale, cases }: { locale: Locale; cases: BuilderCa
       {/* Phones: a compact bar at the bottom, the full list opens above it. */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink/95 backdrop-blur lg:hidden">
         {sheet && parts.length > 0 && (
-          <div className="sheet-in max-h-[50vh] overflow-y-auto border-b border-line px-4 pt-2">
+          <div className="max-h-[50vh] overflow-y-auto border-b border-line px-4 pt-2">
             {list}
-            <button onClick={() => { clear(); setSheet(false); setBurst(null); setLanding(null) }} className="mb-3 mt-1 w-full py-1 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.buildClear}</button>
+            <button onClick={() => { clear(); setSheet(false); setUnlocked(null); setLanding(null) }} className="mb-3 mt-1 w-full py-1 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-mute">{d.buildClear}</button>
           </div>
         )}
         <div className="space-y-2 px-4 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2.5">
-          <SetLadder locale={locale} count={quote.count} compact burst={burst?.min ?? null} burstKey={burst?.key} />
+          <SetLadder locale={locale} count={quote.count} compact />
           <p className="text-xs leading-tight" aria-live="polite">{statusLine}</p>
           <div className="flex items-center gap-3">
             {stack}
             <div className="min-w-0 flex-1 leading-tight">
-              <p className="font-mono text-[15px] tabular-nums"><span key={quote.totalCents} className={`tick ${quote.percent > 0 ? 'text-flame-2' : ''}`}>{money(quote.totalCents, locale)}</span></p>
+              <p className="font-mono text-[15px] tabular-nums"><span className={quote.percent > 0 ? 'text-flame-2' : ''}>{money(quote.totalCents, locale)}</span></p>
               <p className="truncate font-mono text-[10px] tabular-nums text-mute">
                 {quote.percent > 0
                   ? <><span className="line-through">{money(quote.fullCents, locale)}</span> <span className="text-flame">−{quote.percent}%</span></>
