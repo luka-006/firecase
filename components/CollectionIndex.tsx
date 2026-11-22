@@ -2,7 +2,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
-import { ArrowIcon } from './icons'
+import { ArrowIcon, ShuffleIcon } from './icons'
+import { interleaveSets, shuffle } from '@/lib/home-order'
 
 export type IndexItem = {
   slug: string
@@ -10,6 +11,8 @@ export type IndexItem = {
   name: string
   short: string
   price: string
+  /** Crossed-out price when the item is on sale. */
+  compare?: string
   image: string
   sizes: string
   badge?: string
@@ -19,15 +22,64 @@ export type IndexItem = {
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-export function CollectionIndex({ items }: { items: IndexItem[] }) {
+/**
+ * Homepage list. `items` is what the server rendered (a few of the collection, in this hour's order).
+ * `pool` is every case and set: the shuffle button draws a fresh selection from it.
+ */
+export function CollectionIndex({
+  items: initial,
+  pool,
+  heading,
+  viewAll,
+  shuffleLabel,
+  shuffledLabel,
+}: {
+  items: IndexItem[]
+  pool?: IndexItem[]
+  heading?: React.ReactNode
+  viewAll?: React.ReactNode
+  shuffleLabel?: string
+  shuffledLabel?: string
+}) {
+  const [items, setItems] = useState(initial)
   const [active, setActive] = useState(0)
+  const [round, setRound] = useState(0)
+  const canShuffle = !!pool && pool.length > 1 && !!shuffleLabel
+
+  function reshuffle() {
+    if (!pool) return
+    const keep = initial.length
+    let next = interleaveSets(shuffle(pool), keep)
+    // never land on the exact same list twice in a row
+    for (let i = 0; i < 4 && next.map((x) => x.slug).join() === items.map((x) => x.slug).join(); i++) next = interleaveSets(shuffle(pool), keep)
+    setItems(next)
+    setActive(0)
+    setRound((r) => r + 1)
+  }
+
   if (!items.length) return null
   return (
-    <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+    <>
+      {(heading || viewAll || canShuffle) && (
+        <div className="mb-10 flex items-end justify-between gap-4" data-reveal>
+          {heading}
+          <div className="flex shrink-0 items-center gap-6">
+            {canShuffle && (
+              <button type="button" onClick={reshuffle} aria-label={shuffleLabel} className="group -m-2 inline-flex items-center gap-2.5 p-2 font-mono text-[11px] uppercase tracking-[0.18em] text-bone/70 transition hover:text-flame">
+                <span key={round} className={`inline-flex ${round > 0 ? 'shuffle-spin' : ''}`}><ShuffleIcon className="size-5 transition-transform duration-500 group-hover:-rotate-12 sm:size-4" /></span>
+                <span className="hidden sm:inline" aria-hidden="true">{shuffleLabel}</span>
+              </button>
+            )}
+            {viewAll}
+          </div>
+        </div>
+      )}
+      <p className="sr-only" aria-live="polite">{round > 0 ? shuffledLabel : ''}</p>
+      <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
       <div className="lg:col-span-7">
-      <ul className="border-t border-line">
+      <ul key={round} className="border-t border-line">
         {items.map((it, i) => (
-          <li key={it.slug} className="border-b border-line">
+          <li key={it.slug} className={`border-b border-line ${round > 0 ? 'shuffle-in' : ''}`} style={round > 0 ? { ['--d' as string]: `${i * 45}ms` } : undefined}>
             <Link
               href={it.href}
               data-home-kind={it.set ? 'set' : 'case'}
@@ -56,7 +108,8 @@ export function CollectionIndex({ items }: { items: IndexItem[] }) {
                 {it.badge && <span className="mt-2 inline-block max-w-full border border-flame/70 bg-ink px-1.5 py-0.5 font-mono text-[9px] uppercase leading-tight tracking-[0.14em] text-flame sm:text-[10px]">{it.badge}</span>}
               </span>
               <span className={`whitespace-nowrap text-right ${it.set ? 'col-span-2 sm:col-span-1' : ''}`}>
-                <span className={`block font-mono tabular-nums ${it.set ? 'text-base sm:text-lg' : 'text-sm lg:text-base'}`}>{it.price}</span>
+                <span className={`block font-mono tabular-nums ${it.compare ? 'text-flame-2' : ''} ${it.set ? 'text-base sm:text-lg' : 'text-sm lg:text-base'}`}>{it.price}</span>
+                {it.compare && <span className="mt-0.5 block font-mono text-xs tabular-nums text-mute line-through">{it.compare}</span>}
                 {!it.set && it.sizes && <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.14em] text-mute">{it.sizes}</span>}
               </span>
               <ArrowIcon className="hidden size-5 text-mute transition duration-500 group-hover:translate-x-1 group-hover:text-flame lg:block" />
@@ -69,7 +122,7 @@ export function CollectionIndex({ items }: { items: IndexItem[] }) {
         <div className="sticky top-28" data-reveal>
           <div className="frame aspect-square">
             <div className="frame-in">
-              <div className="curtain absolute inset-0">
+              <div key={round} className="curtain absolute inset-0">
                 {items.map((it, i) =>
                   it.image ? (
                     <Image key={it.slug} src={it.image} alt="" fill sizes="40vw" priority={i === 0}
@@ -84,6 +137,7 @@ export function CollectionIndex({ items }: { items: IndexItem[] }) {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

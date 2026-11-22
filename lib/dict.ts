@@ -75,11 +75,15 @@ const hr = {
   viewAll: 'Pogledajte sve',
   noProducts: 'Trenutno nema proizvoda.',
   heroEyebrow: 'Futrole za upaljače',
-  heroPre: 'Pauza za cigaretu,',
-  heroEm: 's više',
-  heroPost: 'stila.',
-  heroSub: 'Futrolu navučete na svoj upaljač za par sekundi. Čuva ga od ogrebotina, a običan upaljač napokon izgleda kao nešto što ste birali.',
+  heroPre: 'Vaš upaljač,',
+  heroEm: 'vaš stil.',
+  heroPost: '',
+  heroSub: 'Metalne i kožne futrole za BIC, Clipper, Cricket i Zippo. Futrolu navučete za par sekundi, a običan upaljač napokon izgleda kao nešto što ste birali.',
   heroCta: 'Istražite kolekciju',
+  saleT: 'Sniženo',
+  saleBadge: 'Sniženo',
+  shuffle: 'Promiješaj',
+  shuffled: 'Kolekcija je promiješana.',
   storyA: 'Upaljač vadite iz džepa više puta dnevno.',
   storyB: 'Red je da i izgleda dobro.',
   faqT: 'Česta pitanja',
@@ -335,11 +339,15 @@ const en: Dict = {
   viewAll: 'View all',
   noProducts: 'No products available right now.',
   heroEyebrow: 'Lighter cases',
-  heroPre: 'Your smoke break,',
-  heroEm: 'with more',
-  heroPost: 'style.',
-  heroSub: 'The case slides onto your lighter in seconds. It keeps it free of scratches, and an ordinary lighter finally looks like something you picked.',
+  heroPre: 'Your lighter,',
+  heroEm: 'your style.',
+  heroPost: '',
+  heroSub: 'Metal and leather cases for BIC, Clipper, Cricket and Zippo lighters. The case slides on in seconds, and an ordinary lighter finally looks like something you picked.',
   heroCta: 'Explore the collection',
+  saleT: 'On sale',
+  saleBadge: 'On sale',
+  shuffle: 'Shuffle',
+  shuffled: 'The collection has been shuffled.',
   storyA: 'You take your lighter out several times a day.',
   storyB: 'It might as well look good.',
   faqT: 'FAQ',
@@ -511,4 +519,5 @@ const en: Dict = {
 }
 
 export const DICT: Record<Locale, Dict> = { hr, en }
-export const t = (locale: Locale) => DICT[locale]
+// Unknown locale (e.g. /index.php reaching app/[locale]) falls back to Croatian instead of crashing.
+export const t = (locale: Locale) => DICT[locale] ?? hr

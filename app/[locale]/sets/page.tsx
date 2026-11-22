@@ -3,7 +3,7 @@ import { ShopCatalogue } from '@/components/ShopCatalogue'
 import { getActiveProducts } from '@/lib/products'
 import { href, type Locale } from '@/lib/routes'
 import { catalogueSets } from '@/lib/setovi'
-import { t } from '@/lib/dict'
+import { listingMeta } from '@/lib/seo'
 
 type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ sort?: string }> }
 
@@ -11,8 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params
   const l = locale as Locale
   return {
-    title: t(l).sets,
-    description: t(l).setsIntro,
+    ...listingMeta('sets', l),
     alternates: { canonical: href(l, 'sets'), languages: { hr: href('hr', 'sets'), en: href('en', 'sets'), 'x-default': href('hr', 'sets') } },
   }
 }

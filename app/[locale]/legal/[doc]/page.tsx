@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: d.title,
     description: doc === 'contact' ? contactMetaDescription(l) : undefined,
-    alternates: { canonical: href(l, key), languages: { hr: href('hr', key), en: href('en', key) } },
+    alternates: { canonical: href(l, key), languages: { hr: href('hr', key), en: href('en', key), 'x-default': href('hr', key) } },
   }
 }
 
