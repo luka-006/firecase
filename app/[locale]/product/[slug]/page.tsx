@@ -148,7 +148,7 @@ export default async function ProductPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <nav className="mb-8 text-xs text-mute"><Link href={crumb.href} className="hover:text-bone">{crumb.label}</Link> <span className="mx-1.5">/</span> {name}</nav>
       <div className="grid min-w-0 grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-        <Gallery images={p.images} alt={name} />
+        <Gallery images={p.images} alt={name} portrait={p.kind === 'set'} />
         <div className="lg:sticky lg:top-24 lg:self-start">
           <p className="eyebrow">Firecase</p>
           <h1 className="h-display mt-4 text-3xl leading-[1.02] sm:text-5xl">{name}</h1>

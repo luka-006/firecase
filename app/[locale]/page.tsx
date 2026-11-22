@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { BuildSetCard, cutoutsFirst } from '@/components/BuildSetCard'
 import { CollectionIndex, type IndexItem } from '@/components/CollectionIndex'
 import { SaleStrip, type SaleItem } from '@/components/SaleStrip'
 import { ScrollCta } from '@/components/ScrollCta'
@@ -19,6 +20,7 @@ import { t } from '@/lib/dict'
 import { catalogueCases, catalogueSets, isSetProduct } from '@/lib/setovi'
 import { hourSeed, interleaveSets, isOnSale, salePercent, seededRandom, shuffle } from '@/lib/home-order'
 import { isLowStock, withLowStockFirst } from '@/lib/stock'
+import { buildableCase } from '@/lib/set-builder'
 import { SOCIAL_PROFILES } from '@/lib/seo'
 
 export const revalidate = 300
@@ -75,6 +77,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       percent: salePercent(p.priceCents, saleRows[i]?.lowest30),
     }
   })
+  // Real case photos for the "Napravi svoj set" block, in this hour's order.
+  const buildPhotos = cutoutsFirst(shuffle(catalogueCases(products).filter(buildableCase), seededRandom(hourSeed() + 1)).map((p) => p.images[0] ?? ''))
   const n = (k: number) => String(k + (sale.length ? 1 : 0)).padStart(2, '0')
   const freeLabel = euros(s.freeThresholdCents, locale)
   const faq: [string, string][] = [...d.faq.slice(0, 2), d.freeShipFaq(freeLabel), ...d.faq.slice(2)]
@@ -136,6 +140,13 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         )}
       </section>
 
+      <section className="container-x pt-24 md:pt-40" aria-labelledby="napravi-set" data-home-build>
+        <div className="mb-10 flex items-end justify-between gap-4" data-reveal>
+          <h2 id="napravi-set" className="h-display text-4xl leading-none sm:text-6xl"><span className={idx}>{n(2)}</span>{d.buildSet}</h2>
+        </div>
+        <BuildSetCard locale={locale} images={buildPhotos} variant="home" />
+      </section>
+
       <section className="sweep-host mt-28 bg-flame text-ink md:mt-44">
         <div className="container-x py-24 md:py-40">
           <p className="h-display max-w-6xl text-[clamp(1.9rem,5vw,4.8rem)] normal-case leading-[1.04]">
@@ -153,7 +164,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <section className="container-x pt-24 md:pt-40" aria-labelledby="faq">
         <div className="grid gap-10 md:grid-cols-12 md:gap-16">
           <h2 id="faq" className="h-display text-3xl leading-none sm:text-5xl md:col-span-4 md:sticky md:top-28 md:self-start" data-reveal>
-            <span className={idx}>{n(2)}</span>{d.faqT}
+            <span className={idx}>{n(3)}</span>{d.faqT}
           </h2>
           <div className="divide-y divide-line border-y border-line md:col-span-8">
             {faq.map(([q, a], i) => (

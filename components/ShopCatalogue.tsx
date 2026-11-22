@@ -27,6 +27,7 @@ export function ShopCatalogue({
   lead?: React.ReactNode
 }) {
   const d = t(locale)
+  const topPercent = Math.max(0, ...BUILD_SET_TIERS.map((tier) => tier.percent))
   let list = [...products]
   if (sort === 'asc') list.sort((a, b) => a.priceCents - b.priceCents)
   if (sort === 'desc') list.sort((a, b) => b.priceCents - a.priceCents)
@@ -35,7 +36,7 @@ export function ShopCatalogue({
   // Kolekcija now lists sets; single cases are picked inside "Napravi svoj set".
   const tabs = [
     { href: href(locale, 'shop', undefined, query), label: d.allCases, on: mode === 'cases' || mode === 'sets' },
-    { href: href(locale, 'build'), label: d.buildSet, on: mode === 'build' },
+    { href: href(locale, 'build'), label: d.buildSet, on: mode === 'build', hot: true },
     { href: href(locale, 'engraver', undefined, query), label: d.engraver, on: mode === 'engraver' },
   ]
   const page = mode === 'engraver' ? 'engraver' : 'shop'
@@ -58,9 +59,10 @@ export function ShopCatalogue({
             href={tab.href}
             role="tab"
             aria-selected={tab.on}
-            className={`-mb-px border-b-2 pb-3 font-mono text-[11px] uppercase tracking-[0.18em] transition ${tab.on ? 'border-bone text-bone' : 'border-transparent text-mute hover:text-bone'}`}
+            className={`-mb-px border-b-2 pb-3 font-mono text-[11px] uppercase tracking-[0.18em] transition ${tab.on ? (tab.hot ? 'border-flame text-flame-2' : 'border-bone text-bone') : tab.hot ? 'border-transparent text-flame-2 hover:text-bone' : 'border-transparent text-mute hover:text-bone'}`}
           >
             {tab.label}
+            {tab.hot && <span className="ml-2 hidden bg-flame px-1 py-0.5 align-[1px] text-[9px] tracking-[0.08em] text-ink sm:inline">−{topPercent}%</span>}
           </Link>
         ))}
       </div>

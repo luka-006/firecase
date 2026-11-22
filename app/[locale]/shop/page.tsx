@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { BuildSetCard } from '@/components/BuildSetCard'
+import { BuildSetCard, cutoutsFirst } from '@/components/BuildSetCard'
 import { ShopCatalogue } from '@/components/ShopCatalogue'
 import { getActiveProducts } from '@/lib/products'
 import { href, type Locale } from '@/lib/routes'
@@ -24,6 +24,6 @@ export default async function Shop({ params, searchParams }: Props) {
   const products = await getActiveProducts()
   // Kolekcija lists sets in an order that changes every hour. Single cases are picked in the builder.
   const sets = shuffle(catalogueSets(products), seededRandom(hourSeed()))
-  const photos = shuffle(catalogueCases(products).filter(buildableCase), seededRandom(hourSeed() + 1)).map((p) => p.images[0] ?? '')
+  const photos = cutoutsFirst(shuffle(catalogueCases(products).filter(buildableCase), seededRandom(hourSeed() + 1)).map((p) => p.images[0] ?? ''))
   return <ShopCatalogue locale={locale} products={sets} sort={sort} mode="sets" lead={<BuildSetCard locale={locale} images={photos} />} />
 }

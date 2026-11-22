@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useActionState, useRef, useState } from 'react'
 import { useCart } from './CartProvider'
-import { FreeShippingBar, SetPartsText } from './CartLines'
+import { FreeShippingBar, SetPartsText, SetThumb } from './CartLines'
 import { UpsellPopup, type UpsellProduct } from './UpsellPopup'
 import { Field } from './Ui'
 import { lookupPromo, startCheckout } from '@/app/actions'
@@ -109,7 +109,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
           {items.map((i) => (
             <li key={i.key} className="flex items-center gap-3 text-sm">
               <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-ink-3">
-                {i.image && <Image src={i.image} alt="" fill sizes="56px" className="object-cover" />}
+                {i.parts?.length ? <SetThumb item={i} /> : i.image && <Image src={i.image} alt="" fill sizes="56px" className="object-cover" />}
                 <span className="absolute -right-0 -top-0 grid size-5 place-items-center rounded-bl-lg bg-bone text-[10px] font-semibold text-ink">{i.qty}</span>
               </span>
               <span className="min-w-0 flex-1">

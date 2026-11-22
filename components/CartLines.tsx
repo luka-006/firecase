@@ -40,6 +40,25 @@ export function SetPartsText({ item, locale }: { item: CartItem; locale: Locale 
   )
 }
 
+/** Built set: its case photos in one square (up to four, then "+N"), each shown whole. */
+export function SetThumb({ item }: { item: CartItem }) {
+  const parts = item.parts ?? []
+  const shown = parts.length > 4 ? parts.slice(0, 3) : parts.slice(0, 4)
+  const more = parts.length - shown.length
+  const cells = shown.length + (more > 0 ? 1 : 0)
+  return (
+    <span className={`absolute inset-0 grid gap-px bg-line ${cells <= 2 ? 'grid-rows-1' : 'grid-rows-2'} ${cells <= 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      {shown.map((p, i) => (
+        <span key={`${p.id}-${p.vi}-${i}`} className="relative overflow-hidden bg-ink-3">
+          {p.image && <Image src={p.image} alt="" fill sizes="48px" className="object-contain" />}
+        </span>
+      ))}
+      {more > 0 && <span className="grid place-items-center bg-ink-3 font-mono text-[11px] tabular-nums text-bone/80">+{more}</span>}
+      {cells === 3 && <span className="bg-ink-3" />}
+    </span>
+  )
+}
+
 export function CartLines({ locale, compact }: { locale: Locale; compact?: boolean }) {
   const { items, setQty, remove, setOpen } = useCart()
   const d = t(locale)
@@ -48,7 +67,7 @@ export function CartLines({ locale, compact }: { locale: Locale; compact?: boole
       {items.map((i) => (
         <li key={i.key} className="flex gap-4 py-4">
           <Link href={i.parts?.length ? href(locale, 'build') : href(locale, 'product', i.slug)} onClick={() => setOpen(false)} className={`relative shrink-0 overflow-hidden rounded-sm bg-ink-3 ${compact ? 'size-20' : 'size-24'}`}>
-            {i.image && <Image src={i.image} alt="" fill sizes="96px" className="object-cover" />}
+            {i.parts?.length ? <SetThumb item={i} /> : i.image && <Image src={i.image} alt="" fill sizes="96px" className="object-cover" />}
           </Link>
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex items-start justify-between gap-2">
