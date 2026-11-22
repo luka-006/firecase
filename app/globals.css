@@ -193,6 +193,15 @@
   to { transform: translate3d(-50%, 0, 0); }
 }
 
+/* Napravi svoj set: istaknuta poveznica u izborniku, ljestvica popusta,
+   futrole koje jednom upadnu u set i nova sličica koja čeka da futrola doleti. */
+.nav-hot { clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px); }
+.ladder-fill { transition: transform 0.8s var(--ease-out-expo); }
+.showcase-case { opacity: 1; transform: none; transition: transform 0.5s var(--ease-out-expo), opacity 0.35s ease; }
+.showcase-case[data-state='wait'] { opacity: 0; transform: translate3d(0, -16%, 0); transition-duration: 0s; }
+.slot-land { animation: slot-land 0.12s ease-out backwards; animation-delay: var(--d, 0ms); }
+@keyframes slot-land { from { opacity: 0; } to { opacity: 1; } }
+
 /* Gecko: will-change i backface-visibility znaju zamrznuti sloj na Firefoxu
    za Android, pa se beskonačna vrtnja i ulazi nikad ne nacrtaju. Vremenska
    animacija riječi ostaje i kad @supports za timeline laže. */
@@ -237,6 +246,9 @@
   .js [data-reveal], .sheet-in, .rise, .rule-draw, .curtain, .wm-rise, .sw, .pop-in, .lb-in, .tick, .heart-pop, .bump, .mark-draw, .marquee-track, .drawer {
     will-change: auto;
   }
+  .ladder-fill { transition-duration: 0.3s; }
+  .showcase-case { transition-duration: 0.2s; }
+  .slot-land { animation: none; }
 }
 
 /* Firefox za Android javi prefers-reduced-motion i kad su sistemske animacije
@@ -261,5 +273,8 @@
     .row-wipe::before { transition-duration: 0.7s; }
     .marquee-track { animation-name: marquee-x; animation-duration: 40s; animation-play-state: running; animation-timing-function: linear; animation-iteration-count: infinite; }
     .drawer { transition-duration: 0.5s; }
+    .ladder-fill { transition-duration: 0.8s; }
+    .showcase-case { transition-duration: 0.5s, 0.35s; }
+    .slot-land { animation: slot-land 0.12s ease-out backwards; animation-delay: var(--d, 0ms); }
   }
 }

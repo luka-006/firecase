@@ -3,7 +3,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { useCart } from './CartProvider'
+import { addToSetDraft, useSetDraft } from './SetDraft'
+import { SetLadder } from './SetLadder'
+import { BUILD_SET_MIN, BUILD_SET_TIERS } from '@/lib/set-builder'
 import { ArrowIcon, CheckIcon, HeartIcon, MinusIcon, PlusIcon, XIcon } from './icons'
 import { favoriteState, toggleFavorite } from '@/app/actions'
 import { ENGRAVING_MAX, engravingText } from '@/lib/engrave'
@@ -64,24 +68,27 @@ function Track({ index, swipe, children, className = '' }: { index: number; swip
   )
 }
 
-export function Gallery({ images, alt }: { images: string[]; alt: string }) {
+/** `portrait`: set photos are made 4:5 (like their Kolekcija cards), case photos are square. */
+export function Gallery({ images, alt, portrait }: { images: string[]; alt: string; portrait?: boolean }) {
   const [i, setI] = useState(0)
   const [open, setOpen] = useState(false)
   const n = images.length
   const go = useCallback((d: number) => setI((x) => (x + d + n) % n), [n])
   const swipe = useSwipe(go, n > 1)
-  if (!n) return <div className="frame aspect-square w-full min-w-0"><div className="frame-in" /></div>
+  const aspect = portrait ? 'aspect-[4/5]' : 'aspect-square'
+  if (!n) return <div className={`frame ${aspect} w-full min-w-0`}><div className="frame-in" /></div>
   return (
     <div className="min-w-0 max-w-full space-y-3">
-      <div className="frame aspect-square w-full min-w-0" data-reveal>
+      <div className={`frame ${aspect} w-full min-w-0`} data-reveal>
         <div className="frame-in">
           <div className="curtain absolute inset-0">
             <Track index={i} swipe={swipe} className="touch-pan-y">
               {images.map((src, idx) => (
                 <button key={src} type="button" onClick={() => !swipe.wasDrag() && setOpen(true)} aria-label={`${alt} ${idx + 1}`}
                   className="group/img relative h-full w-full shrink-0 cursor-zoom-in overflow-hidden">
+                  {/* Whole photo: case photos are square and fill the frame, set photos (4:5) keep their title in view. */}
                   <Image src={src} alt={idx === 0 ? alt : ''} fill priority={idx === 0} sizes="(min-width:1024px) 50vw, 100vw" draggable={false}
-                    className="object-cover transition-transform duration-[1.2s] ease-[cubic-bezier(.16,1,.3,1)] group-hover/img:scale-[1.03]" />
+                    className="object-contain transition-transform duration-[1.2s] ease-[cubic-bezier(.16,1,.3,1)] group-hover/img:scale-[1.03]" />
                 </button>
               ))}
             </Track>
@@ -169,10 +176,14 @@ type BuyProps = {
   /** The page shows the big engraving preview beside the buy box on desktop, so the inline one is for phones only. */
   previewAside?: boolean
   onEngraving?: (state: EngravingState) => void
+  /** Plain case: the button puts it into "Napravi svoj set" instead of the cart. */
+  setOnly?: boolean
 }
 
-export function BuyBox({ locale, product, previewAside, onEngraving }: BuyProps) {
+export function BuyBox({ locale, product, previewAside, onEngraving, setOnly }: BuyProps) {
   const { add, items } = useCart()
+  const draft = useSetDraft().parts
+  const router = useRouter()
   const d = t(locale)
   const stocked = { stock: product.stock, variants: product.variants }
   const firstOpen = product.variants.findIndex((_, i) => !isOptionSoldOut(stocked, i))
@@ -199,6 +210,13 @@ export function BuyBox({ locale, product, previewAside, onEngraving }: BuyProps)
     setQty((q) => Math.min(q, cap))
   }, [cap])
   const onAdd = () => {
+    if (setOnly) {
+      if (soldOut) return
+      const v = product.variants[vi]
+      addToSetDraft({ id: product.id, vi, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: product.image, priceCents: product.priceCents, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' })
+      router.push(href(locale, 'build'))
+      return
+    }
     if (soldOut || qty < 1 || qty > cap) return
     const parsed = product.engrave ? engravingText(engraving) : { ok: true as const, text: '' }
     if (!parsed.ok) {
@@ -259,16 +277,32 @@ export function BuyBox({ locale, product, previewAside, onEngraving }: BuyProps)
         </div>
       )}
       <div className="flex gap-3">
+        {!setOnly && (
         <div className="flex items-center rounded-none border border-line">
           <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="p-3.5 text-mute hover:text-bone" aria-label="-"><MinusIcon className="size-4" /></button>
           <span className="w-7 overflow-hidden text-center tabular-nums" aria-label={d.qty}><span key={qty} className="tick">{qty}</span></span>
           <button onClick={() => setQty((q) => Math.min(cap > 0 ? cap : q, q + 1))} disabled={cap <= 0 || qty >= cap} className="p-3.5 text-mute hover:text-bone disabled:opacity-40" aria-label="+"><PlusIcon className="size-4" /></button>
         </div>
+        )}
         <button onClick={onAdd} disabled={soldOut} className="btn flex-1">
-          {soldOut ? d.outOfStock : done ? (<span className="pop-in inline-flex items-center gap-2"><CheckIcon className="size-4" /> {d.added}</span>) : d.addToCart}
+          {soldOut ? d.outOfStock : done ? (<span className="pop-in inline-flex items-center gap-2"><CheckIcon className="size-4" /> {d.added}</span>) : setOnly ? d.addToSet : d.addToCart}
         </button>
         <FavoriteButton locale={locale} productId={product.id} />
       </div>
+      {setOnly && (
+        <div className="space-y-4 border border-line p-4">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-flame">{d.buildSet}</p>
+          <SetLadder locale={locale} count={draft.length} compact />
+          <p className="text-xs leading-relaxed text-mute">
+            {d.setOnlyNote(BUILD_SET_MIN)} <span className="text-flame">{d.buildTiers(BUILD_SET_TIERS)}</span>
+          </p>
+          {draft.length > 0 && (
+            <Link href={href(locale, 'build')} className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/80 transition hover:text-flame-2">
+              {d.buildInYourSet(draft.length)} <ArrowIcon className="size-3.5" />
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   )
 }

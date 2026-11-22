@@ -1,6 +1,20 @@
 'use client'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CART_STORAGE_KEY, UPSELL_SEEN_KEY, discountCentsFor } from '@/lib/commerce'
+import { builtSetKey } from '@/lib/set-builder'
+
+/** One case inside a set the customer built. Display fields only; checkout reprices from the database. */
+export type SetPartLine = {
+  id: number
+  vi: number
+  slug: string
+  nameHr: string
+  nameEn: string
+  image: string
+  priceCents: number
+  variantHr: string
+  variantEn: string
+}
 
 export type CartItem = {
   key: string
@@ -17,6 +31,10 @@ export type CartItem = {
   engravingFont?: number
   qty: number
   freeShipping?: boolean
+  /** Set the customer built ("Napravi svoj set"). id is 0 and priceCents is the discounted set price. */
+  parts?: SetPartLine[]
+  /** Tier discount shown on the cart line, in percent. */
+  setPercent?: number
 }
 
 type Ctx = {
@@ -89,7 +107,9 @@ export function CartProvider({ children, shipping }: { children: React.ReactNode
   }, [items, upsell, ready])
 
   const add: Ctx['add'] = useCallback((item, qty = 1, opts) => {
-    const key = item.engraving ? `${item.id}:${item.vi}:${item.engraving}:${item.engravingFont ?? ''}` : `${item.id}:${item.vi}`
+    const key = item.parts?.length
+      ? builtSetKey(item.parts)
+      : item.engraving ? `${item.id}:${item.vi}:${item.engraving}:${item.engravingFont ?? ''}` : `${item.id}:${item.vi}`
     setItems((prev) => {
       const found = prev.find((i) => i.key === key)
       if (found) return prev.map((i) => (i.key === key ? { ...i, ...item, qty: Math.min(99, i.qty + qty) } : i))

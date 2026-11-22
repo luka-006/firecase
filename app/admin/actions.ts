@@ -136,6 +136,8 @@ export async function saveProduct(_: State, f: FormData): Promise<State> {
     stock: stockRaw === '' ? null : Math.max(0, parseInt(stockRaw, 10) || 0),
     active: f.get('active') === 'on', featured: f.get('featured') === 'on', sort: parseInt(str(f, 'sort'), 10) || 0,
     engrave: kindRow?.kind === 'set' ? false : f.get('engrave') === 'on',
+    // Sets can switch free delivery on and off, e.g. while a set is on promotion.
+    ...(kindRow?.kind === 'set' ? { freeShipping: f.get('freeShipping') === 'on' } : {}),
     sku: str(f, 'sku'), materialHr: str(f, 'materialHr'), materialEn: str(f, 'materialEn'),
     manufacturer: str(f, 'manufacturer'), euResponsible: str(f, 'euResponsible'),
     supplierUrl: str(f, 'supplierUrl'), costCents: str(f, 'cost') ? cents(str(f, 'cost')) : null,

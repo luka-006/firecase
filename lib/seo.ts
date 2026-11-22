@@ -32,17 +32,22 @@ export function siteDescription(locale: Locale, freeFrom: string) {
 }
 
 /** Titles and meta descriptions for the listing pages (shop, sets, engraver). */
-export function listingMeta(page: 'shop' | 'sets' | 'engraver', locale: Locale) {
+export function listingMeta(page: 'shop' | 'sets' | 'engraver' | 'build', locale: Locale) {
   const en = locale === 'en'
+  if (page === 'build') {
+    return en
+      ? { title: 'Build your own set of lighter cases', description: 'Pick the lighter cases you like and put them in one set. 3 cases get 10% off, 5 or more get 20%. Cases for BIC J5, BIC J6, Clipper, Cricket and Zippo.' }
+      : { title: 'Napravite svoj set futrola za upaljače', description: 'Odaberite futrole za upaljače koje vam se sviđaju i složite svoj set. Za 3 futrole 10% popusta, za 5 i više 20%. Za BIC J5, BIC J6, Clipper, Cricket i Zippo.' }
+  }
   if (page === 'shop') {
     return en
-      ? { title: 'Lighter cases – Collection', description: 'All our lighter cases in one place: metal and leather cases for BIC J5, BIC J6, Clipper, Cricket and Zippo lighters. Delivery across Croatia.' }
-      : { title: 'Futrole za upaljače – Kolekcija', description: 'Sve futrole za upaljače na jednom mjestu: metalne i kožne futrole za BIC J5, BIC J6, Clipper, Cricket i Zippo. Dostava po cijeloj Hrvatskoj.' }
+      ? { title: 'Lighter case sets – Collection', description: 'Sets of lighter cases, ready made or built by you: metal and leather cases for BIC J5, BIC J6, Clipper, Cricket and Zippo. Delivery across Croatia.' }
+      : { title: 'Setovi futrola za upaljače – Kolekcija', description: 'Setovi futrola za upaljače, gotovi ili po vašem izboru: metalne i kožne futrole za BIC J5, BIC J6, Clipper, Cricket i Zippo. Dostava po cijeloj Hrvatskoj.' }
   }
   if (page === 'sets') {
     return en
-      ? { title: 'Lighter case sets', description: 'Sets of lighter cases that cost less than buying each case on its own, and always ship free within Croatia. A good gift for him.' }
-      : { title: 'Setovi futrola za upaljače', description: 'Setovi futrola za upaljače, povoljniji nego kad futrole kupujete pojedinačno, i uvijek s besplatnom dostavom po Hrvatskoj. Dobar poklon za njega.' }
+      ? { title: 'Lighter case sets', description: 'Sets of lighter cases that cost less than buying each case on its own. Ready made or built by you, for BIC J5, BIC J6, Clipper and Cricket.' }
+      : { title: 'Setovi futrola za upaljače', description: 'Setovi futrola za upaljače, povoljniji nego kad futrole kupujete pojedinačno. Gotovi ili po vašem izboru, za BIC J5, BIC J6, Clipper i Cricket.' }
   }
   return en
     ? { title: 'Engraved lighter cases', description: 'Lighter cases engraved with a name or initials. A personal gift for him. Engraving supports the letters A to Z, without accents.' }

@@ -208,6 +208,9 @@ export function ProductForm({ p, proposalId, initial }: { p: Product | null; pro
           {base?.kind !== 'set' && (
             <label className="flex items-center gap-3"><input type="checkbox" name="engrave" defaultChecked={!!base?.engrave} className="size-4 accent-[#d08a2e]" /> Gravura (Engraver)</label>
           )}
+          {base?.kind === 'set' && (
+            <label className="flex items-center gap-3"><input type="checkbox" name="freeShipping" defaultChecked={!!base?.freeShipping} className="size-4 accent-[#d08a2e]" /> Besplatna dostava (npr. za akciju)</label>
+          )}
         </div>
       </Section>
 

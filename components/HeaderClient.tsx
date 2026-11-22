@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom'
 import { useCart } from './CartProvider'
 import { BagIcon, MenuIcon, XIcon } from './icons'
 import { href, switchLocale, type Locale } from '@/lib/routes'
+import type { ShopLink } from '@/lib/shop-nav'
 import { t } from '@/lib/dict'
 
 export function CartButton({ locale }: { locale: Locale }) {
@@ -27,12 +28,21 @@ export function CartButton({ locale }: { locale: Locale }) {
   )
 }
 
-export function NavLinks({ links }: { links: { href: string; label: string }[] }) {
+export function NavLinks({ links }: { links: ShopLink[] }) {
   const pathname = usePathname()
   return (
-    <nav className="hidden items-center gap-7 md:flex">
+    <nav className="hidden items-center gap-7 min-[900px]:flex">
       {links.map((l) => {
         const active = !l.href.includes('#') && (pathname === l.href || pathname.startsWith(l.href + '/'))
+        // "Napravi svoj set" stands out as a flame chip with the top discount.
+        if (l.highlight) return (
+          <Link key={l.href} href={l.href} aria-current={active ? 'page' : undefined}
+            className={`nav-hot group/hot inline-flex items-center gap-2 whitespace-nowrap px-3 py-[7px] font-mono text-[11px] uppercase tracking-[0.16em] transition-colors duration-300 ${active ? 'bg-flame text-ink' : 'bg-flame/15 text-flame-2 hover:bg-flame hover:text-ink'}`}>
+            <span aria-hidden className={`size-[5px] rotate-45 transition-colors ${active ? 'bg-ink' : 'bg-flame-2 group-hover/hot:bg-ink'}`} />
+            {l.label}
+            <span className={`hidden text-[10px] tracking-[0.06em] lg:inline ${active ? 'text-ink/70' : 'text-bone/70 group-hover/hot:text-ink/70'}`}>{l.highlight}</span>
+          </Link>
+        )
         return (
           <Link key={l.href} href={l.href}
             className={`relative font-mono text-[11px] uppercase tracking-[0.16em] transition after:absolute after:-bottom-1.5 after:left-0 after:h-px after:w-full after:origin-left after:bg-flame after:transition-transform after:duration-500 hover:text-bone hover:after:scale-x-100 ${active ? 'text-bone after:scale-x-100' : 'text-bone/65 after:scale-x-0'}`}>
@@ -75,7 +85,7 @@ export function HeaderShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function MobileMenu({ locale, links }: { locale: Locale; links: { href: string; label: string }[] }) {
+export function MobileMenu({ locale, links }: { locale: Locale; links: ShopLink[] }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
@@ -87,12 +97,15 @@ export function MobileMenu({ locale, links }: { locale: Locale; links: { href: s
     return () => { document.body.style.overflow = '' }
   }, [open])
   const panel = (
-      <div className={`fixed inset-0 z-50 md:hidden ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
+      <div className={`fixed inset-0 z-50 min-[900px]:hidden ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
         <div onClick={() => setOpen(false)} className={`fade absolute inset-0 bg-black/70 backdrop-blur-sm ${open ? 'opacity-100' : 'opacity-0'}`} />
         <nav className={`drawer absolute left-0 top-0 flex h-full w-[85%] max-w-xs flex-col gap-1 border-r border-line bg-ink p-6 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
           <button onClick={() => setOpen(false)} className="mb-6 self-end text-mute" aria-label={d.close}><XIcon /></button>
           {links.map((l) => (
-            <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="h-display border-b border-line px-1 py-4 text-2xl transition hover:text-flame-2">{l.label}</Link>
+            <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className={`h-display flex items-center justify-between gap-3 border-b border-line px-1 py-4 text-2xl transition hover:text-flame-2 ${l.highlight ? 'text-flame-2' : ''}`}>
+              {l.label}
+              {l.highlight && <span className="nav-hot shrink-0 bg-flame px-2 py-1 font-mono text-[10px] font-medium tracking-[0.1em] text-ink">{l.highlight}</span>}
+            </Link>
           ))}
           <div className="mt-auto flex items-center gap-3 pt-4">
             <LangSwitch locale={locale} />
@@ -102,7 +115,7 @@ export function MobileMenu({ locale, links }: { locale: Locale; links: { href: s
   )
   return (
     <>
-      <button onClick={() => setOpen(true)} className="p-2 text-bone/80 md:hidden" aria-label={d.menu}><MenuIcon /></button>
+      <button onClick={() => setOpen(true)} className="p-2 text-bone/80 min-[900px]:hidden" aria-label={d.menu}><MenuIcon /></button>
       {mounted && createPortal(panel, document.body)}
     </>
   )

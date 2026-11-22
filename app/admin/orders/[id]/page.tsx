@@ -113,8 +113,8 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                   </div>
                   {i.components?.length ? (
                     <ul className="mt-1 space-y-0.5 text-xs text-mute">
-                      {i.components.map((part) => (
-                        <li key={part.productId}>{part.qty * i.qty}× {part.name}</li>
+                      {i.components.map((part, pi) => (
+                        <li key={`${part.productId}-${pi}`}>{part.qty * i.qty}× {part.name}{part.variant ? <span>: {part.variant}</span> : null}</li>
                       ))}
                     </ul>
                   ) : null}

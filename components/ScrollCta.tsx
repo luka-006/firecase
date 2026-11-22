@@ -5,8 +5,9 @@ import { ArrowIcon } from './icons'
 
 /**
  * "Istražite kolekciju" pill that slides up from the bottom once the hero button has
- * scrolled out of view, and steps aside near the footer and while the cookie bar
- * covers the bottom of a phone screen.
+ * scrolled out of view, and steps aside near the footer, while the cookie bar
+ * covers the bottom of a phone screen, and while the "Napravi svoj set" block
+ * sits at the bottom of the screen (so it does not cover that block's own button).
  */
 export function ScrollCta({ href, label, anchorId }: { href: string; label: string; anchorId: string }) {
   const [on, setOn] = useState(false)
@@ -20,7 +21,9 @@ export function ScrollCta({ href, label, anchorId }: { href: string; label: stri
       const footer = document.querySelector('footer')
       const nearEnd = footer ? footer.getBoundingClientRect().top < window.innerHeight - 40 : false
       const cookieBar = !!document.querySelector('[data-cookie-notice]') && window.innerWidth < 1024
-      setOn(pastHero && !nearEnd && !cookieBar)
+      const feature = document.querySelector('[data-build-feature]')?.getBoundingClientRect()
+      const overFeature = !!feature && feature.top < window.innerHeight - 40 && feature.bottom > window.innerHeight - 120
+      setOn(pastHero && !nearEnd && !cookieBar && !overFeature)
     }
     const schedule = () => { if (!frame) frame = requestAnimationFrame(check) }
     check()

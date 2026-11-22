@@ -5,6 +5,7 @@ import { getUser } from '@/lib/auth'
 import { sql } from '@/lib/db'
 import { getSettings } from '@/lib/settings'
 import { EU_COUNTRIES } from '@/lib/config'
+import { CHECKOUT_UPSELL } from '@/lib/commerce'
 import type { Locale } from '@/lib/routes'
 import { t } from '@/lib/dict'
 import { PageHead } from '@/components/PageHead'
@@ -29,7 +30,7 @@ export default async function Checkout({ params }: { params: Promise<{ locale: s
       <CheckoutForm locale={locale} defaults={defaults} loggedIn={!!user} countries={countries}
         ship={{ shippingCents: s.shippingCents, freeThresholdCents: s.freeThresholdCents, euShippingCents: s.euShippingCents }}
         delivery={locale === 'en' ? s.deliveryEn : s.deliveryHr}
-        upsellProducts={products.slice(0, 8).map((p) => ({
+        upsellProducts={(CHECKOUT_UPSELL ? products : []).slice(0, 8).map((p) => ({
           id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents,
           vi: p.variants.length ? 0 : -1, variantHr: p.variants[0]?.hr ?? '', variantEn: p.variants[0]?.en ?? '',
         }))} />
