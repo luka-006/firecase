@@ -28,6 +28,7 @@ test('language switch drops an internal hr prefix', () => {
   assert.equal(href('hr', 'contest'), '/natjecaj')
   assert.equal(switchLocale('/natjecaj', 'hr'), '/natjecaj')
   assert.equal(switchLocale('/en/natjecaj', 'hr'), '/natjecaj')
+  assert.equal(switchLocale('/natjecaj', 'en'), '/en')
 })
 
 test('contest rules stay a quality contest in Croatian', () => {

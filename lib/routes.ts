@@ -79,5 +79,8 @@ export function hrefFromInternal(internalPath: string, locale: Locale): string {
 // Radi i s javnim (/trgovina, /en/shop) i s internim URL-om koji Next ponekad vrati u usePathname()
 export function switchLocale(pathname: string, to: Locale): string {
   const normalized = pathname.startsWith('/') ? pathname : `/${pathname}`
-  return hrefFromInternal(toInternal(normalized), to)
+  const internal = toInternal(normalized)
+  // The contest page is Croatian only (/en/natjecaj is a 404), so English goes to the English home page.
+  if (to === 'en' && internal.split('/').filter(Boolean)[1] === ROUTES.contest.internal) return href('en', 'home')
+  return hrefFromInternal(internal, to)
 }
