@@ -120,7 +120,7 @@ export function Gallery({ images, alt, portrait }: { images: string[]; alt: stri
           {images.map((src, idx) => (
             <button key={src} onClick={() => setI(idx)} aria-label={`${idx + 1}`}
               className={`relative size-20 shrink-0 overflow-hidden border transition ${idx === i ? 'border-flame' : 'border-line opacity-60 hover:opacity-100'}`}>
-              <Image src={src} alt="" fill sizes="80px" className="object-cover" />
+              <Image src={src} alt="" fill sizes="80px" className="object-contain" />
             </button>
           ))}
         </div>

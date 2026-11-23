@@ -91,13 +91,13 @@ export function CollectionIndex({
             >
               {it.set ? (
                 <span className="frame relative block aspect-square" style={{ ['--c' as string]: '12px' }}>
-                  <span className="frame-in">{it.image && <Image src={it.image} alt="" fill sizes="100px" className="object-cover" />}</span>
+                  <span className="frame-in">{it.image && <Image src={it.image} alt="" fill sizes="100px" className="object-contain" />}</span>
                 </span>
               ) : (
                 <>
                   <span className="hidden font-mono text-xs text-mute lg:block">{pad(i + 1)}</span>
                   <span className="frame relative block aspect-square lg:hidden" style={{ ['--c' as string]: '10px' }}>
-                    <span className="frame-in">{it.image && <Image src={it.image} alt="" fill sizes="72px" className="object-cover" />}</span>
+                    <span className="frame-in">{it.image && <Image src={it.image} alt="" fill sizes="72px" className="object-contain" />}</span>
                   </span>
                 </>
               )}
@@ -126,7 +126,7 @@ export function CollectionIndex({
                 {items.map((it, i) =>
                   it.image ? (
                     <Image key={it.slug} src={it.image} alt="" fill sizes="40vw" priority={i === 0}
-                      className={`object-cover transition-[opacity,transform] duration-[1200ms] ease-[cubic-bezier(.16,1,.3,1)] ${i === active ? 'scale-100 opacity-100' : 'scale-[1.04] opacity-0'}`} />
+                      className={`object-contain transition-[opacity,transform] duration-[1200ms] ease-[cubic-bezier(.16,1,.3,1)] ${i === active ? 'scale-100 opacity-100' : 'scale-[1.04] opacity-0'}`} />
                   ) : null,
                 )}
               </div>

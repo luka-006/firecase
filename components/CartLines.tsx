@@ -67,7 +67,7 @@ export function CartLines({ locale, compact }: { locale: Locale; compact?: boole
       {items.map((i) => (
         <li key={i.key} className="flex gap-4 py-4">
           <Link href={i.parts?.length ? href(locale, 'build') : href(locale, 'product', i.slug)} onClick={() => setOpen(false)} className={`relative shrink-0 overflow-hidden rounded-sm bg-ink-3 ${compact ? 'size-20' : 'size-24'}`}>
-            {i.parts?.length ? <SetThumb item={i} /> : i.image && <Image src={i.image} alt="" fill sizes="96px" className="object-cover" />}
+            {i.parts?.length ? <SetThumb item={i} /> : i.image && <Image src={i.image} alt="" fill sizes="96px" className="object-contain" />}
           </Link>
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex items-start justify-between gap-2">

@@ -18,7 +18,7 @@ export function ProductMarquee({ products, locale }: { products: Product[]; loca
         >
           <span className="relative block aspect-[4/5] overflow-hidden bg-ink-3">
             {p.images[0] && (
-              <Image src={p.images[0]} alt="" fill sizes="176px" className="object-cover" />
+              <Image src={p.images[0]} alt="" fill sizes="176px" className="object-contain" />
             )}
           </span>
           <span className="mt-3 block min-w-0 h-display text-sm leading-tight [overflow-wrap:anywhere]">{name}</span>

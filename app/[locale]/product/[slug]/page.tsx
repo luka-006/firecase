@@ -177,7 +177,7 @@ export default async function ProductPage({ params }: Props) {
                   return (
                     <li key={`${ref.productId}-${index}`} className="flex items-center gap-3 py-3">
                       <span className="relative size-14 shrink-0 overflow-hidden bg-ink-3">
-                        {item?.images[0] && <Image src={item.images[0]} alt="" fill sizes="56px" className="object-cover" />}
+                        {item?.images[0] && <Image src={item.images[0]} alt="" fill sizes="56px" className="object-contain" />}
                       </span>
                       {item?.active ? (
                         <Link href={href(locale, 'product', item.slug)} className="min-w-0 flex-1 text-sm hover:text-flame">{name}</Link>

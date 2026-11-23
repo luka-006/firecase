@@ -58,7 +58,7 @@ export function EngraverShop({ locale, cases, banner }: { locale: Locale; cases:
                 <button type="button" onClick={() => setSlug(c.slug)} aria-pressed={on}
                   className={`flex w-full items-center gap-4 py-4 text-left transition ${on ? 'text-bone' : 'text-bone/85 hover:text-bone'}`}>
                   <span className={`relative size-20 shrink-0 overflow-hidden border bg-ink-3 transition ${on ? 'border-flame' : 'border-line'}`}>
-                    {c.thumb && <Image src={c.thumb} alt="" fill sizes="80px" className="object-cover" />}
+                    {c.thumb && <Image src={c.thumb} alt="" fill sizes="80px" className="object-contain" />}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[15px]">{c.name}</span>

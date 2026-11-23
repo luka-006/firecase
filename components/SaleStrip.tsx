@@ -33,7 +33,7 @@ export function SaleStrip({ items, title, badge, index }: { items: SaleItem[]; t
             <Link href={it.href} className="group block">
               <span className="frame relative block aspect-square" style={{ ['--c' as string]: '18px' }}>
                 <span className="frame-in">
-                  {it.image && <Image src={it.image} alt="" fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 78vw" className="object-cover transition-transform duration-[1200ms] ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.04]" />}
+                  {it.image && <Image src={it.image} alt="" fill sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 78vw" className="object-contain transition-transform duration-[1200ms] ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.04]" />}
                 </span>
                 <span className="sale-tag absolute left-0 top-5 z-10 bg-flame px-3 py-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-ink">
                   {it.percent ? `−${it.percent} %` : badge}

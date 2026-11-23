@@ -109,7 +109,7 @@ export function CheckoutForm({ locale, defaults, loggedIn, countries, ship, deli
           {items.map((i) => (
             <li key={i.key} className="flex items-center gap-3 text-sm">
               <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-ink-3">
-                {i.parts?.length ? <SetThumb item={i} /> : i.image && <Image src={i.image} alt="" fill sizes="56px" className="object-cover" />}
+                {i.parts?.length ? <SetThumb item={i} /> : i.image && <Image src={i.image} alt="" fill sizes="56px" className="object-contain" />}
                 <span className="absolute -right-0 -top-0 grid size-5 place-items-center rounded-bl-lg bg-bone text-[10px] font-semibold text-ink">{i.qty}</span>
               </span>
               <span className="min-w-0 flex-1">

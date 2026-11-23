@@ -26,7 +26,7 @@ export function ReviewForm({
           return (
             <li key={item.itemIndex} className="border border-line p-4">
               <div className="flex items-center gap-3">
-                {img ? <img src={img} alt="" width={64} height={64} className="size-16 bg-ink-3 object-cover" /> : null}
+                {img ? <img src={img} alt="" width={64} height={64} className="size-16 bg-ink-3 object-contain" /> : null}
                 <div>
                   <p className="font-medium">{item.name}</p>
                   {item.variant ? <p className="text-sm text-mute">{item.variant}</p> : null}

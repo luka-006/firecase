@@ -82,7 +82,7 @@ export function UpsellPopup({
               return (
                 <li key={p.id} className="min-w-0">
                   <span className="relative block aspect-[4/5] overflow-hidden bg-ink-3">
-                    {p.image && <Image src={p.image} alt="" fill sizes="180px" className="object-cover" />}
+                    {p.image && <Image src={p.image} alt="" fill sizes="180px" className="object-contain" />}
                   </span>
                   <span className="mt-2 block min-w-0 text-sm leading-tight [overflow-wrap:anywhere]">{name}</span>
                   <span className="mt-1 block whitespace-nowrap font-mono text-sm tabular-nums">{money(p.priceCents, locale)}</span>
