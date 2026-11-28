@@ -14,6 +14,7 @@ export function ShopCatalogue({
   engraver,
   builder,
   lead,
+  engraverTab = true,
 }: {
   locale: Locale
   products: Product[]
@@ -25,6 +26,8 @@ export function ShopCatalogue({
   builder?: React.ReactNode
   /** First tile of the grid, e.g. the card that opens the set builder. */
   lead?: React.ReactNode
+  /** Shows the Engraver tab; off while no engraving case is published. */
+  engraverTab?: boolean
 }) {
   const d = t(locale)
   const topPercent = Math.max(0, ...BUILD_SET_TIERS.map((tier) => tier.percent))
@@ -33,11 +36,11 @@ export function ShopCatalogue({
   if (sort === 'desc') list.sort((a, b) => b.priceCents - a.priceCents)
   list = withLowStockFirst(list)
   const query = sort ? `sort=${sort}` : undefined
-  // Kolekcija now lists sets; single cases are picked inside "Napravi svoj set".
+  // Kolekcija lists sets, and single cases too while they are sold on their own; the builder has its own tab.
   const tabs = [
     { href: href(locale, 'shop', undefined, query), label: d.allCases, on: mode === 'cases' || mode === 'sets' },
     { href: href(locale, 'build'), label: d.buildSet, on: mode === 'build', hot: true },
-    { href: href(locale, 'engraver', undefined, query), label: d.engraver, on: mode === 'engraver' },
+    ...(engraverTab || mode === 'engraver' ? [{ href: href(locale, 'engraver', undefined, query), label: d.engraver, on: mode === 'engraver' }] : []),
   ]
   const page = mode === 'engraver' ? 'engraver' : 'shop'
   const title = mode === 'build' ? d.buildTitle : mode === 'sets' ? d.sets : mode === 'engraver' ? d.engraver : locale === 'en' ? 'Lighter cases' : 'Futrole za upaljače'

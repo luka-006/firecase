@@ -19,7 +19,7 @@ export function ladderFill(count: number) {
   return 1
 }
 
-/** Rail with the set steps (2 / 3 / 5 / 8) and their discounts. The fill slides when the count changes. */
+/** Rail with the set steps (2 / 3 / 5 / 8): set, discount, free shipping, bigger discount. The fill slides when the count changes. */
 export function SetLadder({ locale, count, compact }: { locale: Locale; count: number; compact?: boolean }) {
   const d = t(locale)
   const fill = ladderFill(count)
@@ -32,10 +32,13 @@ export function SetLadder({ locale, count, compact }: { locale: Locale; count: n
           return (
             <div key={step.min} className={`flex items-baseline justify-end gap-1.5 text-right ${compact ? 'pb-1.5' : 'pb-2.5'}`}>
               <span className={`font-mono tabular-nums transition-colors duration-500 ${compact ? 'text-[10px]' : 'text-sm'} ${on ? 'text-bone' : 'text-mute'}`}>{step.min}</span>
-              <span className={`font-mono uppercase tracking-[0.08em] transition-colors duration-500 ${compact ? 'text-[10px]' : 'text-[11px]'} ${on ? 'text-flame-2' : 'text-mute/70'}`}>
-                {step.percent ? `−${step.percent}%` : d.buildStepSet}
-              </span>
-              {compact && step.freeShipping && <TruckIcon className={`size-3.5 self-center transition-colors duration-500 ${on ? 'text-flame-2' : 'text-mute/70'}`} />}
+              {/* A step that only adds free shipping shows the truck instead of a percent. */}
+              {(step.percent > 0 || !step.freeShipping) && (
+                <span className={`font-mono uppercase tracking-[0.08em] transition-colors duration-500 ${compact ? 'text-[10px]' : 'text-[11px]'} ${on ? 'text-flame-2' : 'text-mute/70'}`}>
+                  {step.percent ? `−${step.percent}%` : d.buildStepSet}
+                </span>
+              )}
+              {step.freeShipping && <TruckIcon className={`${compact ? 'size-3.5' : 'size-4'} self-center transition-colors duration-500 ${on ? 'text-flame-2' : 'text-mute/70'}`} />}
             </div>
           )
         })}

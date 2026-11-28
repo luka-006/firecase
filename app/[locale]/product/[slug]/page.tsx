@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { BuyBox, Gallery } from '@/components/ProductClient'
-import { soldOnlyInSet } from '@/lib/set-builder'
+import { buildableCase, soldOnlyInSet } from '@/lib/set-builder'
 import { ProductReviews } from '@/components/ProductReviews'
 import { Stars, formatRating } from '@/components/Stars'
 import { ChevronIcon } from '@/components/icons'
@@ -85,8 +85,10 @@ export default async function ProductPage({ params }: Props) {
   const setBlocked = p.kind === 'set' && (included.some((item) => !item) || setPartsBlocked(included.filter((item): item is NonNullable<typeof item> => !!item)))
   const reviewBundle = await getProductReviewBundle(p.id)
   const d = t(locale)
-  // Plain cases are bought inside "Napravi svoj set"; sets and engraved cases keep their own button.
+  // Plain cases go to the cart on their own and can also go into "Napravi svoj set" (only into a set while SINGLE_CASES_FOR_SALE is off); sets and engraved cases keep their own button.
   const setOnly = soldOnlyInSet(p)
+  // A plain case sold on its own can still be put into a set from its page.
+  const setPart = !setOnly && buildableCase(p)
   const crumb = p.kind === 'set'
     ? { href: href(locale, 'shop'), label: d.sets }
     : setOnly
@@ -192,7 +194,7 @@ export default async function ProductPage({ params }: Props) {
             </div>
           )}
           <div className="mt-8">
-            <BuyBox locale={locale} setOnly={setOnly} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: soldOut ? 0 : p.stock, freeShipping: p.freeShipping, engrave: p.engrave === true && p.kind !== 'set' }} />
+            <BuyBox locale={locale} setOnly={setOnly} setPart={setPart} product={{ id: p.id, slug: p.slug, nameHr: p.nameHr, nameEn: p.nameEn, image: p.images[0] ?? '', priceCents: p.priceCents, variants: publicVariants(p.variants), stock: soldOut ? 0 : p.stock, freeShipping: p.freeShipping, engrave: p.engrave === true && p.kind !== 'set' }} />
           </div>
           <div className="mt-8 border-t border-line">
             {desc && <Row title={d.description} open>{desc}</Row>}

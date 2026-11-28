@@ -103,7 +103,7 @@ export async function startCheckout(_: State, f: FormData): Promise<State> {
   for (const id of new Set(plain.map((line) => line.id))) {
     const p = products.find((x) => x.id === id)
     if (!p) return { error: d.errors.stock }
-    // Plain cases are sold only inside a set now ("Napravi svoj set").
+    // Plain cases are sold only inside a set ("Napravi svoj set") while SINGLE_CASES_FOR_SALE is off.
     if (soldOnlyInSet(p)) return { error: d.errors.setOnly }
     const lines = plain.filter((line) => line.id === id)
     if (lines.some((line) => line.vi >= 0 && !p.variants[line.vi])) return { error: d.errors.stock }

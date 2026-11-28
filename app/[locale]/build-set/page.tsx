@@ -4,6 +4,7 @@ import { SetBuilder, type BuilderCase } from '@/components/SetBuilder'
 import { getActiveProducts } from '@/lib/products'
 import { href, type Locale } from '@/lib/routes'
 import { buildableCase } from '@/lib/set-builder'
+import { catalogueEngravers } from '@/lib/engrave'
 import { lighterModels, listingMeta } from '@/lib/seo'
 import { withLowStockFirst } from '@/lib/stock'
 import { publicVariants } from '@/lib/variants'
@@ -20,7 +21,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BuildSetPage({ params }: Props) {
   const locale = (await params).locale as Locale
-  const products = (await getActiveProducts()).filter(buildableCase)
+  const all = await getActiveProducts()
+  const products = all.filter(buildableCase)
   // Only public fields reach the browser: no supplier links, options or costs.
   const cases: BuilderCase[] = withLowStockFirst(products).map((p) => ({
     id: p.id,
@@ -33,5 +35,5 @@ export default async function BuildSetPage({ params }: Props) {
     stock: p.stock,
     models: lighterModels([p.fits, p.nameHr, p.shortHr]),
   }))
-  return <ShopCatalogue locale={locale} products={products} mode="build" builder={<SetBuilder locale={locale} cases={cases} />} />
+  return <ShopCatalogue locale={locale} products={products} mode="build" builder={<SetBuilder locale={locale} cases={cases} />} engraverTab={catalogueEngravers(all).length > 0} />
 }

@@ -105,5 +105,6 @@ test('product and contact meta descriptions stay within 140–160 characters', (
   inRange(contactMetaDescription('hr'))
   inRange(contactMetaDescription('en'))
   assert.match(contactMetaDescription('hr'), /info@firecase.net/)
-  assert.match(productMetaDescription({ locale: 'hr', name: 'Arabeska', short: '', material: '', variants: [], delivery: '8–16 dana' }), /8–16/)
+  // The delivery time is kept out of search snippets (checkout, terms and emails still show it).
+  assert.doesNotMatch(productMetaDescription({ locale: 'hr', name: 'Arabeska', short: '', material: '', variants: [], delivery: '8–16 dana' }), /8–16/)
 })

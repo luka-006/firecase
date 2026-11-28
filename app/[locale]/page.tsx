@@ -20,7 +20,7 @@ import { t } from '@/lib/dict'
 import { catalogueCases, catalogueSets, isSetProduct } from '@/lib/setovi'
 import { hourSeed, interleaveSets, isOnSale, salePercent, seededRandom, shuffle } from '@/lib/home-order'
 import { isLowStock, withLowStockFirst } from '@/lib/stock'
-import { buildableCase } from '@/lib/set-builder'
+import { BUILD_SET_TIERS, buildableCase } from '@/lib/set-builder'
 import { SOCIAL_PROFILES } from '@/lib/seo'
 
 export const revalidate = 300
@@ -81,7 +81,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const buildPhotos = cutoutsFirst(shuffle(catalogueCases(products).filter(buildableCase), seededRandom(hourSeed() + 1)).map((p) => p.images[0] ?? ''))
   const n = (k: number) => String(k + (sale.length ? 1 : 0)).padStart(2, '0')
   const freeLabel = euros(s.freeThresholdCents, locale)
-  const faq: [string, string][] = [...d.faq.slice(0, 2), d.freeShipFaq(freeLabel), ...d.faq.slice(2)]
+  const freeSetMin = BUILD_SET_TIERS.find((tier) => tier.freeShipping)?.min
+  const faq: [string, string][] = [...d.faq.slice(0, 2), d.freeShipFaq(freeLabel, freeSetMin), ...d.faq.slice(2)]
   const ld = [
     { '@context': 'https://schema.org', '@type': 'Organization', name: 'Firecase', url: SITE_URL, logo: `${SITE_URL}/icon-512.png`, email: SELLER.email, sameAs: SOCIAL_PROFILES },
     { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Firecase', url: SITE_URL, inLanguage: locale === 'en' ? 'en' : 'hr' },
