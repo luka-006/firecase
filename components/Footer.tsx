@@ -5,7 +5,7 @@ import { href, type Locale } from '@/lib/routes'
 import { publicShopLinks } from '@/lib/shop-nav'
 import { t } from '@/lib/dict'
 
-export function Footer({ locale }: { locale: Locale }) {
+export function Footer({ locale, engraver }: { locale: Locale; engraver?: boolean }) {
   const d = t(locale)
   const a = 'transition hover:text-bone'
   const ul = 'space-y-3 text-sm text-bone/60'
@@ -16,7 +16,7 @@ export function Footer({ locale }: { locale: Locale }) {
         <div className="md:col-span-3">
           <p className="eyebrow mb-5">{d.footerShop}</p>
           <ul className={ul}>
-            {publicShopLinks(locale).filter((link) => link.href !== href(locale, 'contact')).map((link) => (
+            {publicShopLinks(locale, { engraver }).filter((link) => link.href !== href(locale, 'contact')).map((link) => (
               <li key={link.href}><Link className={a} href={link.href}>{link.label}</Link></li>
             ))}
             <li><Link className={a} href={href(locale, 'account')}>{d.account}</Link></li>

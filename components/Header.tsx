@@ -6,9 +6,9 @@ import { href, type Locale } from '@/lib/routes'
 import { publicShopLinks } from '@/lib/shop-nav'
 import { t } from '@/lib/dict'
 
-export function Header({ locale, announcement }: { locale: Locale; announcement: string }) {
+export function Header({ locale, announcement, engraver }: { locale: Locale; announcement: string; engraver?: boolean }) {
   const d = t(locale)
-  const links = publicShopLinks(locale)
+  const links = publicShopLinks(locale, { engraver })
   return (
     <>
       {announcement && (

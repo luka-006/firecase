@@ -36,13 +36,13 @@ export function listingMeta(page: 'shop' | 'sets' | 'engraver' | 'build', locale
   const en = locale === 'en'
   if (page === 'build') {
     return en
-      ? { title: 'Build your own set of lighter cases', description: 'Pick the lighter cases you like and put them in one set. 3 cases get 10% off, 5 or more get 20%. Cases for BIC J5, BIC J6, Clipper, Cricket and Zippo.' }
-      : { title: 'Napravite svoj set futrola za upaljače', description: 'Odaberite futrole za upaljače koje vam se sviđaju i složite svoj set. Za 3 futrole 10% popusta, za 5 i više 20%. Za BIC J5, BIC J6, Clipper, Cricket i Zippo.' }
+      ? { title: 'Build your own set of lighter cases', description: 'Pick the lighter cases you like and put them in one set. 3 cases get 10% off, 5 or more ship free, 8 or more get 30%. For BIC, Clipper, Cricket and Zippo.' }
+      : { title: 'Napravite svoj set futrola za upaljače', description: 'Odaberite futrole za upaljače i složite svoj set. Za 3 futrole 10% popusta, za 5 i više besplatna dostava, za 8 i više 30%. Za BIC, Clipper, Cricket i Zippo.' }
   }
   if (page === 'shop') {
     return en
-      ? { title: 'Lighter case sets – Collection', description: 'Sets of lighter cases, ready made or built by you: metal and leather cases for BIC J5, BIC J6, Clipper, Cricket and Zippo. Delivery across Croatia.' }
-      : { title: 'Setovi futrola za upaljače – Kolekcija', description: 'Setovi futrola za upaljače, gotovi ili po vašem izboru: metalne i kožne futrole za BIC J5, BIC J6, Clipper, Cricket i Zippo. Dostava po cijeloj Hrvatskoj.' }
+      ? { title: 'Lighter cases – Collection', description: 'Metal and leather lighter cases for BIC J5, BIC J6, Clipper, Cricket and Zippo. Buy one on its own or build a set and save. Delivery across Croatia.' }
+      : { title: 'Futrole za upaljače – Kolekcija', description: 'Metalne i kožne futrole za upaljače BIC J5, BIC J6, Clipper, Cricket i Zippo. Uzmite jednu ili složite set i uštedite. Dostava po cijeloj Hrvatskoj.' }
   }
   if (page === 'sets') {
     return en
@@ -115,8 +115,8 @@ export function productMetaDescription(input: {
   fits?: string
 }) {
   const en = input.locale === 'en'
-  const delivery = tidy(input.delivery || (en ? '8–16 days' : '8–16 dana'))
-  const tail = en ? `Delivery in ${delivery}.` : `Dostava ${delivery}.`
+  // The delivery time stays out of search snippets; it is shown in checkout, the terms and the emails.
+  const tail = ''
   const name = tidy(input.name) || 'Firecase'
   const lead = `${name}, ${en ? 'lighter case' : 'futrola za upaljač'}.`
   // Order matters: when the text is too long, extras are dropped from the end, so the fit
@@ -127,8 +127,8 @@ export function productMetaDescription(input: {
     input.material ? (en ? `Material: ${sentence(input.material)}` : `Materijal: ${sentence(input.material)}`) : '',
   ].filter(Boolean)
   const pads = en
-    ? ['It slides onto your lighter in a few seconds.', 'It keeps the lighter free of scratches.', 'Ships across Croatia.']
-    : ['Navučete je na upaljač za par sekundi.', 'Čuva upaljač od ogrebotina.', 'Šaljemo je po cijeloj Hrvatskoj.']
+    ? ['It slides onto your lighter in a few seconds.', 'It keeps the lighter free of scratches.', 'Ships across Croatia.', 'Returns within 14 days.']
+    : ['Navučete je na upaljač za par sekundi.', 'Čuva upaljač od ogrebotina.', 'Šaljemo je po cijeloj Hrvatskoj.', 'Povrat u roku od 14 dana.']
 
   const join = (bits: string[]) => tidy(bits.filter(Boolean).join(' '))
   let chosen = extras

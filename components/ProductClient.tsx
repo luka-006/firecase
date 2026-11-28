@@ -190,9 +190,11 @@ type BuyProps = {
   onEngraving?: (state: EngravingState) => void
   /** Plain case: the button puts it into "Napravi svoj set" instead of the cart. */
   setOnly?: boolean
+  /** Plain case sold on its own that can also go into "Napravi svoj set": a second button adds it there. */
+  setPart?: boolean
 }
 
-export function BuyBox({ locale, product, previewAside, onEngraving, setOnly }: BuyProps) {
+export function BuyBox({ locale, product, previewAside, onEngraving, setOnly, setPart }: BuyProps) {
   const { add, items } = useCart()
   const draft = useSetDraft().parts
   const router = useRouter()
@@ -221,12 +223,15 @@ export function BuyBox({ locale, product, previewAside, onEngraving, setOnly }: 
     if (cap <= 0) return
     setQty((q) => Math.min(q, cap))
   }, [cap])
+  const putInSet = () => {
+    if (soldOut) return
+    const v = product.variants[vi]
+    addToSetDraft({ id: product.id, vi, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: photoForVariant(product, vi), priceCents: product.priceCents, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' })
+    router.push(href(locale, 'build'))
+  }
   const onAdd = () => {
     if (setOnly) {
-      if (soldOut) return
-      const v = product.variants[vi]
-      addToSetDraft({ id: product.id, vi, slug: product.slug, nameHr: product.nameHr, nameEn: product.nameEn, image: photoForVariant(product, vi), priceCents: product.priceCents, variantHr: v?.hr ?? '', variantEn: v?.en ?? '' })
-      router.push(href(locale, 'build'))
+      putInSet()
       return
     }
     if (soldOut || qty < 1 || qty > cap) return
@@ -304,13 +309,18 @@ export function BuyBox({ locale, product, previewAside, onEngraving, setOnly }: 
         </button>
         <FavoriteButton locale={locale} productId={product.id} />
       </div>
-      {setOnly && (
+      {(setOnly || setPart) && (
         <div className="space-y-4 border border-line p-4">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-flame">{d.buildSet}</p>
           <SetLadder locale={locale} count={draft.length} compact />
           <p className="text-xs leading-relaxed text-mute">
-            {d.setOnlyNote(BUILD_SET_MIN)} <span className="text-flame">{d.buildTiers(BUILD_SET_TIERS)}</span>
+            {setOnly ? d.setOnlyNote(BUILD_SET_MIN) : d.singleOrSet} <span className="text-flame">{d.buildTiers(BUILD_SET_TIERS)}</span>
           </p>
+          {!setOnly && (
+            <button onClick={putInSet} disabled={soldOut} className="btn-ghost btn-sm w-full disabled:pointer-events-none disabled:opacity-50">
+              {d.addToSet}
+            </button>
+          )}
           {draft.length > 0 && (
             <Link href={href(locale, 'build')} className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-bone/80 transition hover:text-flame-2">
               {d.buildInYourSet(draft.length)} <ArrowIcon className="size-3.5" />

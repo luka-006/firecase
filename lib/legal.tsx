@@ -3,8 +3,12 @@ import { SELLER } from './config'
 import { euros, money } from './money'
 import { href, type Locale } from './routes'
 import type { Settings } from './settings'
+import { BUILD_SET_TIERS } from './set-builder'
 
-export const LEGAL_DATE = { hr: '16. listopada 2026.', en: '16 October 2026' }
+/** Smallest set the customer builds that ships free, from the set-builder tiers. */
+const FREE_SET_MIN = BUILD_SET_TIERS.find((tier) => tier.freeShipping)?.min
+
+export const LEGAL_DATE = { hr: '28. studenoga 2026.', en: '28 November 2026' }
 export const LEGAL_DOCS = ['terms', 'privacy', 'cookies', 'shipping', 'returns', 'withdrawal', 'contact'] as const
 export type LegalDoc = (typeof LEGAL_DOCS)[number]
 
@@ -53,7 +57,7 @@ const hr: Record<LegalDoc, Doc> = {
         <p>Iznos narudžbe tereti se u trenutku narudžbe. Račun se izdaje u elektroničkom obliku i dostavlja na e-mail kupca.</p>
 
         <h2>5. Dostava</h2>
-        <p>Dostava je moguća na adrese u Republici Hrvatskoj{s.shipEu ? ' te u države članice Europske unije navedene u blagajni' : ''}. Cijena dostave unutar Hrvatske iznosi {money(s.shippingCents, locale)}. Besplatna dostava za narudžbe od {euros(s.freeThresholdCents, locale)}, računa se prije popusta. Setovi označeni besplatnom dostavom šalju se bez naknade za dostavu.{s.shipEu ? ` Dostava u ostale države EU iznosi ${money(s.euShippingCents, locale)}.` : ''}</p>
+        <p>Dostava je moguća na adrese u Republici Hrvatskoj{s.shipEu ? ' te u države članice Europske unije navedene u blagajni' : ''}. Cijena dostave unutar Hrvatske iznosi {money(s.shippingCents, locale)}. Besplatna dostava za narudžbe od {euros(s.freeThresholdCents, locale)}, računa se prije popusta. Setovi označeni besplatnom dostavom šalju se bez naknade za dostavu.{FREE_SET_MIN ? ` Set koji kupac sam složi od ${FREE_SET_MIN} ili više futrola također se šalje bez naknade za dostavu.` : ''}{s.shipEu ? ` Dostava u ostale države EU iznosi ${money(s.euShippingCents, locale)}.` : ''}</p>
         <p>Očekivani rok dostave je {s.deliveryHr}. Prodavatelj će robu isporučiti najkasnije u roku od 30 dana od sklapanja ugovora. Ako to ne bude moguće, kupca će obavijestiti, a kupac ima pravo raskinuti ugovor i dobiti povrat plaćenog iznosa bez odgode.</p>
         <p>Rizik od propasti ili oštećenja robe prelazi na potrošača kad on ili treća osoba koju je odredio (osim prijevoznika) preuzme robu. Ako je paket vidljivo oštećen, preporučujemo da to odmah prijavite dostavljaču i javite nam se na <Mail />.</p>
 
@@ -183,7 +187,7 @@ const hr: Record<LegalDoc, Doc> = {
       <>
         <ul>
           <li>Dostavljamo na adrese u Republici Hrvatskoj{s.shipEu ? ' i u države članice EU navedene u blagajni' : ''}.</li>
-          <li>Cijena dostave: <b>{money(s.shippingCents, locale)}</b>. Besplatna dostava za narudžbe od <b>{euros(s.freeThresholdCents, locale)}</b>, računa se prije popusta. Setovi označeni besplatnom dostavom šalju se bez naknade za dostavu.{s.shipEu ? ` Dostava u ostale države EU: ${money(s.euShippingCents, locale)}.` : ''}</li>
+          <li>Cijena dostave: <b>{money(s.shippingCents, locale)}</b>. Besplatna dostava za narudžbe od <b>{euros(s.freeThresholdCents, locale)}</b>, računa se prije popusta. Setovi označeni besplatnom dostavom šalju se bez naknade za dostavu.{FREE_SET_MIN ? ` Set koji složite sami od ${FREE_SET_MIN} ili više futrola također se šalje bez naknade za dostavu.` : ''}{s.shipEu ? ` Dostava u ostale države EU: ${money(s.euShippingCents, locale)}.` : ''}</li>
           <li>Očekivani rok dostave: <b>{s.deliveryHr}</b>, a najkasnije 30 dana od sklapanja ugovora.</li>
         </ul>
         <p>Za sva pitanja o dostavi pišite nam na <Mail />.</p>
@@ -235,7 +239,7 @@ const hr: Record<LegalDoc, Doc> = {
         <p><a href={`mailto:${SELLER.email}`}>{SELLER.email}</a></p>
         <p>Na poruke odgovaramo u roku od 24 sata, radnim danom.</p>
         <h2>Narudžbe i dostava</h2>
-        <p>Dostava traje 8–16 dana. Za pitanja o narudžbi u poruci navedite broj narudžbe, pa ćemo vam brže odgovoriti.</p>
+        <p>Za pitanja o narudžbi u poruci navedite broj narudžbe, pa ćemo vam brže odgovoriti.</p>
         <h2>Povrat i reklamacije</h2>
         <p>Proizvod možete vratiti u roku od 14 dana od primitka. Javite nam se na e-mail i poslat ćemo vam sve potrebne upute.</p>
       </>
@@ -272,7 +276,7 @@ const en: Record<LegalDoc, Doc> = {
         <p>Payments are processed by Stripe (Stripe Payments Europe Ltd., Ireland): credit and debit cards (Visa, Mastercard, Maestro and others), Apple Pay, Google Pay and PayPal. Availability may depend on your device and browser. Card details are entered directly with Stripe; the seller has no access to them. The order amount is charged when the order is placed. The invoice is issued electronically and sent by email.</p>
 
         <h2>5. Delivery</h2>
-        <p>We deliver to addresses in Croatia{s.shipEu ? ' and to the EU member states listed at checkout' : ''}. Shipping within Croatia costs {money(s.shippingCents, locale)}. Free shipping for orders of {euros(s.freeThresholdCents, locale)}, calculated before discounts. Sets marked for free shipping are sent with no delivery charge.{s.shipEu ? ` Shipping to other EU countries costs ${money(s.euShippingCents, locale)}.` : ''}</p>
+        <p>We deliver to addresses in Croatia{s.shipEu ? ' and to the EU member states listed at checkout' : ''}. Shipping within Croatia costs {money(s.shippingCents, locale)}. Free shipping for orders of {euros(s.freeThresholdCents, locale)}, calculated before discounts. Sets marked for free shipping are sent with no delivery charge.{FREE_SET_MIN ? ` A set the buyer builds with ${FREE_SET_MIN} or more cases also ships with no delivery charge.` : ''}{s.shipEu ? ` Shipping to other EU countries costs ${money(s.euShippingCents, locale)}.` : ''}</p>
         <p>Expected delivery time is {s.deliveryEn}. Goods will be delivered no later than 30 days after the contract is concluded. If this is not possible, we will inform the buyer, who may terminate the contract and receive a refund without delay.</p>
         <p>The risk of loss or damage passes to the consumer when they, or a third party designated by them (other than the carrier), take possession of the goods. If a parcel is visibly damaged, please report it to the courier and contact us at <Mail />.</p>
 
@@ -401,7 +405,7 @@ const en: Record<LegalDoc, Doc> = {
       <>
         <ul>
           <li>We deliver to addresses in Croatia{s.shipEu ? ' and to the EU member states listed at checkout' : ''}.</li>
-          <li>Shipping: <b>{money(s.shippingCents, locale)}</b>. Free for orders of <b>{euros(s.freeThresholdCents, locale)}</b>, calculated before discounts. Sets marked for free shipping are sent with no delivery charge.{s.shipEu ? ` Other EU countries: ${money(s.euShippingCents, locale)}.` : ''}</li>
+          <li>Shipping: <b>{money(s.shippingCents, locale)}</b>. Free for orders of <b>{euros(s.freeThresholdCents, locale)}</b>, calculated before discounts. Sets marked for free shipping are sent with no delivery charge.{FREE_SET_MIN ? ` A set you build yourself with ${FREE_SET_MIN} or more cases also ships with no delivery charge.` : ''}{s.shipEu ? ` Other EU countries: ${money(s.euShippingCents, locale)}.` : ''}</li>
           <li>Expected delivery time: <b>{s.deliveryEn}</b>, and no later than 30 days after the contract is concluded.</li>
         </ul>
         <p>For any delivery questions, email us at <Mail />.</p>
@@ -453,7 +457,7 @@ const en: Record<LegalDoc, Doc> = {
         <p><a href={`mailto:${SELLER.email}`}>{SELLER.email}</a></p>
         <p>We reply within 24 hours on business days.</p>
         <h2>Orders and delivery</h2>
-        <p>Delivery takes 8–16 days. If you are asking about an order, include the order number in your message so we can reply sooner.</p>
+        <p>If you are asking about an order, include the order number in your message so we can reply sooner.</p>
         <h2>Returns and complaints</h2>
         <p>You may return a product within 14 days of receiving it. Email us and we will send you the instructions you need.</p>
       </>

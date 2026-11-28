@@ -6,11 +6,14 @@ export const BUILD_SET_MAX = 10
 
 export type BuildSetTier = { min: number; percent: number; freeShipping?: boolean }
 
-/** Discount by number of cases in a set the customer builds. The highest tier reached applies. */
+/**
+ * Discount by number of cases in a set the customer builds. The highest percent reached applies,
+ * and free shipping, once reached, stays for bigger sets. A tier with percent 0 only adds free shipping.
+ */
 export const BUILD_SET_TIERS: readonly BuildSetTier[] = [
   { min: 3, percent: 10 },
-  { min: 5, percent: 20 },
-  { min: 8, percent: 30, freeShipping: true },
+  { min: 5, percent: 0, freeShipping: true },
+  { min: 8, percent: 30 },
 ]
 
 export type BuiltSetPart = { id: number; vi: number }
@@ -21,7 +24,7 @@ export function builtSetPercent(count: number) {
   return percent
 }
 
-/** A tier can also make delivery free (8 cases and more). */
+/** A tier can also make delivery free (5 cases and more). */
 export function builtSetFreeShipping(count: number) {
   return BUILD_SET_TIERS.some((tier) => tier.freeShipping && count >= tier.min)
 }
@@ -55,7 +58,13 @@ export function buildableCase(p: { kind?: string | null; engrave?: boolean | nul
   return p.active !== false && p.kind !== 'set' && p.engrave !== true
 }
 
-/** Plain single cases are sold only inside a set. Sets and engraved cases still sell on their own. */
+/**
+ * Single cases can be bought on their own again; below the free-shipping rules the customer pays delivery.
+ * Set to false to sell plain cases only inside a set ("Napravi svoj set") again.
+ */
+export const SINGLE_CASES_FOR_SALE = true
+
+/** Plain single cases are sold only inside a set while SINGLE_CASES_FOR_SALE is off. Sets and engraved cases always sell on their own. */
 export function soldOnlyInSet(p: { kind?: string | null; engrave?: boolean | null }) {
-  return p.kind !== 'set' && p.engrave !== true
+  return !SINGLE_CASES_FOR_SALE && p.kind !== 'set' && p.engrave !== true
 }
